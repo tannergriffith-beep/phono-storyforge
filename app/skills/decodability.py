@@ -226,6 +226,27 @@ def _suffix_bases(word: str):
         yield word[:-1]               # cats -> cat
 
 
+def inflectional_suffix(word: str) -> str | None:
+    """Returns the inflectional suffix ('ing'/'ed'/'es'/'s') a word carries, else None.
+
+    Uses the same length/spelling guards as `_suffix_bases` so it agrees with the
+    decoder's suffix layer. This is the hook miscue attribution (Phase 3) uses to
+    map the inflected ending onto its '-s/-es/-ed/-ing' mastery sentinel — the
+    decomposition itself never emits those sentinels (it folds the ending into the
+    ordinary letter/glued graphemes), so they have to be recovered at word level.
+    """
+    w = clean_word(word)
+    if w.endswith("ing") and len(w) >= 5:
+        return "ing"
+    if w.endswith("ed") and len(w) >= 4:
+        return "ed"
+    if w.endswith("es") and len(w) >= 4:
+        return "es"
+    if w.endswith("s") and not w.endswith("ss") and len(w) >= 3:
+        return "s"
+    return None
+
+
 def _word_decodable(word: str, mastered_levels: list[str]) -> tuple[bool, list[str]]:
     """Word-level verdict, applying the suffix layer when 'suffixes' is mastered."""
     hits = _segment(word)

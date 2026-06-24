@@ -266,6 +266,54 @@ class Objective(BaseModel):
     rationale: str = Field(default="", description="Human-readable explanation of the choice.")
 
 
+class Miscue(BaseModel):
+    """A single classified deviation between the expected text and the read-aloud."""
+
+    kind: Literal[
+        "correct", "substitution", "omission", "insertion", "self_correction", "hesitation"
+    ] = Field(..., description="Running-record miscue classification for this position.")
+    expected: str | None = Field(
+        default=None, description="The expected word (None for an insertion)."
+    )
+    spoken: str | None = Field(
+        default=None, description="What the child said (None for an omission)."
+    )
+    position: int = Field(..., description="Index of this position in the expected word stream.")
+    error_word: str | None = Field(
+        default=None, description="The discarded first attempt, for a self-correction."
+    )
+
+
+class AssessmentResult(BaseModel):
+    """The deterministic miscue analysis of one read-aloud: errors + fluency + evidence.
+
+    `grapheme_evidence` is the contract consumed by the BKT mastery model
+    (app/skills/mastery.update_from_evidence): grapheme key -> per-opportunity
+    True/False outcomes, keyed by GRAPHEME_INVENTORY keys including the
+    structural sentinels (_blend_, -s/-es/-ed/-ing).
+    """
+
+    expected_text: str = Field(..., description="The text the book asked the child to read.")
+    spoken_text: str = Field(..., description="The child's read-aloud transcript.")
+    total_words: int = Field(..., ge=0, description="Number of expected words.")
+    words_correct: int = Field(..., ge=0, description="Expected words ultimately read correctly.")
+    errors: int = Field(..., ge=0, description="Substitutions + omissions + insertions.")
+    substitutions: int = Field(default=0, ge=0)
+    omissions: int = Field(default=0, ge=0)
+    insertions: int = Field(default=0, ge=0)
+    self_corrections: int = Field(default=0, ge=0, description="Errors the child fixed (not counted).")
+    accuracy: float = Field(..., ge=0.0, le=1.0, description="words_correct / total_words.")
+    wcpm: float = Field(..., ge=0.0, description="Words correct per minute.")
+    duration_seconds: float = Field(..., ge=0.0, description="Read-aloud duration.")
+    miscues: list[Miscue] = Field(
+        default_factory=list, description="Every non-correct position, in order."
+    )
+    grapheme_evidence: dict[str, list[bool]] = Field(
+        default_factory=dict,
+        description="grapheme -> per-opportunity True(correct)/False(miscue) for the mastery model.",
+    )
+
+
 class ParentReport(BaseModel):
     """Report for parents containing letter, reinforced phonics patterns, and sight words to practice."""
 
