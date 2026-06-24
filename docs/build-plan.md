@@ -13,7 +13,7 @@
 | 5. Illustrations                      | Jul 1–2   | Real illustrated book in a Doc                 | ✅ Done |
 | **Flagship A. Closed loop → product** | Jun 24    | `app/tutor` stateful loop + `SessionLog` + CLI | ✅ Done |
 | Flagship B. Voice read-aloud          | Jun 24    | Gemini Live → transcript; LLM book in the loop | ✅ Done |
-| Flagship C. Web UI + live mastery viz | TBD       | The filmable demo                              | ⬜      |
+| Flagship C. Web UI + live mastery viz | Jun 24    | The filmable demo (typed + browser-mic voice)  | ✅ Done |
 | Flagship D. Flywheel + rigorous eval  | TBD       | De-circularized evidence                       | ⬜      |
 | Writeup + video + final eval          | Jul 4–5   | Submission package                             | ⬜      |
 | Buffer / submit                       | Jul 6     | —                                              | ⬜      |
@@ -198,18 +198,24 @@ against an external decodable-word corpus).
 
 ---
 
-## Jul 3 — Stretch (superseded by Flagship A/B above)
+## Jul 3 — Stretch (superseded by Flagship A/B/C above)
 
 Original plan: minimal audio upload→transcript, **or** a thin Streamlit read-along.
-Stages A/B delivered the stateful loop + real Gemini Live voice instead; the web UI (C)
-is the remaining successor.
+The Flagship stages delivered far more: the stateful loop (A), real Gemini Live voice +
+verifier-gated LLM books (B), and a live web read-along that drives the loop with both a
+typed path and browser-mic voice (C). Streamlit was rejected for C because the demo is
+continuous + live-animated and needs a clean browser-audio channel.
 
 ---
 
 ## Jul 4–5 — Submission package (non-negotiable)
 
 - Writeup: problem → architecture → **the evidence result**
-- Record video (\~5 min): input → illustrated book → simulated read → miscue highlight → mastery chart → adapted next book
+- Record video (\~5 min): lead with the **live web demo** (`scripts/tutor_web.py`) — child
+  reads a page → miscue heatmap lights per word → mastery bars animate as BKT updates →
+  next-target panel shifts ("the loop adapted"); then the offline **evidence chart**
+  (adaptive > static) for rigor, and the illustrated book for polish. Browser-mic voice
+  is the optional live beat (needs Live creds; typed presets are the safe fallback).
 - Update README to match the new system; remove stale claims
 - Final eval run + commit artifacts
 - Submit (Jul 5; Jul 6 = buffer)
