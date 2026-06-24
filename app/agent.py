@@ -44,7 +44,7 @@ from app.schemas import (
     ExportResult,
     ParentReport,
 )
-from app.tools import check_decodability
+from app.skills.decodability import check_decodability
 
 # Configure Gemini Model options
 MODEL_NAME = "gemini-flash-lite-latest"
