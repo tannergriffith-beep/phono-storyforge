@@ -1,0 +1,81 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "profile_age6_digraphs_cats",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Please write a story for my 6-year-old child. They have mastered short_vowels and they are working on digraphs. They love cats. Their sight words are: the, said, is, to, a."
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "profile_age7_blends_dinosaurs",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "My 7-year-old is learning blends. She has already mastered short vowels and digraphs. Her interest is dinosaurs. Sight words: was, they, of, the."
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "profile_age8_silent_e_space",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "I need a story for my 8-year-old. He is working on silent_e and has mastered short_vowels, digraphs, and blends. He is interested in space. Sight words: are, have, your, there."
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "profile_age9_r_controlled_robots",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "My 9-year-old child wants a story about robots. Her reading target level is r_controlled. Mastered levels are: short_vowels, digraphs, blends, silent_e. Sight words: some, come, here."
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "profile_age11_vowel_teams_deep_sea",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "I want a story for an 11-year-old child. Their target level is vowel_teams. They have mastered short_vowels, digraphs, blends, silent_e, and r_controlled. They love deep sea exploration. Sight words: once, one, give, live, they."
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "profile_age12_blends_soccer",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "A story for my 12-year-old child who is working on blends. They mastered short vowels and digraphs. Their interest is soccer. Sight words: of, to, the, was."
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "profile_age5_short_vowels_dogs",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "My 5-year-old only knows short_vowels. He likes dogs. Sight words: a, i, the, is."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+metrics_to_run:
+  - decodability_accuracy
+  - illustration_style_appropriateness
+  - agent_turn_count
+
+custom_metrics:
+  - name: decodability_accuracy
+    prompt_template: |
+      You are an expert phonics and reading education evaluator.
+      Your task is to analyze the agent's story draft and determine if it strictly adheres to the child's phonics profile.
+
+      Here is the child's profile and request:
+      {prompt}
+
+      Here is the final response or full agent trace showing the story pages generated:
+      Response: {response}
+      Full trace: {agent_data}
+
+      Analyze the story pages. For each page:
+      1. Extract all words in the story pages.
+      2. Verify if the child has mastered the phonics patterns for each word, OR if the word is in the child's allowed sight words (either explicitly requested or standard sight words).
+         Allowed phonics levels in order (each level includes the ones before it):
+         - short_vowels: basic short vowels (VC/CVC like 'cat', 'red', 'pin', 'dog', 'run', 'on', 'at'). No digraphs (sh, ch, th, etc.), no blends (st, fl, etc.), no silent e, no r-controlled (ar, er, etc.), no vowel teams.
+         - digraphs: sh, ch, th, wh, ck, ng, ph, qu.
+         - blends: adjacent consonants like 'flat', 'stop', 'hand', 'went'.
+         - silent_e: silent e pattern at the end of the word like 'make', 'like', 'home', 'cute'.
+         - r_controlled: ar, er, ir, or, ur like 'car', 'her', 'bird', 'horn', 'turn'.
+         - vowel_teams: ai, ay, ee, ea, oa, oe, ie, igh, oo, ou, ow, oi, oy, au, aw.
+      3. List any words that violate the mastered phonics levels and are not sight words.
+
+      Grade the decodability accuracy on a scale of 1 to 5:
+      - 5 (Excellent): Zero phonics or sight-word violations. Every word is 100% decodable.
+      - 4 (Good): 1-2 minor violations (e.g. standard plural endings, simple suffixes, or a single slightly complex word).
+      - 3 (Acceptable): 3-5 violations. The story has some difficult words but is mostly decodable.
+      - 2 (Below Average): 6-10 violations. The writer frequently used words above the child's level.
+      - 1 (Poor): More than 10 violations, or the story is not written at all, or uses complex vocabulary completely ignoring the phonics constraints.
+
+      Return your evaluation as a valid JSON object matching this structure:
+      {
+        "score": <integer between 1 and 5>,
+        "explanation": "<detailed string detailing the target level, mastered levels, any violating words found, and the reason for the score>"
+      }
+
+      CRITICAL JSON FORMATTING RULES:
+      - The output must be valid JSON.
+      - The 'explanation' must be a single-line string of text. Write the explanation as a single continuous paragraph without bullet points, markdown bold (*), or raw newlines.
+      - Do NOT use any double quotes (") or backslashes (\) inside the explanation string. If you need to quote words, use single quotes (') instead.
+
+  - name: illustration_style_appropriateness
+    prompt_template: |
+      You are an expert art director evaluating book illustrations.
+      Your task is to analyze the illustration prompts generated in the trace and verify if they follow the style guide and the age-band instructions.
+
+      Here is the child's profile containing their age and interests:
+      {prompt}
+
+      Here is the agent's output and full trace showing the generated illustration prompts:
+      Response: {response}
+      Full trace: {agent_data}
+
+      Verify the following requirements for each generated image prompt:
+      1. Does it start with the EXACT Base Style Block?
+         "Warm, loose, hand-illustrated style — not stock-perfect, not generic clip art. Flat color fills only, no gradients, 2px stroke weight. Real, expressive faces — not generic smiley faces. Home and everyday settings (kitchen table, living room, backyard) — not classrooms. Consistent character appearance across every page. Restricted to Japonica (#DB7E65), Deep Navy (#192255), Warm Gold (#EBBA7A), Strikemaster (#9C6D8B), Pearl Bush (#ECE5DB), and Tundora (#483E45)."
+      2. Does it append the correct Age-Band Modifier matching the child's age?
+         - Age 5-7: "Rounder shapes, simpler scenes, larger character proportions, gentle and playful energy."
+         - Age 8-10: "Fuller scene detail, age-proportionate characters (not toddler-round), adventure/narrative energy."
+         - Age 11-13: "Graphic-novel/editorial illustration energy, more realistic proportions, dynamic compositions. Deliberately avoid anything that reads as an 'early reader' picture-book look."
+      3. Does it describe the scene incorporating the child's interest?
+
+      Grade the illustration style appropriateness on a scale of 1 to 5:
+      - 5 (Excellent): All prompts strictly start with the Base Style Block, contain the correct age-band modifier, incorporate the child's interest, and describe specific scenes.
+      - 4 (Good): Most prompts follow the requirements with minor omissions (e.g. style block is slightly altered but has all key words, or interest is present but not well integrated).
+      - 3 (Acceptable): Prompts follow the general style but miss either the correct age-band modifier or have inconsistencies in the style block.
+      - 2 (Below Average): Multiple prompts do not use the style block or incorrect age-band modifiers are applied.
+      - 1 (Poor): No illustration prompts generated, or they completely ignore the style block and age-band rules.
+
+      Return your evaluation as a valid JSON object matching this structure:
+      {
+        "score": <integer between 1 and 5>,
+        "explanation": "<detailed explanation of the analysis, checking the base style block and age-band modifier match, and rationale for the score>"
+      }
+
+      CRITICAL JSON FORMATTING RULES:
+      - The output must be valid JSON.
+      - The 'explanation' must be a single-line string of text. Write the explanation as a single continuous paragraph without bullet points, markdown bold (*), or raw newlines.
+      - Do NOT use any double quotes (") or backslashes (\) inside the explanation string. If you need to quote words, use single quotes (') instead.
+
+  - name: agent_turn_count
+    custom_function: |
+      def evaluate(instance):
+          turns = (instance.get("agent_data") or {}).get("turns", [])
+          return {'score': len(turns)}

@@ -1,0 +1,15 @@
+name: "agy-capstoneproject"
+acli_version: "0.5.0"
+agent_directory: "app"
+region: "us-east1"
+base_template: "adk"
+generated_at: "2026-06-22T12:56:14.086729+00:00"
+language: "python"
+create_params:
+  deployment_target: "none"
+  session_type: "in_memory"
+  cicd_runner: "skip"
+  include_data_ingestion: false
+  
+  datastore: "none"
+  agent_guidance_filename: "GEMINI.md"
