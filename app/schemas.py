@@ -369,3 +369,94 @@ class ParentReport(BaseModel):
     )
 
 
+# =============================================================================
+# FLAGSHIP STAGE A: the closed loop as a product (not just the eval simulation)
+#
+# SessionLog is the append-only record of one real read-aloud session: what the
+# planner targeted, what the child read, how they did, and how mastery moved.
+# It is the durable evidence trail behind the longitudinal growth curve and the
+# self-improving content flywheel — and the thing that proves, run over run,
+# that the tutor actually adapts. Persisted by app/store/session_log.py.
+# =============================================================================
+
+
+class SessionLog(BaseModel):
+    """One completed read-aloud session, flattened for logging and analytics."""
+
+    learner_id: str = Field(..., description="The learner this session belongs to.")
+    session_index: int = Field(..., ge=0, description="0-based session number for this learner.")
+    timestamp: str = Field(default_factory=_utcnow_iso, description="When the session was recorded (ISO-8601 UTC).")
+
+    # What the planner chose to teach.
+    target_grapheme: str = Field(..., description="The frontier grapheme the session targeted.")
+    target_level: str = Field(..., description="Phonics level of the target grapheme.")
+    rationale: str = Field(default="", description="Planner's human-readable reason for the target.")
+
+    # What the child read.
+    book_title: str = Field(default="", description="Title of the practice book read.")
+    expected_text: str = Field(..., description="The text the book asked the child to read.")
+    spoken_text: str = Field(..., description="The child's read-aloud transcript.")
+
+    # How they did (fluency snapshot).
+    total_words: int = Field(..., ge=0)
+    words_correct: int = Field(..., ge=0)
+    errors: int = Field(..., ge=0)
+    accuracy: float = Field(..., ge=0.0, le=1.0)
+    wcpm: float = Field(..., ge=0.0)
+
+    # How mastery moved (the adaptation signal).
+    target_p_before: float | None = Field(
+        default=None, description="Target grapheme P(L) before this session's evidence."
+    )
+    target_p_after: float | None = Field(
+        default=None, description="Target grapheme P(L) after this session's evidence."
+    )
+    newly_mastered: list[str] = Field(
+        default_factory=list, description="Graphemes that crossed the mastery threshold this session."
+    )
+    newly_mastered_levels: list[str] = Field(
+        default_factory=list, description="Levels that became fully mastered this session."
+    )
+    delta: MasteryDelta = Field(
+        default_factory=MasteryDelta, description="Full per-grapheme before/after for the session."
+    )
+
+    @classmethod
+    def build(
+        cls,
+        *,
+        learner_id: str,
+        session_index: int,
+        objective: "Objective",
+        book_title: str,
+        assessment: "AssessmentResult",
+        delta: "MasteryDelta",
+    ) -> "SessionLog":
+        """Flattens an objective + assessment + mastery delta into a log row."""
+        p_before = p_after = None
+        for change in delta.changes:
+            if change.grapheme == objective.target_grapheme:
+                p_before, p_after = change.p_before, change.p_after
+                break
+        return cls(
+            learner_id=learner_id,
+            session_index=session_index,
+            target_grapheme=objective.target_grapheme,
+            target_level=objective.target_level,
+            rationale=objective.rationale,
+            book_title=book_title,
+            expected_text=assessment.expected_text,
+            spoken_text=assessment.spoken_text,
+            total_words=assessment.total_words,
+            words_correct=assessment.words_correct,
+            errors=assessment.errors,
+            accuracy=assessment.accuracy,
+            wcpm=assessment.wcpm,
+            target_p_before=p_before,
+            target_p_after=p_after,
+            newly_mastered=list(delta.newly_mastered),
+            newly_mastered_levels=list(delta.newly_mastered_levels),
+            delta=delta,
+        )
+
+
