@@ -1,127 +1,152 @@
 # Phono StoryForge
 
-Phono StoryForge is a personalized decodable storybook generator capstone project built using the Google Agent Development Kit (ADK) in Python. It helps parents and educators generate highly personalized, phonically-accurate stories tailored to a child's age, specific reading profile, and interests, and exports them directly to Google Workspace.
+Phono StoryForge is a personalized decodable-storybook generator built on Google's Agent Development Kit (ADK). A parent or teacher describes a child's reading profile — age, phonics level, mastered sounds, sight words, interests — and a 7-agent pipeline writes a story that is phonically decodable at exactly that level, illustrates it, exports it to Google Docs/Drive, and drafts a personalized progress email to the parent in Gmail.
 
-## 🚀 Build Status: Complete & Verified
-All 7 agent stages are fully implemented, integrated, and verified end-to-end:
-1. **Intake Agent** -> Converts raw parent/teacher input into a structured `PhonicsProfile`.
-2. **Story Planner Agent** -> Designs a `StoryOutline` with phonics-appropriate characters, setting, and beats.
-3. **Decodable Writer Agent** -> Writes the story pages page-by-page.
-4. **Phonics QA Loop Agent (Security Guardrail)** -> Deterministically audits the draft for phonics violations, loop-revising until 100% decodable.
-5. **Illustration Prompt Agent** -> Generates cohesive, child-friendly illustration prompts using tailored style guides and age-band overrides.
-6. **Formatter/Export Agent (MCP)** -> Formats the book and exports it to Google Docs and Google Drive via Model Context Protocol (MCP) servers.
-7. **Parent Report Agent (Gmail/MCP)** -> Generates a warm, educational progress report for the parent and creates a draft email via the Gmail MCP tool.
+Built as the capstone project for Google/Kaggle's **5-Day AI Agents Intensive — Vibe Coding Capstone**, Track: **Agents for Good** (education).
 
----
+## The Problem
 
-## 🏗️ Multi-Agent Architecture
+Parents of dyslexic and struggling readers are told to "read decodable books at their level," but decodable books at the *exact* combination of phonics level + interests + age a given child needs are scarce, generic, and not personalized. Phono StoryForge generates one on demand, with a built-in QA loop that guarantees every word in the story is actually decodable for that child — not just "close enough."
 
-Phono StoryForge leverages a sequential multi-agent system combined with a feedback-loop-based security guardrail:
+## Status
+
+All 7 agent stages are implemented and wired into a single `SequentialAgent` pipeline. The two real-world write paths — Google Docs/Drive export and Gmail draft creation — have been verified end-to-end against real accounts (not just mocked test runs). Three guardrails are implemented and covered by unit/integration tests. See **Known Limitations** below for the two issues that are still open and documented rather than hidden.
+
+## Architecture
 
 ```mermaid
 graph TD
-    User([Raw Child Reading Profile]) --> Intake[Intake Agent]
-    Intake -->|PhonicsProfile| Planner[Story Planner Agent]
-    Planner -->|StoryOutline| Loop[Writer + QA Loop Agent]
-    
-    subgraph Writer + QA Loop
-        Writer[Decodable Writer Agent] -->|StoryDraft| QA[Phonics QA Agent]
-        QA -->|Violations found / Loop repeat| Writer
-        QA -->|Passed / Escalate| LoopExit[Finalized Storybook]
+    User([Parent/Teacher Input]) --> Intake[1. Intake Agent]
+    Intake -->|PhonicsProfile| Planner[2. Story Planner Agent]
+    Planner -->|StoryOutline| Loop
+
+    subgraph Loop["3+4. Writer + Phonics QA Loop"]
+        Writer["Decodable Writer Agent"] -->|StoryDraft| QA{"Phonics QA Agent<br/>Security Guardrail"}
+        QA -->|Violations found| Writer
+        QA -->|100% decodable| LoopExit["Finalized Story"]
     end
-    
-    LoopExit --> Illustration[Illustration Prompt Agent]
-    Illustration -->|StoryIllustrations| Formatter[Formatter/Export Agent]
-    
-    subgraph MCP Integration
-        Formatter -->|Google Docs API| Doc[Create Google Doc]
-        Formatter -->|Google Drive API| Drive[Organize in Drive]
-    end
-    
-    Formatter -->|ExportResult| Parent[Parent Report Agent]
-    Parent -->|Gmail API| Draft[Create Draft Email]
+
+    LoopExit --> Illustration["5. Illustration Prompt Agent"]
+    Illustration -->|StoryIllustrations| Formatter["6. Formatter/Export Agent"]
+
+    Formatter -->|"gws CLI / MCP"| GWS1["Google Docs + Drive"]
+    Formatter --> Guard1{"Export Guardrail<br/>doc_id + shareable_url valid?"}
+    Guard1 -->|No| Halt1["🛑 Halt pipeline"]
+    Guard1 -->|Yes| Parent["7. Parent Report Agent"]
+
+    Parent -->|"gws CLI / MCP"| GWS2["Gmail Draft"]
+    Parent --> Guard2{"Gmail Guardrail<br/>draft actually created?"}
+    Guard2 -->|No| Halt2["🛑 Halt pipeline"]
+    Guard2 -->|Yes| Done["Parent letter + draft ready"]
 ```
 
-### Capstone Concepts Implemented
+| # | Agent | File / symbol | What it does |
+|---|-------|----------------|---------------|
+| 1 | Intake Agent | `intake_agent` | Converts free-text input into a structured `PhonicsProfile` (age, target level, mastered levels, sight words, interest). |
+| 2 | Story Planner Agent | `story_planner` | Designs a `StoryOutline` — characters, setting, plot beats — constrained to the child's phonics level. |
+| 3 | Decodable Writer Agent | `writer_agent` | Writes the story page-by-page inside the loop below. |
+| 4 | Phonics QA Agent (guardrail) | `PhonicsQAAgent` inside `writer_qa_loop` | Deterministic Python checker (`app/tools.py`) audits every word against the child's phonics/sight-word profile and sends violations back to the writer. Loops until clean or raises `ValueError` ("Phonics Guardrail Validation FAILED") if it can't converge. |
+| 5 | Illustration Prompt Agent | `illustration_prompt_agent` | Generates page-by-page illustration prompts from a locked style guide (`docs/illustration-style-guide.md`) with age-band overrides. |
+| 6 | Formatter/Export Agent (MCP + guardrail) | `formatter_export_agent` | Formats the book and exports it to Google Docs/Drive via MCP. `save_export_result` validates **both** `doc_id` and `shareable_url` before letting the pipeline continue — a real doc with a broken link still halts the run. |
+| 7 | Parent Report Agent (MCP + guardrail) | `parent_report_agent` | Writes a warm progress letter referencing the real export link, and creates a Gmail draft via MCP. `save_parent_report` verifies the `create_draft` tool call actually returned a draft ID before continuing. |
 
-1. **Multi-Agent Systems built with ADK**: Uses `SequentialAgent` and custom `LoopAgent` / `BaseAgent` structures to orchestrate data flow and task responsibility.
-2. **Model Context Protocol (MCP) integration**: Exposes Google Drive (`@modelcontextprotocol/server-gdrive`) and Google Docs (`@modelcontextprotocol/server-google-docs`) standard servers via `McpToolset` for book export.
-3. **Agent Skills**: Custom deterministic rules in `app/tools.py` act as a discrete Python skill evaluating spelling, consonant blends, silent-e, and vowel digraphs.
-4. **Security Features (Guardrail Loop)**: Custom `PhonicsQAAgent` runs as a loop-based security guardrail, enforcing strict safety criteria and directing revisions until the text passes.
+### Capstone concepts demonstrated
 
----
+- **Multi-agent systems (ADK)** — `SequentialAgent` orchestrating 6 stages, one of which (`writer_qa_loop`) is a `LoopAgent` wrapping a custom `BaseAgent` subclass.
+- **MCP server integration** — Google's official `@googleworkspace/cli` (`gws`), run in MCP stdio mode via `McpToolset`, exposes Drive/Docs/Gmail write tools to the formatter and parent-report agents.
+- **Security features** — three independent guardrails halt the pipeline rather than silently continuing on bad output: the phonics decodability loop, the export-result validator, and the Gmail-draft validator.
+- **Agent skills** — the phonics checker in `app/tools.py` is a deterministic, non-LLM skill (spelling/blend/digraph/silent-e rules) the QA agent calls rather than trusting an LLM's judgment of decodability.
+- **Deployability** — `Dockerfile` + `agents-cli deploy` / `agents-cli infra` support a path to Cloud Run; not deployed live for this submission (a public repo + setup instructions satisfies the Kaggle project-link requirement without a live demo).
+- **Antigravity** — used as the AI-assisted IDE for the bulk of implementation; see the submission video for a walkthrough of that workflow.
+
+## Known Limitations
+
+Documented honestly rather than glossed over:
+
+- **`gws` CLI is pinned to `0.7.0`.** Google removed MCP server mode (`gws mcp`) in `0.8.0` ([PR #275](https://github.com/googleworkspace/cli/pull/275)) due to tool-count/context bloat. `0.7.0` works today but is a deliberate pin to a version its own maintainers moved past, not a long-term fix. A future iteration would migrate to a maintained MCP wrapper or call `gws` directly via subprocess instead of MCP.
+- **The eval grading harness has a JSON-parsing bug**, unrelated to the agent pipeline itself: when the LLM-judge's free-text `explanation` field contains raw newlines/markdown, `agents-cli eval grade` fails to parse it (`400 INVALID_ARGUMENT - Error parsing JSON`). This affects automated eval scoring runs, not the agent's actual behavior — `tests/unit` and `tests/integration` (which don't depend on the grading harness) pass cleanly.
 
 ## Project Structure
 
 ```
 agy-capstoneproject/
-├── app/         # Core agent code
-│   ├── agent.py               # Main agent logic and multi-agent pipeline
-│   ├── schemas.py             # Pydantic schemas enforcing structured data contracts
-│   ├── tools.py               # Deterministic rule-based phonics checker
-│   ├── phonics_db.py          # Phonics level definition database
-│   └── app_utils/             # App utilities and helpers
-├── tests/                     # Unit, integration, and load tests
-├── GEMINI.md                  # AI-assisted development guide
-└── pyproject.toml             # Project dependencies
+├── app/
+│   ├── agent.py            # 7-agent pipeline, guardrail callbacks, MCP wiring
+│   ├── schemas.py          # Pydantic contracts between agents
+│   ├── tools.py            # Deterministic phonics-checking skill
+│   ├── phonics_db.py       # Phonics level reference data
+│   └── fast_api_app.py     # FastAPI entrypoint (used by Dockerfile/deploy)
+├── docs/
+│   └── illustration-style-guide.md
+├── tests/
+│   ├── unit/                # save_export_result, save_parent_report, tools
+│   ├── integration/          # full pipeline run (mocked MCP), failure-path test
+│   └── eval/                 # agents-cli eval datasets
+├── Dockerfile
+└── pyproject.toml
 ```
-
-
-> 💡 **Tip:** Use [Gemini CLI](https://github.com/google-gemini/gemini-cli) for AI-assisted development - project context is pre-configured in `GEMINI.md`.
 
 ## Requirements
 
-Before you begin, ensure you have:
-- **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
-- **agents-cli**: Agents CLI - Install with `uv tool install google-agents-cli`
-- **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
+- **Python** 3.11–3.13
+- **[uv](https://docs.astral.sh/uv/getting-started/installation/)** — dependency management
+- **Node.js / npm** (provides `npx`) — required to run the `gws` MCP server
+- **[agents-cli](https://github.com/googleapis/agents-cli)** — `uv tool install google-agents-cli`
+- **Google Cloud SDK** — needed for `gcloud auth application-default login` (required by `agents-cli eval`, even though the agent itself calls the Google AI Studio API directly)
+- A Google Cloud project with Vertex AI enabled, and a Google AI Studio API key
 
+## Setup
 
-## Quick Start
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/tannergriffith-beep/phono-storyforge.git
+   cd phono-storyforge
+   ```
 
-Install `agents-cli` and its skills if not already installed:
+2. Install dependencies:
+   ```bash
+   agents-cli install
+   ```
+
+3. Create `app/.env` with:
+   ```
+   GOOGLE_API_KEY=<your AI Studio API key>
+   GOOGLE_GENAI_USE_VERTEXAI=0
+   GOOGLE_CLOUD_PROJECT=<your GCP project ID>
+   GOOGLE_CLOUD_LOCATION=global
+   LOG_LEVEL=INFO
+   ```
+   The agent's own LLM calls go through the AI Studio key (`GOOGLE_GENAI_USE_VERTEXAI=0`); `agents-cli eval` still needs a real GCP project for Vertex AI evaluation.
+
+4. Authenticate `gcloud` for eval/ADC:
+   ```bash
+   gcloud auth application-default login
+   ```
+
+5. Set up `gws` CLI credentials for real Docs/Drive/Gmail export. The MCP subprocess only inherits a safe-list of env vars (`HOME`, `PATH`, etc.), so credentials must go in the default file location, not environment variables:
+   ```bash
+   mkdir -p ~/.config/gws
+   cp /path/to/your/client_secret_xxx.json ~/.config/gws/client_secret.json
+   ```
+
+6. Run it:
+   ```bash
+   agents-cli playground
+   ```
+
+## Testing
 
 ```bash
-uvx google-agents-cli setup
+uv run pytest tests/unit tests/integration
 ```
 
-Install required packages:
+Integration tests set `INTEGRATION_TEST=TRUE`, which swaps the real `gws` MCP toolset for plain mocked tools — this works around an ADK limitation where its function-declaration builder can't introspect a live `McpToolset`. Real MCP export/Gmail behavior is exercised through `agents-cli playground` against a real account instead.
 
+For agent evals:
 ```bash
-agents-cli install
+INTEGRATION_TEST=TRUE agents-cli eval generate
+agents-cli eval grade
 ```
-
-Test the agent with a local web server:
-
-```bash
-agents-cli playground
-```
-
-You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
-
-## Commands
-
-| Command              | Description                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------- |
-| `agents-cli install` | Install dependencies using uv                                                         |
-| `agents-cli playground` | Launch local development environment                                                  |
-| `agents-cli lint`    | Run code quality checks                                                               |
-| `agents-cli eval`    | Evaluate agent behavior (generate, grade, analyze, and more — see `agents-cli eval --help`) |
-| `uv run pytest tests/unit tests/integration` | Run unit and integration tests                                                        |
-
-## 🛠️ Project Management
-
-| Command | What It Does |
-|---------|--------------|
-| `agents-cli scaffold enhance` | Add CI/CD pipelines and Terraform infrastructure |
-| `agents-cli infra cicd` | One-command setup of entire CI/CD pipeline + infrastructure |
-| `agents-cli scaffold upgrade` | Auto-upgrade to latest version while preserving customizations |
-
----
-
-## Development
-
-Edit your agent logic in `app/agent.py` and test with `agents-cli playground` - it auto-reloads on save.
 
 ## Deployment
 
@@ -130,9 +155,4 @@ gcloud config set project <your-project-id>
 agents-cli deploy
 ```
 
-To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
-To set up your production infrastructure, run `agents-cli infra cicd`.
-
-## Observability
-
-Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
+`Dockerfile` builds a standalone FastAPI image (`app/fast_api_app.py`) suitable for Cloud Run. Not deployed live for this submission — see Known Limitations.
