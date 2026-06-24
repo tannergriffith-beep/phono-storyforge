@@ -464,12 +464,16 @@ async def save_export_result(callback_context: CallbackContext) -> types.Content
     print(f"\n--- [Export Agent Callback] Saved export_result to state: {callback_context.state['export_result']} ---")
     
     # Export guardrail: Halt the pipeline if the document export failed.
-    if doc_id == "unknown" or not doc_id:
+    # Both fields must be valid — a real doc_id with an "unknown" shareable_url
+    # is still a failed export, since parent_report_agent embeds shareable_url
+    # directly into the parent-facing letter as a clickable link.
+    if doc_id == "unknown" or not doc_id or shareable_url == "unknown" or not shareable_url:
         raise ValueError(
             "Google Workspace Document Export FAILED. "
-            "Unable to generate or verify document ID for the exported book."
+            f"Unable to verify a complete export result (doc_id={doc_id!r}, "
+            f"shareable_url={shareable_url!r})."
         )
-        
+
     return None
 
 formatter_export_agent = Agent(
