@@ -15,10 +15,10 @@ from pydantic import BaseModel, Field
 class PhonicsProfile(BaseModel):
     """Structured intake profile capturing a student's reading capacity and interests."""
 
-    target_level: Literal["short_vowels", "digraphs", "blends", "silent_e", "r_controlled", "vowel_teams"] = Field(
+    target_level: Literal["short_vowels", "digraphs", "blends", "silent_e", "r_controlled", "vowel_teams", "glued_sounds", "y_vowel", "suffixes"] = Field(
         ..., description="The next phonics focus level we are targetting for the story."
     )
-    mastered_levels: list[Literal["short_vowels", "digraphs", "blends", "silent_e", "r_controlled", "vowel_teams"]] = Field(
+    mastered_levels: list[Literal["short_vowels", "digraphs", "blends", "silent_e", "r_controlled", "vowel_teams", "glued_sounds", "y_vowel", "suffixes"]] = Field(
         ..., description="The list of phonics levels the child has already mastered."
     )
     sight_words: list[str] = Field(

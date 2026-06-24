@@ -43,6 +43,15 @@ VOWEL_TEAMS = {
     "ai", "ay", "ee", "ea", "oa", "oe", "ie",
     "oo", "ou", "ow", "oi", "oy", "au", "aw",
 }
+# Welded / "glued" sounds: the vowel fuses with a following nasal or 'l' so the
+# word cannot be sounded out letter-by-letter (e.g. 'ball' is /bɔl/, not CVC).
+# Taught as discrete units in structured-literacy sequences.
+GLUED_SOUNDS = {
+    "all", "ang", "ing", "ong", "ung", "ank", "ink", "onk", "unk",
+}
+# Inflectional suffixes recognized by the suffix layer (-ing handled via the
+# glued 'ing' rime as well).
+SUFFIXES = ("ing", "ed", "es", "s")
 
 # Silent-e middle consonant excludes 'r' (V-r-e reads as r-controlled, e.g.
 # 'more', 'here', not as a silent-e split vowel).
@@ -131,7 +140,10 @@ def _segment(word: str) -> list[GraphemeHit] | None:
             if final_e_idx is not None and i < final_e_idx < i + length:
                 continue
             seg = word[i : i + length]
-            if seg in VOWEL_TEAMS:
+            if seg in GLUED_SOUNDS:
+                # Checked before the 'ng' digraph so 'ing'/'ang' weld as a unit.
+                hits.append(GraphemeHit(seg, "glued_sounds", (i, i + length), "V"))
+            elif seg in VOWEL_TEAMS:
                 hits.append(GraphemeHit(seg, "vowel_teams", (i, i + length), "V"))
             elif seg in R_CONTROLLED:
                 hits.append(GraphemeHit(seg, "r_controlled", (i, i + length), "V"))
@@ -146,7 +158,12 @@ def _segment(word: str) -> list[GraphemeHit] | None:
             continue
 
         # Single-character grapheme.
-        if ch in VOWELS:
+        if ch == "y":
+            # 'y' is a consonant only word-initially (yes, yard); elsewhere it
+            # acts as a vowel (long-i in 'my', /ee/ in 'happy').
+            level, kind = ("short_vowels", "C") if i == 0 else ("y_vowel", "V")
+            hits.append(GraphemeHit("y", level, (i, i + 1), kind))
+        elif ch in VOWELS:
             hits.append(GraphemeHit(ch, "short_vowels", (i, i + 1), "V"))
         elif ch in CONSONANTS:
             hits.append(GraphemeHit(ch, "short_vowels", (i, i + 1), "C"))
@@ -183,6 +200,47 @@ def _verdict(
     return (len(violations) == 0), violations
 
 
+def _suffix_bases(word: str):
+    """Yields plausible base spellings after stripping an inflectional suffix.
+
+    Covers consonant de-doubling ('running'->'run', 'hopped'->'hop') and
+    silent-e restoration ('making'->'make', 'liked'->'like').
+    """
+    if len(word) <= 2:
+        return
+    if word.endswith("ing") and len(word) >= 5:
+        stem = word[:-3]
+        yield stem                    # jumping -> jump
+        yield stem + "e"              # making  -> make
+        if len(stem) >= 2 and stem[-1] == stem[-2]:
+            yield stem[:-1]           # running -> run
+    if word.endswith("ed") and len(word) >= 4:
+        stem = word[:-2]
+        yield stem                    # jumped -> jump
+        yield word[:-1]               # liked  -> like
+        if len(stem) >= 2 and stem[-1] == stem[-2]:
+            yield stem[:-1]           # hopped -> hop
+    if word.endswith("es") and len(word) >= 4:
+        yield word[:-2]               # foxes -> fox
+    if word.endswith("s") and not word.endswith("ss") and len(word) >= 3:
+        yield word[:-1]               # cats -> cat
+
+
+def _word_decodable(word: str, mastered_levels: list[str]) -> tuple[bool, list[str]]:
+    """Word-level verdict, applying the suffix layer when 'suffixes' is mastered."""
+    hits = _segment(word)
+    ok, violations = _verdict(hits, mastered_levels)
+    if ok or "suffixes" not in mastered_levels:
+        return ok, violations
+    # The word isn't decodable as written, but an inflected form whose base is
+    # decodable counts as decodable for a child who has the suffix skill.
+    for base in _suffix_bases(word):
+        base_ok, _ = _verdict(_segment(base), mastered_levels)
+        if base_ok:
+            return True, []
+    return ok, violations
+
+
 def decompose(
     raw_word: str,
     mastered_levels: list[str] | None = None,
@@ -209,7 +267,7 @@ def decompose(
     if is_sight or not cleaned:
         return WordDecomposition(cleaned, graphemes, True, is_sight, [])
 
-    decodable, violations = _verdict(hits, mastered_levels or [])
+    decodable, violations = _word_decodable(cleaned, mastered_levels or [])
     return WordDecomposition(cleaned, graphemes, decodable, False, violations)
 
 
@@ -219,8 +277,7 @@ def is_word_decodable(word: str, mastered_levels: list[str]) -> bool:
     Kept as the public predicate the QA loop and tests rely on; now derived
     from the shared grapheme decomposition.
     """
-    hits = _segment(word.lower())
-    decodable, _ = _verdict(hits, mastered_levels)
+    decodable, _ = _word_decodable(word.lower(), mastered_levels)
     return decodable
 
 

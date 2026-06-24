@@ -167,6 +167,9 @@ CRITICAL RULES:
    - silent_e: adds silent 'e' long vowels (e.g., 'make', 'like', 'home').
    - r_controlled: adds ar, er, ir, or, ur (e.g., 'car', 'her', 'bird').
    - vowel_teams: adds vowel teams (e.g., 'rain', 'see', 'boat').
+   - glued_sounds: adds welded rimes (all, ang, ing, ong, ung, ank, ink, onk, unk). Words like 'ball', 'sing', 'bank' are ONLY allowed if this level is mastered — they are NOT plain CVC words.
+   - y_vowel: allows 'y' as a vowel (e.g., 'my', 'happy'). Without it, avoid words where 'y' is a vowel.
+   - suffixes: allows inflectional endings (-s, -es, -ed, -ing) on an otherwise-decodable base (e.g., 'dogs', 'jumped').
    Do NOT use any pattern that is NOT in the child's mastered list.
 
 Provide a valid JSON response matching the StoryDraft schema.

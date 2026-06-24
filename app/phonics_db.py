@@ -37,7 +37,19 @@ PHONICS_LEVELS: dict[str, dict[str, Any]] = {
     "vowel_teams": {
         "description": "Vowel teams and diphthongs (ai, ay, ee, ea, oa, oe, ie, igh, oo, ou, ow, oi, oy, au, aw).",
         "vowel_teams": ["ai", "ay", "ee", "ea", "oa", "oe", "ie", "igh", "oo", "ou", "ow", "oi", "oy", "au", "aw"],
-    }
+    },
+    # Cross-cutting skills (not part of the linear cumulative sequence above).
+    "glued_sounds": {
+        "description": "Welded/glued sounds where a vowel fuses with a nasal or 'l' (all, ang, ing, ong, ung, ank, ink, onk, unk). Not sounded out letter-by-letter.",
+        "glued": ["all", "ang", "ing", "ong", "ung", "ank", "ink", "onk", "unk"],
+    },
+    "y_vowel": {
+        "description": "The letter 'y' acting as a vowel (long-i in 'my', /ee/ in 'happy').",
+    },
+    "suffixes": {
+        "description": "Common inflectional endings (-s, -es, -ed, -ing) added to an otherwise-decodable base word.",
+        "suffixes": ["s", "es", "ed", "ing"],
+    },
 }
 
 # High-frequency sight words (irregular words that cannot be decoded easily at early levels but are essential)

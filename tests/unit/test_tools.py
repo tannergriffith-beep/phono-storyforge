@@ -164,10 +164,63 @@ def test_check_decodability_violations() -> None:
     story_text = "the cat had a fish and did jump to make a home"
     
     result = check_decodability(story_text, profile)
-    
+
     assert result["is_decodable"] is False
     # Check that the violating words are recorded (deduplicated)
     # Note: 'home' is also a violation (silent e)
     expected_violations = {"fish", "jump", "make", "home"}
     assert set(result["violations"]) == expected_violations
     assert "Story contains phonics violations" in result["feedback"]
+
+
+# =============================================================================
+# Day-2 sound-level corrections: glued sounds, y-as-vowel, suffixes.
+# =============================================================================
+
+def test_glued_sounds_not_plain_cvc() -> None:
+    """Welded sounds (all, -ng/-nk rimes) are NOT decodable as plain CVC."""
+    sv = ["short_vowels"]
+    # 'ball' is /bɔl/, not a short-a CVC word — the Day-1 false positive.
+    assert not is_word_decodable("ball", sv)
+    assert not is_word_decodable("call", sv)
+    # Nasal welded rimes: 'ng' being a digraph is not enough.
+    assert not is_word_decodable("sing", ["short_vowels", "digraphs"])
+    assert not is_word_decodable("bank", sv)
+    assert not is_word_decodable("song", sv)
+
+
+def test_glued_sounds_decodable_when_mastered() -> None:
+    """With glued_sounds mastered, welded words decode."""
+    glued = ["short_vowels", "glued_sounds"]
+    assert is_word_decodable("ball", glued)
+    assert is_word_decodable("sing", glued)
+    assert is_word_decodable("bank", glued)
+    assert is_word_decodable("honk", glued)
+    # A blend onset still requires 'blends' on top of the glued rime.
+    assert not is_word_decodable("drank", glued)
+    assert is_word_decodable("drank", ["short_vowels", "blends", "glued_sounds"])
+
+
+def test_y_as_vowel() -> None:
+    """Terminal 'y' acts as a vowel and needs the y_vowel skill."""
+    sv = ["short_vowels"]
+    assert not is_word_decodable("my", sv)
+    assert not is_word_decodable("fly", ["short_vowels", "blends"])
+    # 'happy': the false 'py' blend is gone; 'y' is the blocking grapheme.
+    assert not is_word_decodable("happy", ["short_vowels", "blends"])
+    assert is_word_decodable("my", ["short_vowels", "y_vowel"])
+    assert is_word_decodable("happy", ["short_vowels", "y_vowel"])
+    # Word-initial 'y' is still a consonant.
+    assert is_word_decodable("yes", sv)
+
+
+def test_suffixes() -> None:
+    """Inflectional plurals decode only when the suffix skill is present."""
+    sv = ["short_vowels"]
+    # 'dogs' = dog + s; the g+s cluster reads as a blend without the skill.
+    assert not is_word_decodable("dogs", sv)
+    assert is_word_decodable("dogs", ["short_vowels", "suffixes"])
+    assert is_word_decodable("cats", ["short_vowels", "suffixes"])
+    # Base must itself be decodable: 'ships' needs digraphs too.
+    assert not is_word_decodable("ships", ["short_vowels", "suffixes"])
+    assert is_word_decodable("ships", ["short_vowels", "digraphs", "suffixes"])
