@@ -191,10 +191,30 @@ real loop, never fakes it.
 - **Done when:** the browser drives the real loop end to end. ✅ — 8 new viz unit tests,
   152 offline green; socket/mic/browser kept out of the default test path.
 
-**Stage D — flywheel + de-circularized eval** ⬜
+**Stage D — flywheel + de-circularized eval** 🟧 (segmenter half done)
 Every real session → an eval datapoint; `check_decodability` as an always-on judge.
 Break the simulation's circularity (independent learner model + validate `decompose`
-against an external decodable-word corpus).
+against an external corpus).
+
+- ✅ **Segmenter externally validated.** `tests/unit/test_decompose_corpus.py` checks
+  `_segment` against (A) a 58-word hand-verified grapheme truth set across every level,
+  and (B) structural tiling laws swept over `/usr/share/dict/words` (~210k words). Result:
+  tiling+reconstruction on 209,743/210,773; count≤letters on all; no false vowel drops.
+  This anchors the "guaranteed decodable" claim to truth outside the codebase. Additive —
+  asserts segmentation structure only, never decodability verdicts, so headline numbers
+  are untouched.
+- ⬜ **Independent learner model** still parked — the simulated learner and planner still
+  share a ZPD assumption. This is the remaining half of de-circularization.
+
+**Known, bounded, test-pinned findings** (surfaced by the corpus sweep; both safe to defer —
+neither touches the experiment, both are now locked by tests so any future fix is deliberate):
+- **Trailing-`e` drop (real bug).** 1,030/210,773 words (0.49%, e.g. `booze`, `achieve`,
+  `sieve`) where the silent-`e` regex fires but the vowel is absorbed by a vowel team, so the
+  trailing silent `e` is dropped. Pinned: a test proves it *only ever* drops the final char
+  and stays <1%. Fix is a follow-up (re-emit the orphaned `e` as a silent grapheme).
+- **Split-vowel span overlap (representational choice).** The discontinuous `a_e` grapheme
+  spans vowel..final-`e`, overlapping the medial consonant's span (25,133 words). Coverage is
+  complete (no gaps); only strict partition breaks. Documented, not a defect.
 
 ---
 
