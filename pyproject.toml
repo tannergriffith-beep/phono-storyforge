@@ -14,6 +14,9 @@ dependencies = [
     "gcsfs>=2024.11.0",
     "google-cloud-logging>=3.12.0,<4.0.0",
     "mcp>=1.28.0",
+    # Phase 5 illustrations: decode generated PNGs for the deterministic palette
+    # verifier (app/skills/palette_verifier.py) and the illustrator.
+    "pillow>=10.0.0",
 ]
 requires-python = ">=3.11,<3.14"
 
