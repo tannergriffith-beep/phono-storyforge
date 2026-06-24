@@ -8,8 +8,16 @@
 # =============================================================================
 
 from __future__ import annotations
+from datetime import datetime, timezone
 from typing import Literal
 from pydantic import BaseModel, Field
+
+from app.phonics_db import (
+    GRAPHEME_INVENTORY,
+    LEVEL_SEQUENCE,
+    MASTERY_THRESHOLD,
+    bkt_params_for_level,
+)
 
 
 class PhonicsProfile(BaseModel):
@@ -108,6 +116,154 @@ class ExportResult(BaseModel):
     shareable_url: str = Field(
         ..., description="The shareable link to the Google Doc."
     )
+
+
+# =============================================================================
+# CAPSTONE CONCEPT 5: Closed-loop mastery model (Phase 2)
+# Per-learner, cross-session knowledge state tracked with Bayesian Knowledge
+# Tracing. These are pure data contracts; the update math lives in
+# app/skills/mastery.py and the target selection in app/skills/planner.py.
+# =============================================================================
+
+
+def _utcnow_iso() -> str:
+    """Timezone-aware UTC timestamp as an ISO-8601 string (store-friendly)."""
+    return datetime.now(timezone.utc).isoformat()
+
+
+class GraphemeMastery(BaseModel):
+    """BKT knowledge state for a single grapheme (the unit of mastery)."""
+
+    grapheme: str = Field(..., description="The grapheme key, e.g. 'sh', 'a_e', '-ed'.")
+    level: str = Field(..., description="The phonics level that introduces this grapheme.")
+    p_mastery: float = Field(
+        ..., ge=0.0, le=1.0,
+        description="Current BKT P(L): probability the learner knows this grapheme.",
+    )
+    opportunities: int = Field(
+        default=0, ge=0, description="Total practice opportunities observed for this grapheme."
+    )
+    correct: int = Field(
+        default=0, ge=0, description="Number of those opportunities answered correctly."
+    )
+    last_seen_session: int | None = Field(
+        default=None, description="Session index of the most recent evidence (for spaced review)."
+    )
+
+    def is_mastered(self, threshold: float = MASTERY_THRESHOLD) -> bool:
+        return self.p_mastery >= threshold
+
+
+class LearnerProfile(BaseModel):
+    """Persistent, cross-session profile for one learner.
+
+    Holds the per-grapheme mastery map plus the personalization fields the
+    story pipeline already consumes. Round-trips through app/store.
+    """
+
+    learner_id: str = Field(..., description="Stable unique id for the learner.")
+    name: str = Field(default="", description="Display name (optional).")
+    age: int = Field(default=6, description="Learner age, used to adapt story tone.")
+    interest: str = Field(default="", description="Topic for personalization, e.g. 'dinosaurs'.")
+    sight_words: list[str] = Field(
+        default_factory=list, description="Learner-specific known sight words."
+    )
+    masteries: dict[str, GraphemeMastery] = Field(
+        default_factory=dict, description="grapheme -> BKT mastery state."
+    )
+    sessions_completed: int = Field(
+        default=0, ge=0, description="Number of completed read-aloud sessions."
+    )
+    created_at: str = Field(default_factory=_utcnow_iso)
+    updated_at: str = Field(default_factory=_utcnow_iso)
+
+    @classmethod
+    def new(
+        cls,
+        learner_id: str,
+        *,
+        name: str = "",
+        age: int = 6,
+        interest: str = "",
+        sight_words: list[str] | None = None,
+    ) -> "LearnerProfile":
+        """Creates a fresh profile with every inventory grapheme at its BKT prior."""
+        masteries = {
+            grapheme: GraphemeMastery(
+                grapheme=grapheme,
+                level=level,
+                p_mastery=bkt_params_for_level(level)["p_init"],
+            )
+            for grapheme, level in GRAPHEME_INVENTORY
+        }
+        return cls(
+            learner_id=learner_id,
+            name=name,
+            age=age,
+            interest=interest,
+            sight_words=list(sight_words or []),
+            masteries=masteries,
+        )
+
+    def is_level_mastered(self, level: str, threshold: float = MASTERY_THRESHOLD) -> bool:
+        """A level is mastered when all of its tracked graphemes are mastered."""
+        graphemes = [m for m in self.masteries.values() if m.level == level]
+        return bool(graphemes) and all(m.is_mastered(threshold) for m in graphemes)
+
+    def mastered_levels(self, threshold: float = MASTERY_THRESHOLD) -> list[str]:
+        """Levels fully mastered, in curriculum order (feeds the decodability checker)."""
+        return [lvl for lvl in LEVEL_SEQUENCE if self.is_level_mastered(lvl, threshold)]
+
+    def touch(self) -> None:
+        """Stamps updated_at to now."""
+        self.updated_at = _utcnow_iso()
+
+
+class GraphemeDelta(BaseModel):
+    """The before/after of a single grapheme's mastery after applying evidence."""
+
+    grapheme: str
+    level: str
+    p_before: float
+    p_after: float
+    n_correct: int
+    n_incorrect: int
+
+    @property
+    def delta(self) -> float:
+        return self.p_after - self.p_before
+
+
+class MasteryDelta(BaseModel):
+    """Summary of a mastery update from one batch of evidence."""
+
+    changes: list[GraphemeDelta] = Field(default_factory=list)
+    newly_mastered: list[str] = Field(
+        default_factory=list, description="Graphemes that crossed the mastery threshold."
+    )
+    newly_mastered_levels: list[str] = Field(
+        default_factory=list, description="Levels that became fully mastered."
+    )
+
+    @property
+    def graphemes_updated(self) -> list[str]:
+        return [c.grapheme for c in self.changes]
+
+
+class Objective(BaseModel):
+    """The next learning target chosen by the adaptive planner for a session."""
+
+    target_grapheme: str = Field(..., description="The frontier grapheme to teach next.")
+    target_level: str = Field(..., description="The phonics level of the target grapheme.")
+    mastered_levels: list[str] = Field(
+        default_factory=list,
+        description="Levels the learner has mastered (the decodable budget for the book).",
+    )
+    review_graphemes: list[str] = Field(
+        default_factory=list,
+        description="Previously-mastered graphemes selected for spaced review.",
+    )
+    rationale: str = Field(default="", description="Human-readable explanation of the choice.")
 
 
 class ParentReport(BaseModel):
