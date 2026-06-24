@@ -91,7 +91,7 @@ The keystone. Everything depends on word→grapheme mapping.
 - `eval/experiments/adaptive_vs_static.py`: adaptive (planner) vs static control over N paired learners; tracks TRUE mastery + a FIXED benchmark probe (fair accuracy/WCPM)
 - Evidence chart (`results/adaptive_vs_static.png`) + CSV fallback (`results/adaptive_vs_static.csv`) — 5 unit tests
 
-**Done when:** chart proves adaptive > static. ✅ — n=30 (de-circularized learner, Stage D): probe accuracy +0.06, true mean mastery +0.04, WCPM +4.9. **This is the minimum winning submission.** (The earlier self-consistent learner reported +0.14 / +0.09 / +16; de-circularizing roughly halved the gaps but kept them positive and robust to a forgetting/discrimination sweep — a more credible win.)
+**Done when:** chart proves adaptive > static. ✅ — n=30 (de-circularized learner, Stage D): probe accuracy +0.06, true mean mastery +0.04, WCPM +4.9. **This is the minimum winning submission.** (The earlier self-consistent learner reported +0.14 / +0.09 / +16; de-circularizing roughly halved the gaps but kept them positive across all 12 cells of a forgetting/discrimination sweep — a more credible win.)
 **Note:** headline metrics are the fixed-probe reading accuracy/WCPM and true mean latent mastery (all robustly adaptive). `num_mastered` (count past a hard 0.95 bar) is breadth-vs-depth ambiguous — under forgetting the fixed drill over-concentrates and ties/edges adaptive — so it's logged in the CSV but not headlined.
 
 ---
@@ -207,8 +207,9 @@ against an external corpus).
   planner's assumptions. Emission is now logistic/IRT with per-grapheme item difficulty
   (not BKT's linear slip/guess), and learning has no prerequisite/ZPD gate but does forget
   unpracticed skills (not the planner's "prereqs unlock learning" thesis). Re-run at n=30:
-  adaptive still wins on accuracy/mastery/WCPM (gaps ~halved, positive, robust to a
-  forgetting/discrimination sweep); the hard-0.95 `num_mastered` count is a wash. See
+  adaptive still wins on accuracy/mastery/WCPM (gaps ~halved, positive across all 12
+  cells of a forgetting/discrimination sweep though it narrows to +0.002 at the harshest
+  corner); the hard-0.95 `num_mastered` count is a wash. See
   `docs/stage-d-independent-learner.md` for the full result.
 
 **Known, bounded, test-pinned findings** (surfaced by the corpus sweep; both safe to defer —

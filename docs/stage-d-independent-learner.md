@@ -17,7 +17,6 @@ Both leaks broken in `eval/simulated_learner.py`:
    - **Mismatch, one sentence:** the learner emits via a logistic with per-grapheme
      item difficulty; BKT inverts a linear slip/guess with no item difficulty, so
      its measurement model is structurally wrong for this child.
-
 2. **No ZPD gate; forgetting instead.** `_readiness` is deleted. Practice now
    raises mastery directly (no prerequisite gate), and `_apply_forgetting` decays
    every grapheme *not* rehearsed that session (`m *= 1 − decay`, learn-only so the
@@ -27,26 +26,33 @@ Both leaks broken in `eval/simulated_learner.py`:
      adaptive can only win by revisiting each child's *decaying frontier*, not by
      satisfying its own ZPD premise.
 
-**Re-run (n=30, 40 sessions), `results/adaptive_vs_static.{png,csv}` regenerated:**
+**Re-run (n=30, 40 sessions), results/adaptive\_vs\_static.{png,csv} regenerated:**
 
-| metric | old (circular) | new (independent) |
-| --- | --- | --- |
-| probe accuracy gap | +0.14 | **+0.06** |
-| true mean mastery gap | +0.09 | **+0.04** |
-| WCPM gap | +16 | **+4.9** |
-| num_mastered (≥0.95) gap | positive | **−0.47 (a wash)** |
+| metric                    | old (circular) | new (independent)  |
+| ------------------------- | -------------- | ------------------ |
+| probe accuracy gap        | +0.14          | **+0.06**          |
+| true mean mastery gap     | +0.09          | **+0.04**          |
+| WCPM gap                  | +16            | **+4.9**           |
+| num\_mastered (≥0.95) gap | positive       | **−0.47 (a wash)** |
 
 **Honest interpretation (writeup-ready):** de-circularizing roughly *halved* every
 gap but did not erase it. Adaptive still beats the fixed sequence on real reading
-accuracy, mean latent mastery, and fluency — and a forgetting/discrimination sweep
-(decay ∈ {0, .02, .03, .05}, a ∈ {5, 7, 9}) keeps the accuracy gap positive in all
-six configs, so the win is robust, not a knife-edge. The one place adaptive does
+accuracy, mean latent mastery, and fluency — and a forgetting × discrimination
+sweep (`decay ∈ {0, .02, .03, .05}` × `a ∈ {5, 7, 9}`, **12 configs**) keeps the
+accuracy gap **positive in all 12**, ranging from +0.098 down to +0.002. The
+baseline cell (`decay=0.03, a=7.0`) reproduces the headline +0.0605 exactly, and
+the smallest gap, +0.002, sits at the harshest corner (`decay=0.05, a=9.0`: most
+forgetting, sharpest emission) — so the win is consistently positive but narrows
+toward a knife-edge under heavy forgetting, not robust by a wide margin there. The
+sweep is reproducible: `uv run python -m eval.experiments.robustness_sweep` regenerates
+`eval/experiments/results/robustness_sweep.csv`. The one place adaptive does
 *not* win is the count of graphemes pushed past a hard 0.95 mastery bar: under
 forgetting the fixed drill over-concentrates practice on a few graphemes and ties
-or slightly edges adaptive there. That is a credible, nuanced result — a smaller
-but defensible win, no longer a self-consistency artifact. The remaining caveat is
-that the learner's constants are reasonable but uncalibrated, and WCPM is still
-`errors → seconds`, not an independent timing measurement.
+or slightly edges adaptive there — the `num_mastered` gap is ≤0 in most cells of
+the sweep too, corroborating the headline −0.47. That is a credible, nuanced
+result — a smaller but defensible win, no longer a self-consistency artifact. The
+remaining caveat is that the learner's constants are reasonable but uncalibrated,
+and WCPM is still `errors → seconds`, not an independent timing measurement.
 
 Tests updated/added in `tests/unit/test_simulated_learner.py` (logistic emission,
 difficulty ordering, no-prereq-gate, forgetting, probe-is-inert) and
@@ -79,8 +85,7 @@ planner's assumptions, re-run the experiment, and see if adaptive still wins.
      — [`app/skills/mastery.py:54-60`](../app/skills/mastery.py).
    - So the tutor's model of the child is, by construction, a perfect model of the
      simulated child. No model mismatch = unrealistically easy.
-
-2. **`_readiness` hard-codes the planner's ZPD premise.**
+2. **\_readiness hard-codes the planner's ZPD premise.**
    - Learner only consolidates a grapheme well once its *prerequisites* are mastered
      — [`eval/simulated_learner.py:113-134`](../eval/simulated_learner.py).
    - The adaptive planner's whole strategy is "target the lowest unmastered grapheme,"
@@ -128,11 +133,11 @@ the whole evidence narrative needs rewriting. Therefore:
 
 ## Done-when
 
-- [ ] Learner's emission **and/or** learning rule is provably not the BKT/planner
-      assumption (documented: "here's the mismatch we introduced").
-- [ ] `eval/experiments/adaptive_vs_static.py` re-run at n=30 on the new learner.
-- [ ] New chart + CSV regenerated; result interpreted honestly in the writeup.
-- [ ] Unit tests updated for the new learner dynamics.
+- Learner's emission **and/or** learning rule is provably not the BKT/planner
+  assumption (documented: "here's the mismatch we introduced").
+- `eval/experiments/adaptive_vs_static.py` re-run at n=30 on the new learner.
+- New chart + CSV regenerated; result interpreted honestly in the writeup.
+- Unit tests updated for the new learner dynamics.
 
 ## If I run out of time
 
