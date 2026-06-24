@@ -11,9 +11,14 @@
 | 2. Mastery model + store             | Jun 26–27 | BKT + LearnerProfile + planner                 | ✅ Done |
 | 3. Simulated learner + evidence      | Jun 28–30 | **Closed loop + evidence chart** 🎯            | ✅ Done |
 | 5. Illustrations                     | Jul 1–2   | Real illustrated book in a Doc                 | ✅ Done |
-| Stretch (audio OR thin UI)           | Jul 3     | Skippable                                      | ⬜      |
+| **Flagship A. Closed loop → product** | Jun 24   | `app/tutor` stateful loop + `SessionLog` + CLI | ✅ Done |
+| Flagship B. Voice read-aloud         | TBD       | Gemini Live → transcript; LLM book in the loop | ⬜      |
+| Flagship C. Web UI + live mastery viz | TBD      | The filmable demo                              | ⬜      |
+| Flagship D. Flywheel + rigorous eval | TBD       | De-circularized evidence                       | ⬜      |
 | Writeup + video + final eval         | Jul 4–5   | Submission package                             | ⬜      |
 | Buffer / submit                      | Jul 6     | —                                              | ⬜      |
+
+> **Note:** the "Stretch (audio OR thin UI)" row was absorbed into the Flagship redesign below — see that section for the new direction that supersedes the original stretch scope.
 
 ### Hard rules (the things that lose competitions)
 
@@ -107,9 +112,53 @@ The keystone. Everything depends on word→grapheme mapping.
 
 ---
 
-## Jul 3 — Stretch (skippable)
+## Flagship redesign (post-GATE) — make the loop the product
 
-Pick ONE only if Phases 1–3+5 are solid: minimal audio upload→transcript, **or** a thin Streamlit read-along. If any doubt, skip.
+Phases 1–5 proved the thesis but left a gap: the closed-loop adaptive tutor lived
+only in the `eval/` simulation, while the shipped ADK pipeline was a stateless
+one-shot generator that never imported the planner/mastery/store. The flagship
+redesign closes that gap — the simulation's `run_session` loop becomes a real,
+stateful product. The brain layer (planner, alignment, BKT, store) is reused
+unchanged; only orchestration + I/O are new.
+
+**Stage A (Jun 24) — closed loop wired into a real stateful product** ✅ Done
+
+- `app/tutor/session.py`: `TutorSession` (`prepare()` → `record_read()`) — the
+  production analog of `eval/loop.run_session`. Reuses `select_objective`,
+  `assess`, `update_from_evidence` as-is; persists to `LearnerStore`.
+- `app/tutor/book_source.py`: swappable `BookProvider` seam. Stage-A default wraps
+  the deterministic eval book builder (eval import confined here so `session.py`
+  stays clean); Stage B swaps in the verifier-gated LLM generator. Seeds
+  UNTEACHABLE graphemes so the planner never stalls.
+- `schemas.SessionLog` + `app/store/session_log.py` (`JSONLSessionLogStore`):
+  append-only per-learner history (growth-curve / flywheel evidence trail).
+- `scripts/tutor_cli.py`: typed-transcript entry path (Stage-A stand-in for voice).
+- **Done when:** two strong reads advance the target and persist across processes.
+  ✅ — `a`→`e`→`i`, mean mastery 0.373→0.427; 6 new unit tests, 122 offline green.
+
+**Stage B — Gemini Live voice + unified generation** ⬜
+
+- `app/voice/`: stream child audio → Gemini Live transcription → tokens that feed
+  the existing `record_read(prepared, spoken)` unchanged. Add a grapheme-targeted
+  scaffolding agent (`decompose` localizes the missed phoneme) + echo/karaoke mode.
+- Replace the deterministic `book_source` with the verifier-gated Gemini generator
+  so the loop produces the illustrated, on-level LLM book.
+
+**Stage C — web read-along + live mastery-graph viz** ⬜
+The filmable continuous demo: child reads, miscue heatmap + mastery bars move live,
+tomorrow's target shifts on screen.
+
+**Stage D — flywheel + de-circularized eval** ⬜
+Every real session → an eval datapoint; `check_decodability` as an always-on judge.
+Break the simulation's circularity (independent learner model + validate `decompose`
+against an external decodable-word corpus).
+
+---
+
+## Jul 3 — Stretch (superseded by Flagship A above)
+
+Original plan: minimal audio upload→transcript, **or** a thin Streamlit read-along.
+Stage A delivered the stateful loop instead; voice (B) and UI (C) are the successors.
 
 ---
 

@@ -1,102 +1,140 @@
 # Phono StoryForge
 
-Phono StoryForge is a personalized decodable-storybook generator built on Google's Agent Development Kit (ADK). A parent or teacher describes a child's reading profile — age, phonics level, mastered sounds, sight words, interests — and a 7-agent pipeline writes a story that is phonically decodable at exactly that level, illustrates it, exports it to Google Docs/Drive, and drafts a personalized progress email to the parent in Gmail.
+Phono StoryForge is a **closed-loop adaptive reading tutor** for early and struggling readers (dyslexia-aware), built on Google's Agent Development Kit (ADK). It doesn't just generate a decodable storybook once — it keeps a per-child mastery model, decides what phonics skill to teach next from that child's own reading evidence, generates a book guaranteed decodable at exactly that level, listens to the child read it, attributes every miscue down to the specific grapheme, updates the mastery model, and lets the *next* book change because of how this read went.
 
 Built as the capstone project for Google/Kaggle's **5-Day AI Agents Intensive — Vibe Coding Capstone**, Track: **Agents for Good** (education).
 
 ## The Problem
 
-Parents of dyslexic and struggling readers are told to "read decodable books at their level," but decodable books at the *exact* combination of phonics level + interests + age a given child needs are scarce, generic, and not personalized. Phono StoryForge generates one on demand, with a built-in QA loop that guarantees every word in the story is actually decodable for that child — not just "close enough."
+Parents of dyslexic and struggling readers are told to "read decodable books at their level," but (1) decodable books at the *exact* combination of phonics level + interests + age a given child needs are scarce and generic, and (2) nothing adapts: there's no loop that watches what the child actually misreads and chooses what to practice next. Phono StoryForge closes that loop — content generation guaranteed decodable for *this* child, plus an evidence-driven tutor that targets their real gaps and adapts session over session.
 
-## Status
+## The thesis: a closed loop, not a one-shot generator
 
-All 7 agent stages are implemented and wired into a single `SequentialAgent` pipeline. The two real-world write paths — Google Docs/Drive export and Gmail draft creation — have been verified end-to-end against real accounts (not just mocked test runs). Three guardrails are implemented and covered by unit/integration tests. See **Known Limitations** below for the two issues that are still open and documented rather than hidden.
+The spine of the project is one loop, run per child, per session:
 
-## Architecture
+```mermaid
+graph LR
+    Store[(LearnerProfile<br/>persistent mastery)] --> Plan["select_objective()<br/>ZPD target from BKT"]
+    Plan -->|Objective| Gen["generate decodable book"]
+    Gen --> Read["child reads aloud"]
+    Read -->|transcript| Assess["assess()<br/>miscue analysis +<br/>grapheme attribution"]
+    Assess -->|grapheme_evidence| BKT["update_from_evidence()<br/>Bayesian Knowledge Tracing"]
+    BKT --> Store
+    BKT -.->|next session's target has shifted| Plan
+```
+
+Everything load-bearing here is **deterministic, non-LLM Python** that the project already implements and unit-tests:
+
+| Step | Module | What it does |
+|---|---|---|
+| Plan | `app/skills/planner.py` `select_objective` | Picks the lowest unmastered grapheme (ZPD) from the child's BKT estimate, plus spaced-review picks. |
+| Decode/verify | `app/skills/decodability.py` `decompose` | The keystone: maps any word → ordered graphemes tagged by phonics level. Powers decodability, targeting, and miscue attribution from one source of truth. |
+| Assess | `app/skills/alignment.py` `assess` | Aligns expected vs. spoken text (running-record miscue types), then attributes each error down to the exact grapheme → `grapheme_evidence`. |
+| Update | `app/skills/mastery.py` `update_from_evidence` | 4-parameter Bayesian Knowledge Tracing; turns evidence into an updated per-grapheme knowledge state. |
+| Persist | `app/store/` | `LearnerProfile` (current mastery) + append-only `SessionLog` history. |
+
+**The same code that runs the product loop is the code the evidence experiment exercises** (see *Evidence* below) — so the simulation isn't a detached toy; it's a calibration/regression harness for the production brain.
+
+## Status (honest)
+
+- **Closed-loop tutor — wired into a real, stateful product (Stage A, done).** `app/tutor/TutorSession` runs the full loop above against a persistent `LearnerStore`, with a typed-transcript entry path (`scripts/tutor_cli.py`). Run it twice for a child with strong reads and the target visibly advances (e.g. `a` → `e` → `i`), mastery rises, and everything persists across processes. **122 offline unit tests pass.**
+- **Decodable-book generation pipeline — implemented and verified end-to-end.** A 7-stage ADK `SequentialAgent` writes a phonically-decodable story, illustrates it (real cut-paper art, on-brand-verified), and exports it to Google Docs/Drive with a Gmail parent report. The Docs/Drive and Gmail write paths are verified against real accounts.
+- **Two generation paths today.** The adaptive loop currently uses a deterministic decodable-passage builder as its content source; the rich illustrated-book pipeline is the separate ADK path. **Unifying them — making the loop generate the illustrated, verifier-gated LLM book — is Stage B** (see Roadmap). This is documented, not hidden.
+- **Not built yet:** Gemini Live voice read-aloud (Stage B), the web read-along + live mastery-graph UI (Stage C). The typed transcript is today's stand-in for voice.
+
+## The content engine: verifier-gated decodable-book generation
+
+The illustrated-book pipeline is the "generate decodable book" node of the loop, and it embodies the project's core pattern — **an LLM/image model proposes, deterministic Python verifies**:
 
 ```mermaid
 graph TD
-    User([Parent/Teacher Input]) --> Intake[1. Intake Agent]
-    Intake -->|PhonicsProfile| Planner[2. Story Planner Agent]
+    Profile([PhonicsProfile]) --> Planner[Story Planner]
     Planner -->|StoryOutline| Loop
 
-    subgraph Loop["3+4. Writer + Phonics QA Loop"]
-        Writer["Decodable Writer Agent"] -->|StoryDraft| QA{"Phonics QA Agent<br/>Security Guardrail"}
-        QA -->|Violations found| Writer
-        QA -->|100% decodable| LoopExit["Finalized Story"]
+    subgraph Loop["Writer + Phonics QA Loop"]
+        Writer["Decodable Writer"] -->|StoryDraft| QA{"Phonics QA<br/>(deterministic check_decodability)"}
+        QA -->|violations| Writer
+        QA -->|100% decodable| Done["Finalized Story"]
     end
 
-    LoopExit --> Illustration["5. Illustration Prompt Agent"]
-    Illustration -->|StoryIllustrations| Formatter["6. Formatter/Export Agent"]
-
-    Formatter -->|"gws CLI / MCP"| GWS1["Google Docs + Drive"]
-    Formatter --> Guard1{"Export Guardrail<br/>doc_id + shareable_url valid?"}
-    Guard1 -->|No| Halt1["🛑 Halt pipeline"]
-    Guard1 -->|Yes| Parent["7. Parent Report Agent"]
-
-    Parent -->|"gws CLI / MCP"| GWS2["Gmail Draft"]
-    Parent --> Guard2{"Gmail Guardrail<br/>draft actually created?"}
-    Guard2 -->|No| Halt2["🛑 Halt pipeline"]
-    Guard2 -->|Yes| Done["Parent letter + draft ready"]
+    Done --> Illust["Illustrator: Nano Banana art<br/>+ palette verifier"]
+    Illust --> Export["Docs/Drive export (MCP)"]
+    Export --> Report["Gmail parent report (MCP)"]
 ```
 
-| # | Agent | File / symbol | What it does |
-|---|-------|----------------|---------------|
-| 1 | Intake Agent | `intake_agent` | Converts free-text input into a structured `PhonicsProfile` (age, target level, mastered levels, sight words, interest). |
-| 2 | Story Planner Agent | `story_planner` | Designs a `StoryOutline` — characters, setting, plot beats — constrained to the child's phonics level. |
-| 3 | Decodable Writer Agent | `writer_agent` | Writes the story page-by-page inside the loop below. |
-| 4 | Phonics QA Agent (guardrail) | `PhonicsQAAgent` inside `writer_qa_loop` | Deterministic Python checker (`app/tools.py`) audits every word against the child's phonics/sight-word profile and sends violations back to the writer. Loops until clean or raises `ValueError` ("Phonics Guardrail Validation FAILED") if it can't converge. |
-| 5 | Illustration Prompt Agent | `illustration_prompt_agent` | Generates page-by-page illustration prompts from the locked Phono brand (`app/brand.py`) with age-band overrides. Real image generation + on-brand verification live in the separate illustrator path — see **Illustrations** below. |
-| 6 | Formatter/Export Agent (MCP + guardrail) | `formatter_export_agent` | Formats the book and exports it to Google Docs/Drive via MCP. `save_export_result` validates **both** `doc_id` and `shareable_url` before letting the pipeline continue — a real doc with a broken link still halts the run. |
-| 7 | Parent Report Agent (MCP + guardrail) | `parent_report_agent` | Writes a warm progress letter referencing the real export link, and creates a Gmail draft via MCP. `save_parent_report` verifies the `create_draft` tool call actually returned a draft ID before continuing. |
+- **Phonics QA guardrail:** a `LoopAgent` wrapping a custom `BaseAgent` re-runs the writer until `check_decodability` (the same `decompose`-based engine) confirms **zero** violations, or it halts. An undecodable word can't ship.
+- **On-brand illustration:** a per-book character bible + **Nano Banana** (`gemini-2.5-flash-image`, via Vertex) render each page as cut-paper collage; a **deterministic palette verifier** (`app/skills/palette_verifier.py`) proves every image stays on the locked Phono palette — the same propose/verify pattern as the phonics gate. Real images are embedded inline in the Doc (OpenDyslexic body, Poppins title).
+- **MCP write paths + guardrails:** Google's official `@googleworkspace/cli` (`gws`) in MCP stdio mode exposes Drive/Docs/Gmail; export and Gmail-draft callbacks validate the real `doc_id`/`shareable_url`/draft-ID before the pipeline continues.
 
-### Illustrations (real cut-paper art, verified on-brand)
+Run `python -m scripts.build_sample_book` to produce a full illustrated decodable book end-to-end in Google Docs (sample committed under `results/sample_book/`).
 
-Beyond the in-pipeline prompt agent, a dedicated illustrator path turns a decodable book into real images. A one-per-book **character bible** is generated and stored in session state, then injected into every page prompt for cross-page character consistency. **Nano Banana** (`gemini-2.5-flash-image`, via Vertex AI) renders each page as soft cut-paper collage, and a **deterministic palette verifier** (`app/skills/palette_verifier.py`) proves every image stays on the locked Phono palette — rejecting and regenerating, or snapping, anything that drifts. The real images are embedded inline in the Google Doc (`app/doc_export.py`: Drive upload + `insertInlineImage`), with OpenDyslexic body text and a Poppins title.
+## Evidence: adaptive beats a fixed sequence
 
-This mirrors the project's core pattern — an LLM/image model proposes, deterministic Python verifies — the same way the phonics checker proves decodability. Run `python -m scripts.build_sample_book` to produce a full illustrated decodable book end-to-end in Google Docs (sample output committed under `results/sample_book/`). Image generation requires a billing-enabled Google Cloud project (the free-tier AI Studio key returns quota `limit:0` for image models), so the illustrator prefers Vertex AI.
+`eval/experiments/adaptive_vs_static.py` runs two arms over the same paired, seeded simulated learners: **adaptive** (`select_objective` chooses each session's target from the child's BKT estimate) vs. **static** (a fixed scope-and-sequence that ignores the evidence). Both close the identical loop; both children read the same fixed benchmark probe each session so the fluency comparison is fair.
 
-### Capstone concepts demonstrated
+Result (n=30, 40 sessions): **probe accuracy +0.14, true mean latent mastery +0.09, +16 WCPM**, with the gaps widening over time. Fully deterministic and LLM-free, so it reproduces exactly. Chart + CSV under `eval/experiments/results/`.
 
-- **Multi-agent systems (ADK)** — `SequentialAgent` orchestrating 6 stages, one of which (`writer_qa_loop`) is a `LoopAgent` wrapping a custom `BaseAgent` subclass.
-- **MCP server integration** — Google's official `@googleworkspace/cli` (`gws`), run in MCP stdio mode via `McpToolset`, exposes Drive/Docs/Gmail write tools to the formatter and parent-report agents.
-- **Security features** — three independent guardrails halt the pipeline rather than silently continuing on bad output: the phonics decodability loop, the export-result validator, and the Gmail-draft validator.
-- **Agent skills** — the phonics checker in `app/tools.py` is a deterministic, non-LLM skill (spelling/blend/digraph/silent-e rules) the QA agent calls rather than trusting an LLM's judgment of decodability.
-- **Deployability** — `Dockerfile` + `agents-cli deploy` / `agents-cli infra` support a path to Cloud Run; not deployed live for this submission (a public repo + setup instructions satisfies the Kaggle project-link requirement without a live demo).
-- **Antigravity** — used as the AI-assisted IDE for the bulk of implementation; see the submission video for a walkthrough of that workflow.
+> Note on rigor: the simulated learner and the planner share a ZPD assumption, so the result is partly self-validating. De-circularizing it (an independent learner model + validating `decompose` against an external decodable-word corpus) is Stage D.
+
+## Roadmap
+
+| Stage | Scope | Status |
+|---|---|---|
+| **A** | Wire the closed loop into a real stateful product (`app/tutor`, `SessionLog`, typed-transcript entry path) | ✅ Done |
+| **B** | Gemini Live voice read-aloud → transcript (replaces typed input); fold the verifier-gated LLM book generator into the loop as the content source | ⬜ Planned |
+| **C** | Web read-along UI + live mastery-graph visualization (the filmable demo) | ⬜ Planned |
+| **D** | Self-improving content flywheel + de-circularized evidence study | ⬜ Planned |
+
+The voice loop (Stage B) drops in behind the existing `TutorSession.record_read(prepared, spoken)` signature — `spoken` simply arrives from ASR instead of stdin.
+
+## Capstone concepts demonstrated
+
+- **Multi-agent systems (ADK)** — a `SequentialAgent` orchestrating the generation pipeline, including a `LoopAgent` wrapping a custom `BaseAgent` QA guardrail.
+- **Agent skills** — the deterministic `decompose`/`check_decodability` decodability engine, the BKT mastery model, the miscue-alignment assessor, and the ZPD planner are non-LLM skills the system reasons with.
+- **Closed-loop / memory** — `LearnerProfile` is cross-session memory; `app/tutor` makes the tutor stateful and adaptive rather than one-shot.
+- **MCP server integration** — `gws` over MCP stdio exposes Drive/Docs/Gmail write tools.
+- **Security / guardrails** — three independent guardrails halt rather than silently continue: the phonics decodability loop, the export-result validator, and the Gmail-draft validator.
+- **Deployability** — `Dockerfile` + `agents-cli deploy` path to Cloud Run (not deployed live for this submission).
 
 ## Known Limitations
 
 Documented honestly rather than glossed over:
 
-- **`gws` CLI is pinned to `0.7.0`.** Google removed MCP server mode (`gws mcp`) in `0.8.0` ([PR #275](https://github.com/googleworkspace/cli/pull/275)) due to tool-count/context bloat. `0.7.0` works today but is a deliberate pin to a version its own maintainers moved past, not a long-term fix. A future iteration would migrate to a maintained MCP wrapper or call `gws` directly via subprocess instead of MCP.
-- **The eval grading harness has a JSON-parsing bug**, unrelated to the agent pipeline itself: when the LLM-judge's free-text `explanation` field contains raw newlines/markdown, `agents-cli eval grade` fails to parse it (`400 INVALID_ARGUMENT - Error parsing JSON`). This affects automated eval scoring runs, not the agent's actual behavior — `tests/unit` and `tests/integration` (which don't depend on the grading harness) pass cleanly.
+- **The adaptive loop and the illustrated-book pipeline are not yet unified.** Today the loop generates deterministic decodable practice passages; the LLM-written, illustrated book is the separate ADK path. Folding the verifier-gated generator into the loop is Stage B.
+- **Voice and UI are not built.** The typed transcript stands in for Gemini Live voice (Stage B); there is no web UI yet (Stage C).
+- **The evidence experiment is partly self-validating** (shared ZPD assumption between simulated learner and planner). De-circularization is Stage D.
+- **`gws` CLI is pinned to `0.7.0`.** Google removed MCP server mode in `0.8.0` ([PR #275](https://github.com/googleworkspace/cli/pull/275)). The pin works today but is a deliberate pin to a version its maintainers moved past.
+- **The eval grading harness has a JSON-parsing bug** unrelated to the agent: when the LLM-judge's `explanation` contains raw newlines, `agents-cli eval grade` fails to parse it. This affects automated eval scoring, not agent behavior — `tests/unit` and `tests/integration` pass cleanly (modulo live-API rate limits).
 
 ## Project Structure
 
 ```
 agy-capstoneproject/
 ├── app/
-│   ├── agent.py            # 7-agent pipeline, guardrail callbacks, MCP wiring
-│   ├── schemas.py          # Pydantic contracts between agents
+│   ├── agent.py            # ADK generation pipeline, guardrail callbacks, MCP wiring
+│   ├── schemas.py          # Pydantic contracts (incl. LearnerProfile, SessionLog)
+│   ├── phonics_db.py        # Grapheme inventory, level sequence, BKT params
 │   ├── brand.py            # Locked Phono brand: palette, cut-paper style, prompt composers
-│   ├── illustrator.py      # Real illustrations: character bible + Nano Banana + verify/regenerate
-│   ├── doc_export.py       # Embed real images into the Google Doc (Drive + inline image)
-│   ├── tools.py            # Deterministic phonics-checking skill
-│   ├── phonics_db.py       # Phonics level reference data
+│   ├── illustrator.py      # Real illustrations: character bible + Nano Banana + verify/regen
+│   ├── doc_export.py       # Embed real images into the Google Doc
+│   ├── tutor/              # ★ Stage A: the closed loop as a stateful product
+│   │   ├── session.py        #   TutorSession: prepare() -> record_read()
+│   │   └── book_source.py    #   swappable content seam (deterministic now, LLM in Stage B)
 │   ├── skills/
-│   │   └── palette_verifier.py  # Deterministic on-brand palette check for generated art
-│   └── fast_api_app.py     # FastAPI entrypoint (used by Dockerfile/deploy)
+│   │   ├── decodability.py   #   decompose() — the keystone grapheme engine
+│   │   ├── planner.py        #   select_objective() — ZPD target selection
+│   │   ├── mastery.py        #   update_from_evidence() — Bayesian Knowledge Tracing
+│   │   ├── alignment.py      #   assess() — miscue analysis + grapheme attribution
+│   │   └── palette_verifier.py
+│   └── store/
+│       ├── learner_store.py  #   JSON LearnerProfile persistence (current state)
+│       └── session_log.py    #   JSONL append-only session history
+├── eval/                   # Simulated learner + the adaptive-vs-static experiment
 ├── scripts/
-│   └── build_sample_book.py  # End-to-end: generate an illustrated decodable book in Docs
-├── results/
-│   └── sample_book/        # Sample generated illustrated book (page PNGs)
-├── docs/
-│   └── illustration-style-guide.md  # Superseded by app/brand.py
-├── tests/
-│   ├── unit/                # guardrails, phonics, palette verifier, illustrator, doc export
-│   ├── integration/          # full pipeline run (mocked MCP), failure-path test
-│   └── eval/                 # agents-cli eval datasets
+│   ├── tutor_cli.py          # ★ typed-transcript entry path for the real loop
+│   └── build_sample_book.py  # End-to-end illustrated decodable book in Docs
+├── results/sample_book/    # Sample generated illustrated book (page PNGs)
+├── tests/                  # unit (incl. tutor loop), integration, eval datasets
 ├── Dockerfile
 └── pyproject.toml
 ```
@@ -107,23 +145,19 @@ agy-capstoneproject/
 - **[uv](https://docs.astral.sh/uv/getting-started/installation/)** — dependency management
 - **Node.js / npm** (provides `npx`) — required to run the `gws` MCP server
 - **[agents-cli](https://github.com/googleapis/agents-cli)** — `uv tool install google-agents-cli`
-- **Google Cloud SDK** — needed for `gcloud auth application-default login` (required by `agents-cli eval`, even though the agent itself calls the Google AI Studio API directly)
+- **Google Cloud SDK** — for `gcloud auth application-default login` (required by `agents-cli eval`)
 - A Google Cloud project with Vertex AI enabled, and a Google AI Studio API key
 
 ## Setup
 
-1. Clone the repo:
+1. Clone and install:
    ```bash
    git clone https://github.com/tannergriffith-beep/phono-storyforge.git
    cd phono-storyforge
-   ```
-
-2. Install dependencies:
-   ```bash
    agents-cli install
    ```
 
-3. Create `app/.env` with:
+2. Create `app/.env`:
    ```
    GOOGLE_API_KEY=<your AI Studio API key>
    GOOGLE_GENAI_USE_VERTEXAI=0
@@ -131,23 +165,37 @@ agy-capstoneproject/
    GOOGLE_CLOUD_LOCATION=global
    LOG_LEVEL=INFO
    ```
-   The agent's own LLM calls go through the AI Studio key (`GOOGLE_GENAI_USE_VERTEXAI=0`); `agents-cli eval` still needs a real GCP project for Vertex AI evaluation.
 
-4. Authenticate `gcloud` for eval/ADC:
+3. Authenticate `gcloud` for eval/ADC:
    ```bash
    gcloud auth application-default login
    ```
 
-5. Set up `gws` CLI credentials for real Docs/Drive/Gmail export. The MCP subprocess only inherits a safe-list of env vars (`HOME`, `PATH`, etc.), so credentials must go in the default file location, not environment variables:
+4. Set up `gws` credentials for real Docs/Drive/Gmail export (the MCP subprocess only inherits a safe-list of env vars, so credentials must go in the default file location):
    ```bash
    mkdir -p ~/.config/gws
    cp /path/to/your/client_secret_xxx.json ~/.config/gws/client_secret.json
    ```
 
-6. Run it:
-   ```bash
-   agents-cli playground
-   ```
+## Running it
+
+**The closed-loop tutor (Stage A — no API keys needed, fully offline):**
+```bash
+uv run python -m scripts.tutor_cli --learner ada --interest dinosaurs --age 6
+# shows the planner's target + a decodable book; type what the child read
+# (or '=' for a perfect read). Run again to watch the target adapt.
+```
+
+**The illustrated-book generation pipeline (live LLM + MCP):**
+```bash
+agents-cli playground            # interactive
+python -m scripts.build_sample_book   # full illustrated book in Google Docs
+```
+
+**The evidence experiment:**
+```bash
+uv run python -m eval.experiments.adaptive_vs_static   # writes chart + CSV
+```
 
 ## Testing
 
@@ -155,13 +203,7 @@ agy-capstoneproject/
 uv run pytest tests/unit tests/integration
 ```
 
-Integration tests set `INTEGRATION_TEST=TRUE`, which swaps the real `gws` MCP toolset for plain mocked tools — this works around an ADK limitation where its function-declaration builder can't introspect a live `McpToolset`. Real MCP export/Gmail behavior is exercised through `agents-cli playground` against a real account instead.
-
-For agent evals:
-```bash
-INTEGRATION_TEST=TRUE agents-cli eval generate
-agents-cli eval grade
-```
+Integration tests set `INTEGRATION_TEST=TRUE`, swapping the real `gws` MCP toolset for mocked tools (works around an ADK limitation introspecting a live `McpToolset`). Real MCP export/Gmail behavior is exercised through `agents-cli playground`. The `tests/unit` suite (incl. the `app/tutor` closed loop) is fully offline and deterministic.
 
 ## Deployment
 
