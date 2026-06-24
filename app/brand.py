@@ -8,7 +8,7 @@
 # image is unmistakably Phono. It holds:
 #   - BRAND_COLORS:                the locked 8-color palette (name -> hex/role).
 #   - ILLUSTRATION_STYLE_PREAMBLE: the cut-paper-collage style block prepended to
-#                                  every Imagen prompt.
+#                                  every image-generation prompt.
 #   - AGE_BAND_MODIFIERS:          per-age tone tweaks.
 #   - CharacterBible rendering:    a stable text block injected into every page
 #                                  prompt so a character looks the same across
@@ -41,8 +41,9 @@ BRAND_COLORS: dict[str, dict[str, str]] = {
     "Tundora":      {"hex": "#483E45", "role": "soft shadows, secondary darks"},
 }
 
-# Plain-language palette line for prompts (Imagen reads words better than hexes,
-# but we name both so the intent is unambiguous and the verifier has the truth).
+# Plain-language palette line for prompts (image models read color words better
+# than hexes, but we name both so the intent is unambiguous and the verifier has
+# the truth).
 _PALETTE_PHRASE = (
     "deep navy (#192255), warm coral (#DB7E65), warm gold (#EBBA7A), "
     "muted sage green (#527164), soft plum (#9C6D8B, used sparingly), and warm "
@@ -122,7 +123,10 @@ def character_bible_block(bible: CharacterBible) -> str:
 def build_page_prompt(
     bible: CharacterBible, scene_description: str, *, age: int
 ) -> str:
-    """Deterministically composes a full Imagen prompt for one page.
+    """Deterministically composes a full image-generation prompt for one page.
+
+    Target model: Nano Banana (Gemini image model) — chosen for cross-page
+    character consistency. Verify the current model id before wiring.
 
     Order: locked style preamble -> age-band modifier -> character bible block ->
     the page's scene -> a closing consistency + no-text reminder. Pure string
