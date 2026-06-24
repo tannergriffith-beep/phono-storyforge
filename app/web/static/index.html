@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phono StoryForge — Live Tutor</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">📖</span>
+      <div>
+        <h1>Phono StoryForge</h1>
+        <p class="tagline">a closed-loop adaptive reading tutor</p>
+      </div>
+    </div>
+    <div class="mean-meter" title="Mean mastery across the grapheme inventory">
+      <span class="mean-label">Mastery</span>
+      <div class="mean-track"><div id="mean-fill" class="mean-fill"></div></div>
+      <span id="mean-value" class="mean-value">—</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Left: the session flow -->
+    <div class="flow">
+      <section id="setup" class="card">
+        <h2>Start a session</h2>
+        <div class="setup-grid">
+          <label>Learner id <input id="learner-id" value="ada" /></label>
+          <label>Name <input id="learner-name" value="Ada" /></label>
+          <label>Age <input id="learner-age" type="number" value="6" min="3" max="12" /></label>
+          <label>Interest <input id="learner-interest" value="dinosaurs" /></label>
+        </div>
+        <button id="start-btn" class="primary">Begin →</button>
+        <p id="conn-status" class="status">connecting…</p>
+      </section>
+
+      <section id="session" class="card" hidden>
+        <div class="objective">
+          <div class="objective-head">
+            <span class="pill" id="session-pill">session #0</span>
+            <span class="target-chip">target <b id="target-grapheme">—</b>
+              <span id="target-level" class="muted"></span></span>
+          </div>
+          <p id="rationale" class="rationale"></p>
+        </div>
+
+        <div class="book">
+          <div class="book-head">
+            <h3 id="book-title">—</h3>
+            <span id="book-source" class="source-badge"></span>
+          </div>
+          <p id="book-text" class="book-text"></p>
+          <p class="legend">
+            <span class="swatch correct"></span>correct
+            <span class="swatch substitution"></span>substitution
+            <span class="swatch omission"></span>omission
+            <span class="swatch fixed"></span>self-fixed
+          </p>
+        </div>
+
+        <div class="read-controls">
+          <label class="read-label">What did the child read aloud?</label>
+          <textarea id="transcript" rows="2" placeholder="type the read-aloud, or use a preset…"></textarea>
+          <div class="presets">
+            <button data-preset="perfect" class="ghost">Perfect read</button>
+            <button data-preset="one" class="ghost">One miscue</button>
+            <button data-preset="struggle" class="ghost">Struggling</button>
+            <button id="score-btn" class="primary">Score read ▸</button>
+          </div>
+        </div>
+
+        <div id="results" hidden>
+          <div id="fluency" class="fluency"></div>
+          <div id="scaffolds" class="scaffolds"></div>
+          <div id="next-target" class="next-target"></div>
+          <button id="next-btn" class="primary">Next session →</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Right: the live mastery bars -->
+    <aside class="card mastery">
+      <h2>Mastery <span class="muted">live BKT P(L)</span></h2>
+      <p class="mastery-hint">bars animate as the read updates the model</p>
+      <div id="bars" class="bars"></div>
+    </aside>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
