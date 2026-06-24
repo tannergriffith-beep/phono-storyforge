@@ -10,7 +10,7 @@
 | 1. Grapheme decomposition + verifier | Jun 24–25 | `decompose()` + sound-level fixes, tests green | ✅ Done |
 | 2. Mastery model + store             | Jun 26–27 | BKT + LearnerProfile + planner                 | ✅ Done |
 | 3. Simulated learner + evidence      | Jun 28–30 | **Closed loop + evidence chart** 🎯            | ✅ Done |
-| 5. Illustrations                     | Jul 1–2   | Real illustrated book in a Doc                 | ⬜      |
+| 5. Illustrations                     | Jul 1–2   | Real illustrated book in a Doc                 | ✅ Done |
 | Stretch (audio OR thin UI)           | Jul 3     | Skippable                                      | ⬜      |
 | Writeup + video + final eval         | Jul 4–5   | Submission package                             | ⬜      |
 | Buffer / submit                      | Jul 6     | —                                              | ⬜      |
@@ -91,19 +91,19 @@ The keystone. Everything depends on word→grapheme mapping.
 
 ---
 
-## Phase 5 — Illustrations (Jul 1–2)
+## Phase 5 — Illustrations (Jul 1–2) ✅ Done
 
-**Day 8 (Jul 1)**
+**Day 8 (Jul 1)** ✅
 
-- Illustrator agent calls Imagen from existing prompts; character-bible state key for consistency
-- Embed generated images into the Google Doc export (real images, not text placeholders)
+- Illustrator agent calls **Nano Banana** (`gemini-2.5-flash-image` via Vertex; free-tier API key is quota-0 for image gen) from `app.brand.build_page_prompt`; deterministic `build_character_bible()` + `character_bible` session-state key for cross-page consistency (page-1 image threaded as the character reference)
+- Deterministic **palette verifier** (`app/skills/palette_verifier.py`) proves each page on-palette via `nearest_brand_color` (tol 80 / 10% budget); reject-and-regenerate or snap on drift — the on-brand half of the LLM-proposes/Python-verifies through-line
+- Embed REAL images into the Google Doc (Drive upload + `insertInlineImage`; OpenDyslexic body / Poppins title)
 
-**Day 9 (Jul 2)**
+**Day 9 (Jul 2)** ✅
 
-- Produce one full illustrated sample book end-to-end; polish style cohesion
+- `scripts/build_sample_book.py` produces one full illustrated sample book end-to-end ("Sam the Fox", 6 decodable pages, all on-brand first try) → opens in Google Docs with 6 inline images; artifacts at `results/sample_book/`
 
-**Done when:** a real illustrated decodable book opens in Google Docs.
-**If behind:** skip entirely — go to writeup.
+**Done when:** a real illustrated decodable book opens in Google Docs. ✅ — 29 new unit tests, full suite 116 passed.
 
 ---
 
