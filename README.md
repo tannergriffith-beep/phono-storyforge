@@ -37,10 +37,11 @@ Everything load-bearing here is **deterministic, non-LLM Python** that the proje
 
 ## Status (honest)
 
-- **Closed-loop tutor — wired into a real, stateful product (Stage A, done).** `app/tutor/TutorSession` runs the full loop above against a persistent `LearnerStore`, with a typed-transcript entry path (`scripts/tutor_cli.py`). Run it twice for a child with strong reads and the target visibly advances (e.g. `a` → `e` → `i`), mastery rises, and everything persists across processes. **122 offline unit tests pass.**
-- **Decodable-book generation pipeline — implemented and verified end-to-end.** A 7-stage ADK `SequentialAgent` writes a phonically-decodable story, illustrates it (real cut-paper art, on-brand-verified), and exports it to Google Docs/Drive with a Gmail parent report. The Docs/Drive and Gmail write paths are verified against real accounts.
-- **Two generation paths today.** The adaptive loop currently uses a deterministic decodable-passage builder as its content source; the rich illustrated-book pipeline is the separate ADK path. **Unifying them — making the loop generate the illustrated, verifier-gated LLM book — is Stage B** (see Roadmap). This is documented, not hidden.
-- **Not built yet:** Gemini Live voice read-aloud (Stage B), the web read-along + live mastery-graph UI (Stage C). The typed transcript is today's stand-in for voice.
+- **Closed-loop tutor — a real, stateful product (Stage A, done).** `app/tutor/TutorSession` runs the full loop above against a persistent `LearnerStore`, exposed through a typed-transcript entry path (`scripts/tutor_cli.py`). Run it twice for a child with strong reads and the target visibly advances (e.g. `a` → `e` → `i`), mastery rises, and everything persists across processes.
+- **Voice read-aloud + verifier-gated LLM books (Stage B, done).** Gemini Live transcribes the child's read-aloud (`app/voice/`, with a `FakeTranscriber` for offline tests) and feeds the *unchanged* `record_read()`; a verifier-gated LLM generator (`app/tutor/llm_book.py`, propose → `check_decodability` → revise) is wired into the loop as an optional content source behind the same `BookProvider` seam (`--llm-book`). Voice is creds-gated and degrades to typed input if Gemini Live is unavailable.
+- **Web read-along + live mastery viz (Stage C, done).** A FastAPI + vanilla-JS app (`app/web/`, launched via `scripts/tutor_web.py`) drives the real loop in the browser over a WebSocket: a miscue heatmap lights per word, mastery bars animate as BKT updates, and the next-target panel shifts on screen. Browser-mic voice is layered on additively; the typed path stands alone if voice is flaky.
+- **Decodable-book generation pipeline — implemented and verified end-to-end.** A multi-stage ADK `SequentialAgent` writes a phonically-decodable story, illustrates it (real cut-paper art, on-brand-verified), and exports it to Google Docs/Drive with a Gmail parent report. The Docs/Drive and Gmail write paths are verified against real accounts.
+- **What's honestly *not* done.** The live per-session loop generates decodable *text* (deterministic builder by default, or the verifier-gated LLM generator); the richer *illustrated* ADK pipeline is not yet folded into the per-session loop. The de-circularized evidence study is Stage D (see *Evidence* and Roadmap). **152 offline unit tests pass** (`uv run pytest tests/unit`).
 
 ## The content engine: verifier-gated decodable-book generation
 
@@ -81,27 +82,29 @@ Result (n=30, 40 sessions): **probe accuracy +0.14, true mean latent mastery +0.
 | Stage | Scope | Status |
 |---|---|---|
 | **A** | Wire the closed loop into a real stateful product (`app/tutor`, `SessionLog`, typed-transcript entry path) | ✅ Done |
-| **B** | Gemini Live voice read-aloud → transcript (replaces typed input); fold the verifier-gated LLM book generator into the loop as the content source | ⬜ Planned |
-| **C** | Web read-along UI + live mastery-graph visualization (the filmable demo) | ⬜ Planned |
+| **B** | Gemini Live voice read-aloud → transcript (replaces typed input); verifier-gated LLM book generator wired into the loop as an optional content source | ✅ Done |
+| **C** | Web read-along UI + live mastery-graph visualization (the filmable demo) | ✅ Done |
 | **D** | Self-improving content flywheel + de-circularized evidence study | ⬜ Planned |
 
-The voice loop (Stage B) drops in behind the existing `TutorSession.record_read(prepared, spoken)` signature — `spoken` simply arrives from ASR instead of stdin.
+The voice loop (Stage B) drops in behind the existing `TutorSession.record_read(prepared, spoken)` signature unchanged — `spoken` simply arrives from ASR instead of stdin.
 
 ## Capstone concepts demonstrated
 
 - **Multi-agent systems (ADK)** — a `SequentialAgent` orchestrating the generation pipeline, including a `LoopAgent` wrapping a custom `BaseAgent` QA guardrail.
 - **Agent skills** — the deterministic `decompose`/`check_decodability` decodability engine, the BKT mastery model, the miscue-alignment assessor, and the ZPD planner are non-LLM skills the system reasons with.
 - **Closed-loop / memory** — `LearnerProfile` is cross-session memory; `app/tutor` makes the tutor stateful and adaptive rather than one-shot.
+- **Voice (Gemini Live)** — `app/voice` streams the child's read-aloud to Gemini Live for transcription and feeds the unchanged assessment loop; a confidence-repair hook and grapheme-localized scaffolding sit on top.
+- **Live web app** — `app/web` (FastAPI + WebSocket) drives the real loop in a browser with a live miscue heatmap and animating mastery bars (the filmable demo).
 - **MCP server integration** — `gws` over MCP stdio exposes Drive/Docs/Gmail write tools.
 - **Security / guardrails** — three independent guardrails halt rather than silently continue: the phonics decodability loop, the export-result validator, and the Gmail-draft validator.
-- **Deployability** — `Dockerfile` + `agents-cli deploy` path to Cloud Run (not deployed live for this submission).
+- **Observability + deployability** — OpenTelemetry/GenAI telemetry wired at the FastAPI entrypoint (`app/app_utils/telemetry.py`, called from `app/fast_api_app.py`); `Dockerfile` + `agents-cli deploy` path to Cloud Run (not deployed live for this submission).
 
 ## Known Limitations
 
 Documented honestly rather than glossed over:
 
-- **The adaptive loop and the illustrated-book pipeline are not yet unified.** Today the loop generates deterministic decodable practice passages; the LLM-written, illustrated book is the separate ADK path. Folding the verifier-gated generator into the loop is Stage B.
-- **Voice and UI are not built.** The typed transcript stands in for Gemini Live voice (Stage B); there is no web UI yet (Stage C).
+- **The loop generates decodable *text*, not yet the *illustrated* book.** The verifier-gated LLM generator is wired into the per-session loop (Stage B), but the richer illustrated-book ADK pipeline (Nano Banana art + Docs export) is still a separate path; folding illustration into the live loop is future work.
+- **Voice is creds-gated and not exercised in CI.** Gemini Live transcription is real (`app/voice`) but requires Live access; without it the web/CLI paths degrade to typed input. The "never-punish" confidence repair is currently a no-op on the live path (Live returns no per-word confidence today) — it only fires in tests via `FakeTranscriber`.
 - **The evidence experiment is partly self-validating** (shared ZPD assumption between simulated learner and planner). De-circularization is Stage D.
 - **`gws` CLI is pinned to `0.7.0`.** Google removed MCP server mode in `0.8.0` ([PR #275](https://github.com/googleworkspace/cli/pull/275)). The pin works today but is a deliberate pin to a version its maintainers moved past.
 - **The eval grading harness has a JSON-parsing bug** unrelated to the agent: when the LLM-judge's `explanation` contains raw newlines, `agents-cli eval grade` fails to parse it. This affects automated eval scoring, not agent behavior — `tests/unit` and `tests/integration` pass cleanly (modulo live-API rate limits).
@@ -119,7 +122,10 @@ agy-capstoneproject/
 │   ├── doc_export.py       # Embed real images into the Google Doc
 │   ├── tutor/              # ★ Stage A: the closed loop as a stateful product
 │   │   ├── session.py        #   TutorSession: prepare() -> record_read()
-│   │   └── book_source.py    #   swappable content seam (deterministic now, LLM in Stage B)
+│   │   ├── book_source.py    #   swappable content seam (deterministic + LLM provider)
+│   │   └── llm_book.py       #   Stage B: verifier-gated LLM book generator
+│   ├── voice/              # ★ Stage B: Gemini Live read-aloud (transcriber + scaffold)
+│   ├── web/               # ★ Stage C: FastAPI + JS live read-along demo
 │   ├── skills/
 │   │   ├── decodability.py   #   decompose() — the keystone grapheme engine
 │   │   ├── planner.py        #   select_objective() — ZPD target selection
@@ -132,6 +138,8 @@ agy-capstoneproject/
 ├── eval/                   # Simulated learner + the adaptive-vs-static experiment
 ├── scripts/
 │   ├── tutor_cli.py          # ★ typed-transcript entry path for the real loop
+│   ├── tutor_web.py          # ★ Stage C: live web read-along server
+│   ├── tutor_voice_cli.py    # ★ Stage B: Gemini Live voice entry path
 │   └── build_sample_book.py  # End-to-end illustrated decodable book in Docs
 ├── results/sample_book/    # Sample generated illustrated book (page PNGs)
 ├── tests/                  # unit (incl. tutor loop), integration, eval datasets
@@ -184,6 +192,20 @@ agy-capstoneproject/
 uv run python -m scripts.tutor_cli --learner ada --interest dinosaurs --age 6
 # shows the planner's target + a decodable book; type what the child read
 # (or '=' for a perfect read). Run again to watch the target adapt.
+```
+
+**The live web read-along (Stage C — the filmable demo, offline by default):**
+```bash
+uv run python -m scripts.tutor_web            # → http://127.0.0.1:8000
+# Begin a session, read a page (type/preset, or the 🎤 browser mic), and watch
+# the miscue heatmap, mastery bars, and next-target panel update live.
+uv run python -m scripts.tutor_web --llm-book # use the verifier-gated LLM books
+```
+
+**Voice read-aloud over Gemini Live (Stage B — needs Live access):**
+```bash
+uv run python -m scripts.tutor_voice_cli --learner ada   # speak the page aloud
+# Requires the `voice` extra for mic capture: uv sync --extra voice
 ```
 
 **The illustrated-book generation pipeline (live LLM + MCP):**

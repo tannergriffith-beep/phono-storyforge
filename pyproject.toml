@@ -34,6 +34,20 @@ eval = [
     "google-cloud-aiplatform[evaluation]>=1.156.0",
     "matplotlib>=3.8,<4.0",
 ]
+# Stage C web read-along (app/web, scripts/tutor_web). FastAPI/uvicorn already
+# resolve transitively via google-adk; declared here so the web app's runtime
+# deps are explicit rather than implicit.
+web = [
+    "fastapi>=0.115,<1.0",
+    "uvicorn>=0.30,<1.0",
+]
+# Stage B voice CLI mic capture (app/voice.microphone_chunks). Only the
+# server-side sounddevice path needs these; the browser-mic web path supplies
+# its own audio and needs neither.
+voice = [
+    "sounddevice>=0.4,<1.0",
+    "numpy>=1.26",
+]
 lint = [
     "ruff>=0.4.6,<1.0.0",
     "ty>=0.0.1a0",
