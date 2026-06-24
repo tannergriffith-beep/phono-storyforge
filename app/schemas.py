@@ -107,6 +107,47 @@ class StoryIllustrations(BaseModel):
     )
 
 
+class Character(BaseModel):
+    """One recurring character, described as cut-paper shapes for consistency."""
+
+    name: str = Field(..., description="Character name (decodable, e.g. 'Sam', 'Chip').")
+    role: str = Field(..., description="Role in the story, e.g. 'protagonist', 'friend', 'pet'.")
+    species: str = Field(..., description="What they are, e.g. 'a young boy', 'a small fox'.")
+    appearance: str = Field(
+        ..., description="Defining look as paper shapes: hair/skin/body, built from torn paper."
+    )
+    clothing: str = Field(..., description="Outfit described with brand-palette colors.")
+    palette_colors: list[str] = Field(
+        default_factory=list,
+        description="Brand color NAMES used for this character (e.g. ['Japonica', 'Deep Navy']).",
+    )
+    defining_features: str = Field(
+        ..., description="The 1-2 traits that keep them recognizable on every page."
+    )
+
+
+class CharacterBible(BaseModel):
+    """The per-book consistency contract injected into every page's image prompt.
+
+    Generated once and stored as a session state key; app/brand.py renders it
+    into the stable text block appended to each page prompt so characters,
+    outfits, and colors never drift across pages.
+    """
+
+    story_title: str = Field(..., description="The book this bible belongs to.")
+    art_style: str = Field(
+        default="soft cut-paper collage",
+        description="Locked storybook art style for the whole book.",
+    )
+    characters: list[Character] = Field(..., description="Every recurring character.")
+    recurring_setting: str = Field(
+        ..., description="The consistent home/everyday setting (never a classroom)."
+    )
+    palette_note: str = Field(
+        default="", description="Optional reminder of palette usage for this book."
+    )
+
+
 class ExportResult(BaseModel):
     """The result of exporting the storybook to Google Docs and Google Drive."""
 

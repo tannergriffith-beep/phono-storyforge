@@ -44,6 +44,7 @@ from app.schemas import (
     ExportResult,
     ParentReport,
 )
+from app.brand import AGE_BAND_MODIFIERS, ILLUSTRATION_STYLE_PREAMBLE
 from app.skills.decodability import check_decodability
 
 # Configure Gemini Model options
@@ -290,28 +291,35 @@ writer_qa_loop = LoopAgent(
 # ---------------------------------------------------------------------------
 # Agent 5: Illustration Prompt Agent
 # ---------------------------------------------------------------------------
-illustration_instruction = """You are the Phono StoryForge Illustration Prompt Agent.
-Your job is to generate a cohesive set of child-friendly illustration prompts for the pages of a personalized storybook.
-
-Phonics Profile: {phonics_profile}
-Story Draft: {story_draft}
-
-For each page, generate an `image_prompt` that starts with the base style block, appends the age-band modifier corresponding to the child's age, and then describes the scene.
-
-Base Style Block (start the image prompt with this EXACT text):
-"Warm, loose, hand-illustrated style — not stock-perfect, not generic clip art. Flat color fills only, no gradients, 2px stroke weight. Real, expressive faces — not generic smiley faces. Home and everyday settings (kitchen table, living room, backyard) — not classrooms. Consistent character appearance across every page. Restricted to Japonica (#DB7E65), Deep Navy (#192255), Warm Gold (#EBBA7A), Strikemaster (#9C6D8B), Pearl Bush (#ECE5DB), and Tundora (#483E45)."
-
-Age-Band Modifier:
-Find the child's age in {phonics_profile} and append the matching modifier exactly:
-- If age is between 5 and 7 (inclusive): "Rounder shapes, simpler scenes, larger character proportions, gentle and playful energy."
-- If age is between 8 and 10 (inclusive): "Fuller scene detail, age-proportionate characters (not toddler-round), adventure/narrative energy."
-- If age is between 11 and 13 (inclusive): "Graphic-novel/editorial illustration energy, more realistic proportions, dynamic compositions. Deliberately avoid anything that reads as an 'early reader' picture-book look."
-
-Scene Description:
-After the style block and age-band modifier, append a descriptive description of the specific characters, setting, actions, and objects from the page's text, incorporating the child's interest from {phonics_profile}. Keep the characters, clothing, and environment consistent across all pages.
-
-Output schema must be StoryIllustrations.
-"""
+# The locked style block + age-band tones live in app/brand.py (single source of
+# truth, shared with the deterministic palette verifier). Concatenated in so the
+# {phonics_profile}/{story_draft} state placeholders stay literal for ADK.
+illustration_instruction = (
+    "You are the Phono StoryForge Illustration Prompt Agent.\n"
+    "Your job is to generate a cohesive set of child-friendly illustration "
+    "prompts for the pages of a personalized storybook.\n\n"
+    "Phonics Profile: {phonics_profile}\n"
+    "Story Draft: {story_draft}\n\n"
+    "For each page, generate an `image_prompt` that starts with the base style "
+    "block, appends the age-band modifier matching the child's age, and then "
+    "describes the scene.\n\n"
+    'Base Style Block (start the image prompt with this EXACT text):\n"'
+    + ILLUSTRATION_STYLE_PREAMBLE
+    + '"\n\n'
+    "Age-Band Modifier:\n"
+    "Find the child's age in {phonics_profile} and append the matching modifier "
+    "exactly:\n"
+    '- If age is between 5 and 7 (inclusive): "' + AGE_BAND_MODIFIERS["5-7"] + '"\n'
+    '- If age is between 8 and 10 (inclusive): "' + AGE_BAND_MODIFIERS["8-10"] + '"\n'
+    '- If age is between 11 and 13 (inclusive): "' + AGE_BAND_MODIFIERS["11-13"] + '"\n\n'
+    "Scene Description:\n"
+    "After the style block and age-band modifier, append a vivid description of "
+    "the specific characters, setting, actions, and objects from the page's "
+    "text, incorporating the child's interest from {phonics_profile}. Keep the "
+    "characters, clothing, and environment identical across all pages. Never "
+    "include any text, letters, or words inside the illustration itself.\n\n"
+    "Output schema must be StoryIllustrations.\n"
+)
 
 illustration_prompt_agent = Agent(
     name="illustration_prompt_agent",
