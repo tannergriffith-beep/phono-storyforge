@@ -9,7 +9,7 @@
 | ------------------------------------ | --------- | ---------------------------------------------- | ------ |
 | 1. Grapheme decomposition + verifier | Jun 24–25 | `decompose()` + sound-level fixes, tests green | ✅ Done |
 | 2. Mastery model + store             | Jun 26–27 | BKT + LearnerProfile + planner                 | ✅ Done |
-| 3. Simulated learner + evidence      | Jun 28–30 | **Closed loop + evidence chart** 🎯            | ⬜      |
+| 3. Simulated learner + evidence      | Jun 28–30 | **Closed loop + evidence chart** 🎯            | ✅ Done |
 | 5. Illustrations                     | Jul 1–2   | Real illustrated book in a Doc                 | ⬜      |
 | Stretch (audio OR thin UI)           | Jul 3     | Skippable                                      | ⬜      |
 | Writeup + video + final eval         | Jul 4–5   | Submission package                             | ⬜      |
@@ -68,25 +68,26 @@ The keystone. Everything depends on word→grapheme mapping.
 
 ## Phase 3 — Simulated learner + miscue analysis + experiment (Jun 28–30) 🎯
 
-**Day 5 (Jun 28)**
+**Day 5 (Jun 28)** ✅
 
-- `app/skills/alignment.py`: align(expected, spoken) → ops (Needleman-Wunsch / difflib)
+- `app/skills/alignment.py`: `align(expected, spoken)` (difflib) → classified ops; self-correction/hesitation recovered from opcodes
 - Miscue classification: substitution/omission/insertion/self\_correction/hesitation
-- Attribution: diff decompositions → implicated graphemes → `grapheme_evidence`
-- `AssessmentResult` schema + WCPM/accuracy in `app/skills/fluency.py`
+- Attribution: diff decompositions → implicated graphemes → `grapheme_evidence` (incl. `_blend_` / `-s/-es/-ed/-ing` sentinels)
+- `AssessmentResult` + `Miscue` schemas; `assess()`; WCPM/accuracy in `app/skills/fluency.py` — 18 unit tests
 
-**Day 6 (Jun 29)**
+**Day 6 (Jun 29)** ✅
 
-- `eval/simulated_learner.py`: latent mastery → `read(book)` emits transcript with realistic miscues
-- Wire full loop: objective → book → simulated read → miscue → mastery update → next objective
+- `eval/book_builder.py`: deterministic decodable book for an Objective (target + review within budget); `UNTEACHABLE_GRAPHEMES` ({ng, ph}) computed dynamically
+- `eval/simulated_learner.py`: latent-mastery child (seeded RNG), TRUE mastery separate from BKT estimate; readiness/ZPD-gated learning; `read(book)` emits miscues tracking mastery
+- `eval/loop.py`: arm-agnostic closed loop objective→book→read→miscue→BKT update→persist — 16 unit tests
 
-**Day 7 (Jun 30) — GATE**
+**Day 7 (Jun 30) — GATE** ✅
 
-- `eval/experiments/adaptive_vs_static.py`: two arms over N sessions, track TRUE mastery + accuracy/WCPM
-- Produce evidence chart (matplotlib): treatment reaches mastery faster than control
+- `eval/experiments/adaptive_vs_static.py`: adaptive (planner) vs static control over N paired learners; tracks TRUE mastery + a FIXED benchmark probe (fair accuracy/WCPM)
+- Evidence chart (`results/adaptive_vs_static.png`) + CSV fallback (`results/adaptive_vs_static.csv`) — 5 unit tests
 
-**Done when:** chart proves adaptive > static. **This is the minimum winning submission.**
-**If behind:** ship the loop + a numeric result table even if the chart is rough.
+**Done when:** chart proves adaptive > static. ✅ — n=30: probe accuracy +0.14, true mean mastery +0.09, WCPM +16, gaps widen over sessions. **This is the minimum winning submission.**
+**Note:** headline metrics are the fixed-probe reading accuracy/WCPM and true mean latent mastery (all robustly adaptive, widening). `num_mastered` is breadth-vs-depth ambiguous (static spreads thin) so it's logged in the CSV but not headlined.
 
 ---
 

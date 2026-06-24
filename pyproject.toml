@@ -29,6 +29,7 @@ dev = [
 eval = [
     "google-adk[eval]>=2.0.0,<3.0.0",
     "google-cloud-aiplatform[evaluation]>=1.156.0",
+    "matplotlib>=3.8,<4.0",
 ]
 lint = [
     "ruff>=0.4.6,<1.0.0",

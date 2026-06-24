@@ -79,6 +79,8 @@ def run_session(
     session_index: int,
     store: LearnerStore | None = None,
     book_rng: random.Random | None = None,
+    num_target: int = 6,
+    book_length: int = 12,
     threshold: float = MASTERY_THRESHOLD,
 ) -> SessionResult:
     """Runs one full closed-loop session and returns the result.
@@ -90,6 +92,8 @@ def run_session(
     book = build_book(
         objective,
         session_index=session_index,
+        num_target=num_target,
+        length=book_length,
         sight_words=set(profile.sight_words),
         rng=book_rng,
     )

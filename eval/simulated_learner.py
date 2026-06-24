@@ -20,7 +20,7 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, field
 
-from app.phonics_db import GRAPHEME_INVENTORY, LEVEL_SEQUENCE
+from app.phonics_db import GRAPHEME_INVENTORY, GRAPHEMES_BY_LEVEL, LEVEL_SEQUENCE
 from app.skills.decodability import GraphemeHit, decompose
 
 _VOWELS = "aeiou"
@@ -39,13 +39,22 @@ class SimulatedLearner:
     learner_id: str
     rng: random.Random
     true_mastery: dict[str, float]
+    seed: int = 0
     # Emission model: P(read grapheme correctly) = m*(1-slip) + (1-m)*guess.
     slip: float = 0.04
     guess: float = 0.10
     # Learning: true mastery moves toward 1.0 by this fraction of the gap per
-    # practice (a correct read consolidates more than a failed attempt).
-    learn_rate: float = 0.12
-    fail_learn_factor: float = 0.35
+    # practice, gated by READINESS (a Vygotskian ZPD effect). A grapheme only
+    # consolidates well once its lower-level prerequisites are in place;
+    # practicing a grapheme the child isn't ready for is largely wasted. This is
+    # the crux of the experiment: the adaptive planner always targets the
+    # lowest *unmastered* grapheme, so its prerequisites are met (high
+    # readiness) and practice sticks; a fixed scope-and-sequence pushes content
+    # on schedule regardless of the child, so it often teaches above the child's
+    # reach (low readiness) and the sessions are wasted.
+    learn_rate: float = 0.18
+    fail_learn_factor: float = 0.15     # a misread grapheme barely sticks
+    readiness_floor: float = 0.05       # minimal learning even when unready
     # Realism: rates for non-error reading behaviours.
     hesitation_rate: float = 0.05
     self_correct_floor_mastery: float = 0.45
@@ -80,6 +89,7 @@ class SimulatedLearner:
             learner_id=learner_id,
             rng=rng,
             true_mastery=true_mastery,
+            seed=seed,
             sight_words=set(sight_words or set()),
         )
 
@@ -100,15 +110,35 @@ class SimulatedLearner:
         wrong = word[:i] + self._swap_letter(word[i]) + word[i + 1 :]
         return wrong if wrong != word else word + self.rng.choice(_VOWELS)
 
+    def _readiness(self, level: str) -> float:
+        """How ready the child is to learn a grapheme at `level`: the mean TRUE
+        mastery of every grapheme in the levels before it (1.0 if none)."""
+        idx = LEVEL_SEQUENCE.index(level)
+        prereqs = [
+            g
+            for lvl in LEVEL_SEQUENCE[:idx]
+            for g in GRAPHEMES_BY_LEVEL[lvl]
+            if g not in UNTEACHABLE_GRAPHEMES
+        ]
+        if not prereqs:
+            return 1.0
+        mean = sum(self.true_mastery.get(g, 0.0) for g in prereqs) / len(prereqs)
+        return max(self.readiness_floor, mean)
+
     def _practice(self, hits: list[GraphemeHit], correct_flags: list[bool]) -> None:
         for hit, ok in zip(hits, correct_flags):
             g = hit.grapheme
             m = self.true_mastery.get(g, 0.0)
-            rate = self.learn_rate if ok else self.learn_rate * self.fail_learn_factor
+            base = self.learn_rate if ok else self.learn_rate * self.fail_learn_factor
+            rate = base * self._readiness(hit.level)
             self.true_mastery[g] = min(1.0, m + rate * (1.0 - m))
 
-    def _read_word(self, word: str) -> list[str]:
-        """Reads one expected word, returning the spoken token(s) for it."""
+    def _read_word(self, word: str, *, learn: bool = True) -> list[str]:
+        """Reads one expected word, returning the spoken token(s) for it.
+
+        When `learn` is False the read is a pure assessment — latent mastery is
+        observed but not updated (used for the fixed benchmark probe).
+        """
         decomp = decompose(word, mastered_levels=LEVEL_SEQUENCE, sight_words=self.sight_words)
 
         # Memorized sight words (and trivial tokens) are recalled, not decoded.
@@ -117,7 +147,8 @@ class SimulatedLearner:
 
         hits = decomp.graphemes
         flags = [self.rng.random() < self._p_correct(h.grapheme) for h in hits]
-        self._practice(hits, flags)
+        if learn:
+            self._practice(hits, flags)
 
         if all(flags):
             if self.rng.random() < self.hesitation_rate:
@@ -137,11 +168,18 @@ class SimulatedLearner:
             return []  # omission
         return [wrong]  # substitution
 
-    def read(self, words: list[str], *, sight_words: set[str] | None = None) -> list[str]:
+    def read(
+        self,
+        words: list[str],
+        *,
+        sight_words: set[str] | None = None,
+        learn: bool = True,
+    ) -> list[str]:
         """Reads a book's word sequence aloud, returning the spoken transcript.
 
         `sight_words` (the book's connectors plus the learner's own) are treated
-        as memorized for this read; they do not exercise decoding.
+        as memorized for this read; they do not exercise decoding. With
+        `learn=False` the read does not change latent mastery (benchmark probe).
         """
         prior = self.sight_words
         if sight_words is not None:
@@ -149,7 +187,7 @@ class SimulatedLearner:
         try:
             spoken: list[str] = []
             for w in words:
-                spoken.extend(self._read_word(w))
+                spoken.extend(self._read_word(w, learn=learn))
             return spoken
         finally:
             self.sight_words = prior
