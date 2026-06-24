@@ -12,7 +12,7 @@
 | 3. Simulated learner + evidence       | Jun 28–30 | **Closed loop + evidence chart** 🎯            | ✅ Done |
 | 5. Illustrations                      | Jul 1–2   | Real illustrated book in a Doc                 | ✅ Done |
 | **Flagship A. Closed loop → product** | Jun 24    | `app/tutor` stateful loop + `SessionLog` + CLI | ✅ Done |
-| Flagship B. Voice read-aloud          | TBD       | Gemini Live → transcript; LLM book in the loop | ⬜      |
+| Flagship B. Voice read-aloud          | Jun 24    | Gemini Live → transcript; LLM book in the loop | ✅ Done |
 | Flagship C. Web UI + live mastery viz | TBD       | The filmable demo                              | ⬜      |
 | Flagship D. Flywheel + rigorous eval  | TBD       | De-circularized evidence                       | ⬜      |
 | Writeup + video + final eval          | Jul 4–5   | Submission package                             | ⬜      |
@@ -136,13 +136,39 @@ unchanged; only orchestration + I/O are new.
 - **Done when:** two strong reads advance the target and persist across processes.
   ✅ — `a`→`e`→`i`, mean mastery 0.373→0.427; 6 new unit tests, 122 offline green.
 
-**Stage B — Gemini Live voice + unified generation** ⬜
+**Stage B (Jun 24) — Gemini Live voice + unified generation** ✅ Done
 
-- `app/voice/`: stream child audio → Gemini Live transcription → tokens that feed
-  the existing `record_read(prepared, spoken)` unchanged. Add a grapheme-targeted
-  scaffolding agent (`decompose` localizes the missed phoneme) + echo/karaoke mode.
-- Replace the deterministic `book_source` with the verifier-gated Gemini generator
-  so the loop produces the illustrated, on-level LLM book.
+*Part 1 — verifier-gated LLM book generator behind the same BookProvider seam* ✅
+
+- `app/tutor/llm_book.py`: `generate_decodable_book()` runs the propose →
+  `check_decodability` → feed-violations-back loop pattern (from `app/agent.py`) as a
+  tight, injectable, offline-testable Python loop. Decodability is the HARD gate (raises
+  `BookGenerationError` rather than ever returning a violation); on-target is best-effort
+  (`llm_offtarget`). `StoryProposer` is injectable (default `make_gemini_proposer`,
+  `gemini-flash-lite-latest`, `StoryDraft` structured output); imports only
+  `app/skills/decodability` — no `eval/` dep.
+- `book_source.make_llm_book_provider()` matches `BookProvider` exactly; on failure it
+  warns + falls back to the deterministic builder, tagged `deterministic_fallback`.
+  `BookProvider`/`BookLike` widened additively with `interest`/`age`/`generation_source`;
+  `session.py` change is additive-only (loop/`record_read`/`assess`/BKT untouched);
+  `SessionLog.generation_source` feeds the Stage-D flywheel.
+
+*Part 2 — Gemini Live voice read-aloud (app/voice/, all imports lazy)* ✅
+
+- `transcriber.py`: `Transcriber` seam `transcribe(expected_words) -> (tokens, duration)`.
+  `LiveTranscriber` streams mic PCM → Gemini Live (`LIVE_MODEL =
+  gemini-live-2.5-flash-native-audio`, input transcription on, expected words bias
+  recognition, raw audio discarded); `FakeTranscriber` for tests. Feeds the unchanged
+  `record_read(prepared, spoken)`.
+- `confidence.py`: `repair_low_confidence` snaps ONLY low-confidence ASR substitutions to
+  the expected word (never punish the child) while confident wrong words survive as real
+  miscues; reuses the `align()` primitive, `assess()` unchanged.
+- `scaffold.py`: `scaffold_for_miscue` localizes the missed grapheme via `decompose()`
+  (ship→sip ⇒ `sh`); `echo_sequence` for echo/karaoke mode.
+- `scripts/tutor_voice_cli.py`: separate voice entry path so audio/Live deps + keys never
+  leak into the offline typed CLI.
+- **Done when:** voice transcript drives the unchanged loop and the LLM book is
+  verifier-gated. ✅ — 22 new unit tests (mocked, no network/mic), 144 offline green.
 
 **Stage C — web read-along + live mastery-graph viz** ⬜
 The filmable continuous demo: child reads, miscue heatmap + mastery bars move live,
@@ -155,10 +181,11 @@ against an external decodable-word corpus).
 
 ---
 
-## Jul 3 — Stretch (superseded by Flagship A above)
+## Jul 3 — Stretch (superseded by Flagship A/B above)
 
 Original plan: minimal audio upload→transcript, **or** a thin Streamlit read-along.
-Stage A delivered the stateful loop instead; voice (B) and UI (C) are the successors.
+Stages A/B delivered the stateful loop + real Gemini Live voice instead; the web UI (C)
+is the remaining successor.
 
 ---
 
