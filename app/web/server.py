@@ -25,6 +25,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from pathlib import Path
@@ -71,9 +72,28 @@ def create_app(
     async def ws(websocket: WebSocket) -> None:
         await websocket.accept()
         prepared = None
+        # Step-2 voice: raw 16-bit/16 kHz PCM frames from the browser mic are
+        # buffered here only while a read is in progress, then handed to the
+        # app/voice Transcriber and discarded. The audio never touches disk and
+        # never leaves this layer — only the derived transcript + duration do.
+        audio_chunks: list[bytes] = []
+        capturing = False
         try:
             while True:
-                msg = json.loads(await websocket.receive_text())
+                message = await websocket.receive()
+                if message["type"] == "websocket.disconnect":
+                    break
+
+                # Binary frame: a chunk of mic PCM (only kept mid-read).
+                if message.get("bytes") is not None:
+                    if capturing:
+                        audio_chunks.append(message["bytes"])
+                    continue
+
+                text = message.get("text")
+                if text is None:
+                    continue
+                msg = json.loads(text)
                 action = msg.get("action")
 
                 if action == "prepare":
@@ -97,6 +117,50 @@ def create_app(
                     # target + new book are rebuilt from persisted mastery.
                     prepared = None
 
+                elif action == "read_start":
+                    if prepared is None:
+                        await websocket.send_json(
+                            {"type": "error", "message": "prepare a session first"}
+                        )
+                        continue
+                    audio_chunks = []
+                    capturing = True
+
+                elif action == "read_end":
+                    capturing = False
+                    if prepared is None:
+                        audio_chunks = []
+                        continue
+                    await websocket.send_json(
+                        {"type": "voice_status", "message": "transcribing…"}
+                    )
+                    try:
+                        # Voice is ADDITIVE and never load-bearing: if Live/creds
+                        # fail, the typed `submit` path is unaffected. The buffered
+                        # frames are replayed as the Transcriber's injectable
+                        # audio_source; transcribe() runs in a worker thread so its
+                        # internal asyncio.run doesn't clash with this event loop.
+                        tokens, duration = await _transcribe(audio_chunks, prepared)
+                        outcome = tutor.record_read(
+                            prepared, tokens, duration_seconds=duration
+                        )
+                        payload = outcome_payload(outcome)
+                        payload["heard"] = tokens
+                        await websocket.send_json(payload)
+                        prepared = None
+                    except Exception as exc:  # noqa: BLE001 - report, never crash the demo
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "message": (
+                                    f"voice transcription failed ({exc}). "
+                                    "You can type the read instead."
+                                ),
+                            }
+                        )
+                    finally:
+                        audio_chunks = []
+
                 else:
                     await websocket.send_json(
                         {"type": "error", "message": f"unknown action: {action!r}"}
@@ -105,6 +169,21 @@ def create_app(
             return
 
     return app
+
+
+async def _transcribe(audio_chunks: list[bytes], prepared) -> tuple[list[str], float]:
+    """Transcribes buffered mic PCM via the app/voice LiveTranscriber seam.
+
+    The buffered frames are passed as the Transcriber's injectable `audio_source`
+    (so the CLI's server-side sounddevice path is never used), and the blocking
+    transcribe() — which wraps Gemini Live in asyncio.run — runs in a worker
+    thread to stay clear of the server's running event loop. Returns the spoken
+    tokens biased toward the page words plus the duration measured from audio.
+    """
+    from app.voice.transcriber import LiveTranscriber
+
+    transcriber = LiveTranscriber(audio_source=list(audio_chunks))
+    return await asyncio.to_thread(transcriber.transcribe, list(prepared.book.words))
 
 
 def _build_default_app() -> FastAPI:

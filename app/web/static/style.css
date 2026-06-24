@@ -112,6 +112,9 @@ button:disabled { opacity: 0.5; cursor: default; }
 .read-label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; }
 .presets { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .presets #score-btn { margin-left: auto; }
+button.mic.recording { background: var(--coral); color: #fff; border-color: var(--coral); animation: rec-pulse 1.2s ease-in-out infinite; }
+@keyframes rec-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(219,126,101,0.5); } 50% { box-shadow: 0 0 0 6px rgba(219,126,101,0); } }
+.voice-status { font-size: 12px; color: var(--plum); margin: 8px 0 0; min-height: 16px; }
 
 /* ---- Results ---- */
 #results { margin-top: 18px; border-top: 1.5px dashed #d7cdbf; padding-top: 16px; }

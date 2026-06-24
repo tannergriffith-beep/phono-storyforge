@@ -18,7 +18,10 @@ const state = {
   words: [],            // expected token stream (positions index into this)
   targetPositions: [],  // positions of words exercising the target grapheme
   bars: {},             // grapheme -> {row, fill, p}
+  mic: { ctx: null, stream: null, node: null, recording: false },
 };
+
+const OUT_RATE = 16000;  // app/voice expects 16-bit/16 kHz mono PCM
 
 // ---- WebSocket wiring -------------------------------------------------------
 
@@ -34,7 +37,8 @@ function connect() {
     const msg = JSON.parse(ev.data);
     if (msg.type === "prepared") renderPrepared(msg);
     else if (msg.type === "outcome") renderOutcome(msg);
-    else if (msg.type === "error") setStatus(msg.message, "err");
+    else if (msg.type === "voice_status") voiceStatus(msg.message);
+    else if (msg.type === "error") { setStatus(msg.message, "err"); voiceStatus(msg.message); }
   };
 }
 
@@ -82,6 +86,70 @@ function applyPreset(kind) {
   $("transcript").value = kept.join(" ");
 }
 
+// ---- Step 2: browser mic -> WebSocket -> app/voice Transcriber --------------
+//
+// Additive enhancement: stream 16 kHz/16-bit PCM frames over the same socket
+// between read_start/read_end. The server feeds them to the injectable
+// LiveTranscriber audio_source. If anything fails (no mic, no Live quota), the
+// typed presets above still work — voice is never load-bearing.
+
+async function toggleMic() {
+  if (state.mic.recording) { stopMic(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    await ctx.audioWorklet.addModule("/static/pcm-worklet.js");
+    const src = ctx.createMediaStreamSource(stream);
+    const node = new AudioWorkletNode(ctx, "pcm-capture");
+    const inRate = ctx.sampleRate;
+    node.port.onmessage = (e) => {
+      const pcm16 = downsampleTo16k(e.data, inRate);
+      if (pcm16.length && state.ws && state.ws.readyState === WebSocket.OPEN) {
+        state.ws.send(pcm16.buffer);
+      }
+    };
+    src.connect(node);
+    node.connect(ctx.destination); // pulls the graph; worklet output is silent (no echo)
+    state.mic = { ctx, stream, node, recording: true };
+    send({ action: "read_start" });
+    setMicUI(true);
+    voiceStatus("🎤 listening… click Stop when the child finishes the page");
+  } catch (err) {
+    voiceStatus("mic unavailable: " + err.message + " — use the typed presets instead");
+  }
+}
+
+function stopMic() {
+  send({ action: "read_end" });
+  const m = state.mic;
+  if (m.node) m.node.disconnect();
+  if (m.stream) m.stream.getTracks().forEach((t) => t.stop());
+  if (m.ctx) m.ctx.close();
+  state.mic = { ctx: null, stream: null, node: null, recording: false };
+  setMicUI(false);
+  voiceStatus("transcribing…");
+}
+
+// Nearest-sample downsample from the mic's native rate to 16 kHz, then to Int16.
+function downsampleTo16k(f32, inRate) {
+  const ratio = inRate / OUT_RATE;
+  const outLen = Math.floor(f32.length / ratio);
+  const out = new Int16Array(outLen);
+  for (let i = 0; i < outLen; i++) {
+    const s = Math.max(-1, Math.min(1, f32[Math.floor(i * ratio)]));
+    out[i] = s * 0x7fff;
+  }
+  return out;
+}
+
+function setMicUI(recording) {
+  const btn = $("mic-btn");
+  btn.textContent = recording ? "⏹ Stop" : "🎤 Read aloud";
+  btn.classList.toggle("recording", recording);
+}
+
+function voiceStatus(text) { $("voice-status").textContent = text || ""; }
+
 // ---- Render: prepared -------------------------------------------------------
 
 function renderPrepared(msg) {
@@ -89,6 +157,7 @@ function renderPrepared(msg) {
   $("session").hidden = false;
   $("results").hidden = true;
   $("transcript").value = "";
+  voiceStatus("");
 
   $("session-pill").textContent = `session #${msg.session_index}`;
   $("target-grapheme").textContent = `/${msg.objective.target_grapheme}/`;
@@ -140,6 +209,9 @@ function renderBars(bars) {
 // ---- Render: outcome --------------------------------------------------------
 
 function renderOutcome(msg) {
+  // If this read came from voice, show what was heard; otherwise clear status.
+  voiceStatus(msg.heard ? "heard: " + msg.heard.join(" ") : "");
+
   // Miscue heatmap: color each expected word by its running-record kind.
   const spans = $("book-text").querySelectorAll(".w");
   msg.heatmap.forEach((cell) => {
@@ -212,6 +284,7 @@ function setMean(x) {
 $("start-btn").addEventListener("click", startSession);
 $("score-btn").addEventListener("click", scoreRead);
 $("next-btn").addEventListener("click", startSession);
+$("mic-btn").addEventListener("click", toggleMic);
 document.querySelectorAll(".presets [data-preset]").forEach((btn) =>
   btn.addEventListener("click", () => applyPreset(btn.dataset.preset))
 );

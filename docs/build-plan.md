@@ -170,9 +170,26 @@ unchanged; only orchestration + I/O are new.
 - **Done when:** voice transcript drives the unchanged loop and the LLM book is
   verifier-gated. ✅ — 22 new unit tests (mocked, no network/mic), 144 offline green.
 
-**Stage C — web read-along + live mastery-graph viz** ⬜
+**Stage C — web read-along + live mastery-graph viz** ✅
 The filmable continuous demo: child reads, miscue heatmap + mastery bars move live,
-tomorrow's target shifts on screen.
+tomorrow's target shifts on screen. FastAPI + vanilla JS over one WebSocket; drives the
+real loop, never fakes it.
+- `app/web/viz.py`: PURE `PreparedSession`/`SessionOutcome` → JSON payloads (no FastAPI,
+  no eval). Bar-set invariant — prepared bars = the graphemes the book can produce
+  evidence for (via the real `attribute_evidence` path) + target + review — so every bar
+  that animates was already on screen (`delta.changes ⊆ prepared bars`).
+- `app/web/server.py`: thin FastAPI + one WebSocket; calls `prepare`/`record_read`
+  UNCHANGED. Only FastAPI importer. `PHONO_LLM_BOOK=1` swaps in the verifier-gated
+  generator. No new deps (fastapi/uvicorn already transitive via google-adk).
+- `app/web/static/`: one HTML page + vanilla JS + brand-palette CSS; heatmap + mastery
+  bars animate via CSS transitions (no framework, no charting lib).
+- Step 2 voice (additive, non-load-bearing): browser mic → AudioWorklet → 16 kHz/16-bit
+  PCM frames over the same socket → buffered → fed as the injectable `LiveTranscriber`
+  audio_source (run in a worker thread); raw audio discarded, only transcript+duration
+  persist. If Live/creds fail, the typed presets still work.
+- `scripts/tutor_web.py`: uvicorn launcher (`--llm-book`, `--port`, `--data-dir`).
+- **Done when:** the browser drives the real loop end to end. ✅ — 8 new viz unit tests,
+  152 offline green; socket/mic/browser kept out of the default test path.
 
 **Stage D — flywheel + de-circularized eval** ⬜
 Every real session → an eval datapoint; `check_decodability` as an always-on judge.
