@@ -32,13 +32,21 @@ class BookLike(Protocol):
     words: list[str]
     target_grapheme: str
     sight_words: set[str]
+    # How the book was produced; consumed by SessionLog for the content flywheel.
+    # Optional: providers that don't set it are read defensively as "deterministic".
+    generation_source: str
 
     @property
     def text(self) -> str: ...
 
 
 class BookProvider(Protocol):
-    """Produces a decodable practice book for a learning objective."""
+    """Produces a decodable practice book for a learning objective.
+
+    `interest`/`age` are optional personalization inputs: the LLM provider uses
+    them for theme and tone, while the deterministic builder ignores them. They
+    default so the protocol stays satisfiable by either provider.
+    """
 
     def __call__(
         self,
@@ -48,6 +56,8 @@ class BookProvider(Protocol):
         sight_words: set[str],
         num_target: int,
         length: int,
+        interest: str = "",
+        age: int = 6,
         rng: random.Random | None = None,
     ) -> BookLike: ...
 
@@ -59,9 +69,15 @@ def deterministic_book_provider(
     sight_words: set[str],
     num_target: int,
     length: int,
+    interest: str = "",
+    age: int = 6,
     rng: random.Random | None = None,
 ) -> BookLike:
-    """Stage-A default: the offline decodable builder from the experiment."""
+    """Stage-A default: the offline decodable builder from the experiment.
+
+    `interest`/`age` are accepted for protocol compatibility but unused — the
+    deterministic builder is word-list based and does not personalize.
+    """
     from eval.book_builder import build_book
 
     return build_book(
@@ -72,6 +88,87 @@ def deterministic_book_provider(
         sight_words=sight_words,
         rng=rng,
     )
+
+
+def make_llm_book_provider(
+    proposer=None,
+    *,
+    max_attempts: int = 4,
+    fallback: BookProvider = deterministic_book_provider,
+) -> BookProvider:
+    """Builds the Stage-B verifier-gated LLM BookProvider.
+
+    Returns a provider matching the BookProvider protocol exactly, so it drops
+    into TutorSession in place of `deterministic_book_provider`. Policy:
+      - decodable + on-target  -> the LLM book (generation_source="llm")
+      - decodable, off-target  -> the LLM book (generation_source="llm_offtarget")
+      - never reaches decodable -> a loud warning + the guaranteed-decodable
+        `fallback` book, re-tagged generation_source="deterministic_fallback"
+        so degradation is logged, never silent.
+
+    `proposer` is the injectable LLM seam (a `StoryProposer`); when omitted it is
+    built lazily from a Gemini client on first use, so importing this module and
+    constructing the provider never require credentials.
+    """
+    import warnings
+
+    from app.tutor.llm_book import (
+        BookGenerationError,
+        generate_decodable_book,
+        make_gemini_proposer,
+    )
+
+    def _provider(
+        objective: Objective,
+        *,
+        session_index: int,
+        sight_words: set[str],
+        num_target: int,
+        length: int,
+        interest: str = "",
+        age: int = 6,
+        rng: random.Random | None = None,
+    ) -> BookLike:
+        active = proposer if proposer is not None else make_gemini_proposer()
+        try:
+            return generate_decodable_book(
+                objective,
+                proposer=active,
+                session_index=session_index,
+                sight_words=sight_words,
+                num_target=num_target,
+                length=length,
+                interest=interest,
+                age=age,
+                rng=rng,
+                max_attempts=max_attempts,
+            )
+        except BookGenerationError as exc:
+            warnings.warn(
+                f"LLM book generation failed for target "
+                f"'{objective.target_grapheme}'; falling back to the "
+                f"deterministic builder. Cause: {exc}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            book = fallback(
+                objective,
+                session_index=session_index,
+                sight_words=sight_words,
+                num_target=num_target,
+                length=length,
+                interest=interest,
+                age=age,
+                rng=rng,
+            )
+            # Tag the fallback so the flywheel can measure the LLM's failure rate.
+            try:
+                book.generation_source = "deterministic_fallback"
+            except (AttributeError, ValueError):
+                pass
+            return book
+
+    return _provider
 
 
 def unteachable_graphemes() -> frozenset[str]:

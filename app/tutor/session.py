@@ -148,6 +148,8 @@ class TutorSession:
             sight_words=set(profile.sight_words),
             num_target=self.num_target,
             length=self.book_length,
+            interest=profile.interest,
+            age=profile.age,
             rng=rng,
         )
         return PreparedSession(
@@ -202,6 +204,7 @@ class TutorSession:
             book_title=getattr(book, "title", ""),
             assessment=assessment,
             delta=delta,
+            generation_source=getattr(book, "generation_source", "deterministic"),
         )
         if self.log_store is not None:
             self.log_store.append(log)

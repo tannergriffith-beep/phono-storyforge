@@ -5,18 +5,18 @@
 
 ## Status dashboard
 
-| Phase                                | Window    | Outcome                                        | Status |
-| ------------------------------------ | --------- | ---------------------------------------------- | ------ |
-| 1. Grapheme decomposition + verifier | Jun 24–25 | `decompose()` + sound-level fixes, tests green | ✅ Done |
-| 2. Mastery model + store             | Jun 26–27 | BKT + LearnerProfile + planner                 | ✅ Done |
-| 3. Simulated learner + evidence      | Jun 28–30 | **Closed loop + evidence chart** 🎯            | ✅ Done |
-| 5. Illustrations                     | Jul 1–2   | Real illustrated book in a Doc                 | ✅ Done |
-| **Flagship A. Closed loop → product** | Jun 24   | `app/tutor` stateful loop + `SessionLog` + CLI | ✅ Done |
-| Flagship B. Voice read-aloud         | TBD       | Gemini Live → transcript; LLM book in the loop | ⬜      |
-| Flagship C. Web UI + live mastery viz | TBD      | The filmable demo                              | ⬜      |
-| Flagship D. Flywheel + rigorous eval | TBD       | De-circularized evidence                       | ⬜      |
-| Writeup + video + final eval         | Jul 4–5   | Submission package                             | ⬜      |
-| Buffer / submit                      | Jul 6     | —                                              | ⬜      |
+| Phase                                 | Window    | Outcome                                        | Status |
+| ------------------------------------- | --------- | ---------------------------------------------- | ------ |
+| 1. Grapheme decomposition + verifier  | Jun 24–25 | `decompose()` + sound-level fixes, tests green | ✅ Done |
+| 2. Mastery model + store              | Jun 26–27 | BKT + LearnerProfile + planner                 | ✅ Done |
+| 3. Simulated learner + evidence       | Jun 28–30 | **Closed loop + evidence chart** 🎯            | ✅ Done |
+| 5. Illustrations                      | Jul 1–2   | Real illustrated book in a Doc                 | ✅ Done |
+| **Flagship A. Closed loop → product** | Jun 24    | `app/tutor` stateful loop + `SessionLog` + CLI | ✅ Done |
+| Flagship B. Voice read-aloud          | TBD       | Gemini Live → transcript; LLM book in the loop | ⬜      |
+| Flagship C. Web UI + live mastery viz | TBD       | The filmable demo                              | ⬜      |
+| Flagship D. Flywheel + rigorous eval  | TBD       | De-circularized evidence                       | ⬜      |
+| Writeup + video + final eval          | Jul 4–5   | Submission package                             | ⬜      |
+| Buffer / submit                       | Jul 6     | —                                              | ⬜      |
 
 > **Note:** the "Stretch (audio OR thin UI)" row was absorbed into the Flagship redesign below — see that section for the new direction that supersedes the original stretch scope.
 

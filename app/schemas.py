@@ -421,6 +421,17 @@ class SessionLog(BaseModel):
         default_factory=MasteryDelta, description="Full per-grapheme before/after for the session."
     )
 
+    # How the book was produced (the content flywheel signal for Stage D).
+    generation_source: Literal[
+        "llm",                     # LLM book, fully decodable + on-target
+        "llm_offtarget",           # LLM book, decodable but not exercising the target
+        "deterministic",           # deterministic builder used as the primary source
+        "deterministic_fallback",  # LLM failed N attempts -> fell back to deterministic
+    ] = Field(
+        default="deterministic",
+        description="How the book read this session was produced (for the content flywheel).",
+    )
+
     @classmethod
     def build(
         cls,
@@ -431,6 +442,7 @@ class SessionLog(BaseModel):
         book_title: str,
         assessment: "AssessmentResult",
         delta: "MasteryDelta",
+        generation_source: str = "deterministic",
     ) -> "SessionLog":
         """Flattens an objective + assessment + mastery delta into a log row."""
         p_before = p_after = None
@@ -457,6 +469,7 @@ class SessionLog(BaseModel):
             newly_mastered=list(delta.newly_mastered),
             newly_mastered_levels=list(delta.newly_mastered_levels),
             delta=delta,
+            generation_source=generation_source,
         )
 
 
