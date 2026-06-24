@@ -23,16 +23,26 @@ def test_adaptive_beats_static_on_true_mastery() -> None:
     assert result.adaptive["true_mean_mastery"][last] > result.static["true_mean_mastery"][last]
 
 
-def test_gap_widens_over_time() -> None:
-    """The advantage should grow, not just exist at a single point."""
-    result = run_experiment(num_learners=12, num_sessions=25)
-    early_gap = (
-        result.adaptive["probe_accuracy"][5] - result.static["probe_accuracy"][5]
+def test_advantage_emerges_from_a_tied_start() -> None:
+    """The arms start identical (paired by seed) and adaptive earns a sustained
+    accuracy lead by the end.
+
+    NOTE: against the de-circularized learner (logistic emission, no ZPD gate,
+    forgetting) the gap does NOT widen monotonically — early on every grapheme is
+    hard for both arms, so they track together, then adaptive pulls ahead and
+    holds. We assert the honest property (absent at the tied start, clearly
+    present at the end), not the old "gap always widens" narrative that the
+    self-consistent learner produced.
+    """
+    result = run_experiment(num_learners=20, num_sessions=35)
+    start_gap = (
+        result.adaptive["probe_accuracy"][0] - result.static["probe_accuracy"][0]
     )
-    late_gap = (
+    final_gap = (
         result.adaptive["probe_accuracy"][-1] - result.static["probe_accuracy"][-1]
     )
-    assert late_gap > early_gap
+    assert abs(start_gap) < 1e-9          # identical paired start, no advantage yet
+    assert final_gap > 0.02               # a clear, sustained lead by the end
 
 
 def test_experiment_is_reproducible() -> None:
