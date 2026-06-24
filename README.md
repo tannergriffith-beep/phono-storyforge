@@ -46,9 +46,15 @@ graph TD
 | 2 | Story Planner Agent | `story_planner` | Designs a `StoryOutline` — characters, setting, plot beats — constrained to the child's phonics level. |
 | 3 | Decodable Writer Agent | `writer_agent` | Writes the story page-by-page inside the loop below. |
 | 4 | Phonics QA Agent (guardrail) | `PhonicsQAAgent` inside `writer_qa_loop` | Deterministic Python checker (`app/tools.py`) audits every word against the child's phonics/sight-word profile and sends violations back to the writer. Loops until clean or raises `ValueError` ("Phonics Guardrail Validation FAILED") if it can't converge. |
-| 5 | Illustration Prompt Agent | `illustration_prompt_agent` | Generates page-by-page illustration prompts from a locked style guide (`docs/illustration-style-guide.md`) with age-band overrides. |
+| 5 | Illustration Prompt Agent | `illustration_prompt_agent` | Generates page-by-page illustration prompts from the locked Phono brand (`app/brand.py`) with age-band overrides. Real image generation + on-brand verification live in the separate illustrator path — see **Illustrations** below. |
 | 6 | Formatter/Export Agent (MCP + guardrail) | `formatter_export_agent` | Formats the book and exports it to Google Docs/Drive via MCP. `save_export_result` validates **both** `doc_id` and `shareable_url` before letting the pipeline continue — a real doc with a broken link still halts the run. |
 | 7 | Parent Report Agent (MCP + guardrail) | `parent_report_agent` | Writes a warm progress letter referencing the real export link, and creates a Gmail draft via MCP. `save_parent_report` verifies the `create_draft` tool call actually returned a draft ID before continuing. |
+
+### Illustrations (real cut-paper art, verified on-brand)
+
+Beyond the in-pipeline prompt agent, a dedicated illustrator path turns a decodable book into real images. A one-per-book **character bible** is generated and stored in session state, then injected into every page prompt for cross-page character consistency. **Nano Banana** (`gemini-2.5-flash-image`, via Vertex AI) renders each page as soft cut-paper collage, and a **deterministic palette verifier** (`app/skills/palette_verifier.py`) proves every image stays on the locked Phono palette — rejecting and regenerating, or snapping, anything that drifts. The real images are embedded inline in the Google Doc (`app/doc_export.py`: Drive upload + `insertInlineImage`), with OpenDyslexic body text and a Poppins title.
+
+This mirrors the project's core pattern — an LLM/image model proposes, deterministic Python verifies — the same way the phonics checker proves decodability. Run `python -m scripts.build_sample_book` to produce a full illustrated decodable book end-to-end in Google Docs (sample output committed under `results/sample_book/`). Image generation requires a billing-enabled Google Cloud project (the free-tier AI Studio key returns quota `limit:0` for image models), so the illustrator prefers Vertex AI.
 
 ### Capstone concepts demonstrated
 
@@ -73,13 +79,22 @@ agy-capstoneproject/
 ├── app/
 │   ├── agent.py            # 7-agent pipeline, guardrail callbacks, MCP wiring
 │   ├── schemas.py          # Pydantic contracts between agents
+│   ├── brand.py            # Locked Phono brand: palette, cut-paper style, prompt composers
+│   ├── illustrator.py      # Real illustrations: character bible + Nano Banana + verify/regenerate
+│   ├── doc_export.py       # Embed real images into the Google Doc (Drive + inline image)
 │   ├── tools.py            # Deterministic phonics-checking skill
 │   ├── phonics_db.py       # Phonics level reference data
+│   ├── skills/
+│   │   └── palette_verifier.py  # Deterministic on-brand palette check for generated art
 │   └── fast_api_app.py     # FastAPI entrypoint (used by Dockerfile/deploy)
+├── scripts/
+│   └── build_sample_book.py  # End-to-end: generate an illustrated decodable book in Docs
+├── results/
+│   └── sample_book/        # Sample generated illustrated book (page PNGs)
 ├── docs/
-│   └── illustration-style-guide.md
+│   └── illustration-style-guide.md  # Superseded by app/brand.py
 ├── tests/
-│   ├── unit/                # save_export_result, save_parent_report, tools
+│   ├── unit/                # guardrails, phonics, palette verifier, illustrator, doc export
 │   ├── integration/          # full pipeline run (mocked MCP), failure-path test
 │   └── eval/                 # agents-cli eval datasets
 ├── Dockerfile
