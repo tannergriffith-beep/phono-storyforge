@@ -80,6 +80,23 @@
           <div id="next-target" class="next-target"></div>
           <button id="next-btn" class="primary">Next session →</button>
         </div>
+
+        <!-- Opt-in illustrated take-home book (creds-gated; hidden by default). -->
+        <div id="book-gen" class="book-gen" hidden>
+          <h4>Take-home book</h4>
+          <p class="muted">Generate <b id="book-gen-name">this learner</b>'s illustrated,
+            decodable book for today's target. Runs the full story pipeline — takes a few minutes.</p>
+          <button id="gen-book-btn" class="primary">📚 Generate illustrated book</button>
+          <p id="book-progress" class="voice-status"></p>
+          <div id="book-result" class="book-result" hidden>
+            <div class="book-result-head">
+              <a id="book-link" href="#" target="_blank" rel="noopener">Open the Google Doc ↗</a>
+              <span id="book-decodable" class="source-badge"></span>
+            </div>
+            <p id="book-note" class="muted"></p>
+            <div id="book-pages" class="book-pages"></div>
+          </div>
+        </div>
       </section>
     </div>
 

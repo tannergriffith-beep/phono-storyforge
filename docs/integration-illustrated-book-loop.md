@@ -1,6 +1,6 @@
 # Integration Plan — Fold the illustrated e-book pipeline into the live closed loop
 
-> **Status:** PLANNED (not started). Self-contained brief for a fresh session that
+> **Status:** IMPLEMENTED (MVP + Phase 2 shipped 2026-06-25; deviations recorded in §12). Self-contained brief for a fresh session that
 > has none of the prior conversation context. Read this top-to-bottom before coding.
 > Written 2026-06-25. Target: ~1 focused day for the MVP; deadline is comfortable.
 
@@ -276,3 +276,35 @@ facts against the code, then go step by step (adapter -> generation fn -> web ac
 -> UI -> gating -> tests). Show me the adapter + a working Doc-link round-trip before
 polishing the page-thumbnail preview.
 ---
+
+## 12. Implementation deviations (as-built, 2026-06-25)
+
+The MVP + Phase 2 shipped. Two deviations from this plan, both forced by reality
+and verified end-to-end on Vertex (ratified):
+
+1. **Model: `gemini-flash-lite-latest` → `gemini-2.5-flash`** (`app/agent.py`).
+   Two reasons: (a) the `-latest` alias is a Developer-API name that **404s as a
+   Vertex publisher model**, so the whole ADK pipeline was already broken on the
+   mandated Vertex backend; (b) the flash-lite tier (`gemini-2.5-flash-lite`,
+   which *does* resolve) could **not** reliably satisfy the decodability guardrail
+   — the writer kept emitting out-of-budget words and the QA `LoopAgent` rejected
+   it. `gemini-2.5-flash` resolves and converges. This is a global change to
+   `root_agent` (also fixes `adk web` / integration on Vertex); eval is untouched.
+
+2. **Deterministic Doc export instead of the LLM export agent.** The plan said to
+   read `export_result` from `root_agent`'s `formatter_export_agent`, but that
+   LLM-drives-MCP-then-hand-formats-JSON step **consistently returned
+   `doc_id="unknown"`** and tripped its own guardrail. The live web flow instead
+   exports the Doc **deterministically** via `app/doc_export.py` (the
+   `build_sample_book` path) — the same propose/verify discipline as the
+   decodability QA loop and the palette verifier: the LLM writes the (QA-gated)
+   text, deterministic code assembles the Doc, so a real link is produced every
+   time the export creds are present. `formatter_export_agent` is left **unchanged**
+   in `root_agent` for `adk web` / integration tests, but is not reliable standalone.
+
+As-built notes (within the planned scope): illustration is driven directly via
+`app/illustrator.py` (Nano Banana + palette verifier, CharacterBible from the
+planner outline) rather than the prompt-only `illustration_prompt_agent`, which is
+dropped from the seeded pipeline; page thumbnails are returned as inline base64;
+and there are two independent degrade axes (illustration-unavailable → text-only;
+Docs-export-unavailable → pages-only), surfaced via `IllustratedBookResult.source`.

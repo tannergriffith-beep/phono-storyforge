@@ -110,6 +110,9 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 pythonpath = "."
 asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "integration: live-API tests (real Vertex/Gemini); opt in with RUN_INTEGRATION=1",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["app","frontend"]

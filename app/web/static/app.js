@@ -19,6 +19,8 @@ const state = {
   targetPositions: [],  // positions of words exercising the target grapheme
   bars: {},             // grapheme -> {row, fill, p}
   mic: { ctx: null, stream: null, node: null, recording: false },
+  illustratedEnabled: false,  // creds-gated take-home book feature
+  learnerName: "",            // for the "Generate <name>'s book" label
 };
 
 const OUT_RATE = 16000;  // app/voice expects 16-bit/16 kHz mono PCM
@@ -35,10 +37,13 @@ function connect() {
   ws.onerror = () => setStatus("connection error", "err");
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
-    if (msg.type === "prepared") renderPrepared(msg);
+    if (msg.type === "capabilities") { state.illustratedEnabled = !!msg.illustrated_enabled; }
+    else if (msg.type === "prepared") renderPrepared(msg);
     else if (msg.type === "outcome") renderOutcome(msg);
     else if (msg.type === "voice_status") voiceStatus(msg.message);
-    else if (msg.type === "error") { setStatus(msg.message, "err"); voiceStatus(msg.message); }
+    else if (msg.type === "book_progress") bookProgress(msg.message);
+    else if (msg.type === "book_ready") renderBookReady(msg);
+    else if (msg.type === "error") { setStatus(msg.message, "err"); voiceStatus(msg.message); bookProgress(msg.message); endBookGen(); }
   };
 }
 
@@ -67,6 +72,73 @@ function startSession() {
 function scoreRead() {
   const transcript = $("transcript").value.trim();
   send({ action: "submit", transcript });
+}
+
+// ---- Illustrated take-home book (opt-in, creds-gated) -----------------------
+
+function generateBook() {
+  const btn = $("gen-book-btn");
+  btn.disabled = true;
+  $("book-result").hidden = true;
+  bookProgress("Starting…");
+  send({ action: "generate_book" });
+}
+
+function bookProgress(text) { $("book-progress").textContent = text || ""; }
+
+function endBookGen() {
+  const btn = $("gen-book-btn");
+  if (btn) btn.disabled = false;
+}
+
+function renderBookReady(msg) {
+  endBookGen();
+  bookProgress("Done — the illustrated book is ready.");
+
+  // Doc link — present unless the export degraded to pages-only.
+  const link = $("book-link");
+  if (msg.shareable_url) {
+    link.href = msg.shareable_url;
+    link.textContent = (msg.title ? `Open “${msg.title}” ↗` : "Open the Google Doc ↗");
+    link.hidden = false;
+  } else {
+    link.hidden = true;
+  }
+
+  $("book-decodable").textContent = msg.decodable ? "decodable ✓" : "decodability unverified";
+
+  // A short note when something degraded, so the result is never misleading.
+  const notes = {
+    illustrated_pages_only: "Pages illustrated, but the Google Docs export was unavailable — showing the pages here.",
+    text_only: "Illustrations were unavailable, so this is a text-only book.",
+    text_only_pages_only: "Illustrations and the Docs export were unavailable — showing the page text only.",
+  };
+  $("book-note").textContent = notes[msg.source] || "";
+
+  // Pages with inline thumbnails when illustrated.
+  const pagesEl = $("book-pages");
+  pagesEl.innerHTML = "";
+  (msg.pages || []).forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = "book-page";
+    if (p.image_ref) {
+      const img = document.createElement("img");
+      img.className = "book-thumb";
+      img.src = p.image_ref;
+      img.alt = `page ${i + 1} illustration`;
+      div.appendChild(img);
+    }
+    const num = document.createElement("span");
+    num.className = "book-page-n";
+    num.textContent = i + 1;
+    const txt = document.createElement("span");
+    txt.className = "book-page-t";
+    txt.textContent = p.text;
+    div.appendChild(num);
+    div.appendChild(txt);
+    pagesEl.appendChild(div);
+  });
+  $("book-result").hidden = false;
 }
 
 // Preset transcripts are built client-side from the known book words so filming
@@ -163,6 +235,17 @@ function renderPrepared(msg) {
   $("target-grapheme").textContent = `/${msg.objective.target_grapheme}/`;
   $("target-level").textContent = msg.objective.target_level;
   $("rationale").textContent = msg.objective.rationale;
+
+  // Reset + reveal the take-home book panel (only when the feature is enabled).
+  state.learnerName = msg.learner_name || "";
+  const bookGen = $("book-gen");
+  bookGen.hidden = !state.illustratedEnabled;
+  if (state.illustratedEnabled) {
+    $("book-gen-name").textContent = state.learnerName || "this learner";
+    $("book-result").hidden = true;
+    bookProgress("");
+    endBookGen();
+  }
 
   state.words = msg.book.words;
   state.targetPositions = msg.book.target_word_positions || [];
@@ -285,6 +368,7 @@ $("start-btn").addEventListener("click", startSession);
 $("score-btn").addEventListener("click", scoreRead);
 $("next-btn").addEventListener("click", startSession);
 $("mic-btn").addEventListener("click", toggleMic);
+$("gen-book-btn").addEventListener("click", generateBook);
 document.querySelectorAll(".presets [data-preset]").forEach((btn) =>
   btn.addEventListener("click", () => applyPreset(btn.dataset.preset))
 );

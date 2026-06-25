@@ -47,13 +47,22 @@ def create_app(
     *,
     data_dir: str | Path = _DEFAULT_DATA_DIR,
     book_provider=None,
+    illustrated_book_generator=None,
 ) -> FastAPI:
     """Builds the FastAPI app wired to a persistent TutorSession.
 
     `book_provider` defaults to TutorSession's deterministic builder (offline,
     filmable, no key). Pass `make_llm_book_provider()` to use the verifier-gated
     Gemini generator without touching anything else.
+
+    `illustrated_book_generator` is the strictly-opt-in, creds-gated hook for the
+    slow illustrated take-home book. When None (the default), the feature is
+    disabled: the client is told so and the button stays hidden, so the offline
+    demo is unchanged. When provided it must be an async callable
+    `(objective, profile, *, progress_cb) -> IllustratedBookResult` — normally
+    `app.tutor.illustrated_book.generate_illustrated_book`.
     """
+    illustrated_enabled = illustrated_book_generator is not None
     app = FastAPI(title="Phono StoryForge — live tutor")
     store = JSONLearnerStore(Path(data_dir) / "profiles")
     log_store = JSONLSessionLogStore(Path(data_dir) / "sessions")
@@ -71,6 +80,11 @@ def create_app(
     @app.websocket("/ws")
     async def ws(websocket: WebSocket) -> None:
         await websocket.accept()
+        # Tell the client which optional features are wired so it can show/hide
+        # the illustrated-book button. Default (no creds) => disabled.
+        await websocket.send_json(
+            {"type": "capabilities", "illustrated_enabled": illustrated_enabled}
+        )
         prepared = None
         # Step-2 voice: raw 16-bit/16 kHz PCM frames from the browser mic are
         # buffered here only while a read is in progress, then handed to the
@@ -161,6 +175,52 @@ def create_app(
                     finally:
                         audio_chunks = []
 
+                elif action == "generate_book":
+                    # Explicit, async, end-of-session action: run the illustrated
+                    # e-book pipeline for the current objective. NEVER inline in
+                    # the read loop. Creds-gated; failures are reported, not fatal.
+                    if not illustrated_enabled:
+                        await websocket.send_json(
+                            {"type": "error", "message": "illustrated book generation is not enabled"}
+                        )
+                        continue
+                    if prepared is None:
+                        await websocket.send_json(
+                            {"type": "error", "message": "prepare a session first"}
+                        )
+                        continue
+
+                    async def _progress(text: str) -> None:
+                        await websocket.send_json(
+                            {"type": "book_progress", "message": text}
+                        )
+
+                    try:
+                        result = await illustrated_book_generator(
+                            prepared.objective, prepared.profile, progress_cb=_progress
+                        )
+                        await websocket.send_json(
+                            {
+                                "type": "book_ready",
+                                "shareable_url": result.shareable_url,
+                                "doc_id": result.doc_id,
+                                "title": result.title,
+                                "decodable": result.decodable,
+                                "source": result.source,
+                                "pages": result.pages,
+                            }
+                        )
+                    except Exception as exc:  # noqa: BLE001 - report, never crash the demo
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "message": (
+                                    f"illustrated book generation failed ({exc}). "
+                                    "The reading loop is unaffected — try again."
+                                ),
+                            }
+                        )
+
                 else:
                     await websocket.send_json(
                         {"type": "error", "message": f"unknown action: {action!r}"}
@@ -198,7 +258,16 @@ def _build_default_app() -> FastAPI:
         from app.tutor.book_source import make_llm_book_provider
 
         book_provider = make_llm_book_provider()
-    return create_app(data_dir=data_dir, book_provider=book_provider)
+    illustrated_book_generator = None
+    if os.environ.get("PHONO_ILLUSTRATED_BOOK", "0") == "1":
+        from app.tutor.illustrated_book import generate_illustrated_book
+
+        illustrated_book_generator = generate_illustrated_book
+    return create_app(
+        data_dir=data_dir,
+        book_provider=book_provider,
+        illustrated_book_generator=illustrated_book_generator,
+    )
 
 
 app = _build_default_app()

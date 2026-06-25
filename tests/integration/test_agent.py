@@ -24,6 +24,18 @@ os.environ["INTEGRATION_TEST"] = "TRUE"
 
 from app.agent import root_agent
 
+# These tests drive the real Vertex/Gemini backend (only the gws MCP tools are
+# mocked); they make live API calls and take minutes. Skip unless RUN_INTEGRATION=1
+# so the default offline suite never hits the network. Run them manually with:
+#   RUN_INTEGRATION=1 uv run python -m pytest tests/integration/test_agent.py
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        os.environ.get("RUN_INTEGRATION") != "1",
+        reason="hits the real Vertex/Gemini backend; set RUN_INTEGRATION=1 to run",
+    ),
+]
+
 
 def test_agent_stream() -> None:
     """Integration test for the agent stream functionality.

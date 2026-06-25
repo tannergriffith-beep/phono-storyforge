@@ -47,8 +47,14 @@ from app.schemas import (
 from app.brand import AGE_BAND_MODIFIERS, ILLUSTRATION_STYLE_PREAMBLE
 from app.skills.decodability import check_decodability
 
-# Configure Gemini Model options
-MODEL_NAME = "gemini-flash-lite-latest"
+# Configure Gemini Model options.
+# Vertex publisher model id (the backend is Vertex: GOOGLE_GENAI_USE_VERTEXAI=1).
+# Two reasons this is an explicit pinned id rather than a "-latest" alias:
+#   1. The Developer-API "-latest" alias (gemini-flash-lite-latest) does NOT
+#      resolve as a Vertex publisher model (404).
+#   2. The flash-lite tier could not reliably satisfy the decodability guardrail
+#      (the writer kept emitting out-of-budget words); gemini-2.5-flash converges.
+MODEL_NAME = "gemini-2.5-flash"
 gemini_model = Gemini(
     model=MODEL_NAME,
     retry_options=types.HttpRetryOptions(attempts=3),

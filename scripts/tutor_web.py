@@ -37,6 +37,11 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=8000, help="Bind port.")
     parser.add_argument("--data-dir", type=Path, default=_DEFAULT_DATA_DIR, help="Where profiles + logs live.")
     parser.add_argument("--llm-book", action="store_true", help="Use the verifier-gated LLM book generator.")
+    parser.add_argument(
+        "--illustrated-book",
+        action="store_true",
+        help="Enable the opt-in, creds-gated illustrated take-home book (ADK pipeline + Google Docs export).",
+    )
     args = parser.parse_args()
 
     import uvicorn
@@ -49,7 +54,17 @@ def main() -> None:
 
         book_provider = make_llm_book_provider()
 
-    app = create_app(data_dir=args.data_dir, book_provider=book_provider)
+    illustrated_book_generator = None
+    if args.illustrated_book:
+        from app.tutor.illustrated_book import generate_illustrated_book
+
+        illustrated_book_generator = generate_illustrated_book
+
+    app = create_app(
+        data_dir=args.data_dir,
+        book_provider=book_provider,
+        illustrated_book_generator=illustrated_book_generator,
+    )
     print(f"Phono StoryForge live tutor → http://{args.host}:{args.port}")
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
 
