@@ -1,7 +1,7 @@
 # Build Plan — Closed-Loop Reading Tutor
 
 **Deadline:** Mon **July 6, 2026**. **Internal ship date:** Sat **July 5** (1 day slack).
-**Today:** June 24. **Assumption:** \~full-time solo effort + AI assist. Part-time? See "Compression" at bottom.
+**Today:** June 25. **Assumption:** \~full-time solo effort + AI assist. Part-time? See "Compression" at bottom.
 
 ## Status dashboard
 
@@ -14,7 +14,8 @@
 | **Flagship A. Closed loop → product** | Jun 24    | `app/tutor` stateful loop + `SessionLog` + CLI | ✅ Done |
 | Flagship B. Voice read-aloud          | Jun 24    | Gemini Live → transcript; LLM book in the loop | ✅ Done |
 | Flagship C. Web UI + live mastery viz | Jun 24    | The filmable demo (typed + browser-mic voice)  | ✅ Done |
-| Flagship D. Flywheel + rigorous eval  | TBD       | De-circularized evidence                       | ⬜      |
+| Flagship D. De-circularized evidence  | Jun 25    | Independent learner + externally-validated `decompose` | ✅ Done |
+| D′. Self-improving content flywheel   | TBD       | Every real session → eval datapoint            | ⬜      |
 | Writeup + video + final eval          | Jul 4–5   | Submission package                             | ⬜      |
 | Buffer / submit                       | Jul 6     | —                                              | ⬜      |
 
@@ -191,10 +192,12 @@ real loop, never fakes it.
 - **Done when:** the browser drives the real loop end to end. ✅ — 8 new viz unit tests,
   152 offline green; socket/mic/browser kept out of the default test path.
 
-**Stage D — flywheel + de-circularized eval** 🟧 (segmenter half done)
-Every real session → an eval datapoint; `check_decodability` as an always-on judge.
+**Stage D — de-circularized eval** ✅ done
 Break the simulation's circularity (independent learner model + validate `decompose`
-against an external corpus).
+against an external corpus). Both halves complete — see results below. (The "every real
+session → eval datapoint, `check_decodability` as an always-on judge" flywheel idea is
+tracked separately as **D′** — see README roadmap and `docs/stage-d-prime-flywheel.md` —
+and is not yet built.)
 
 - ✅ **Segmenter externally validated.** `tests/unit/test_decompose_corpus.py` checks
   `_segment` against (A) a 58-word hand-verified grapheme truth set across every level,
