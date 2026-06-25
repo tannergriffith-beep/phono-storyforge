@@ -29,13 +29,22 @@ from typing import Protocol
 
 from app.voice.confidence import DEFAULT_CONFIDENCE_THRESHOLD, repair_low_confidence
 
-# Pinned in ONE place so the inevitable Live-model churn is a one-line change.
-# `gemini-live-2.5-flash-native-audio` is the current native-audio Live model.
-# Alternatives if needed: the lighter half-cascade `gemini-live-2.5-flash`
-# (cheaper streaming STT, fine when we don't need native-audio output), or the
-# latest-gen `gemini-3.1-flash-live-preview`. Do NOT pin the dated preview id
-# (`...-preview-native-audio-09-2025`); it is being removed 2026-03-19.
-LIVE_MODEL = "gemini-live-2.5-flash-native-audio"
+# Live model ids are pinned here so model churn is a one-line change. The right
+# id depends on the backend, because the two surfaces expose different models:
+#
+#   * Developer API (GOOGLE_GENAI_USE_VERTEXAI=0, API key): the lighter half-cascade
+#     `gemini-live-2.5-flash` does streaming input transcription with TEXT output —
+#     exactly what STT wants (no spoken response), lower latency and cost.
+#   * Vertex AI (GOOGLE_GENAI_USE_VERTEXAI=1, ADC): only the native-audio Live model
+#     is GA, and it REJECTS TEXT output — it must run with AUDIO output. We still
+#     read only the input transcription (what the child said), so the spoken audio
+#     it generates is simply ignored. This is the path that works without an API
+#     key (the new AQ. auth keys currently 401 on the Developer API).
+#
+# Do NOT pin the dated preview id (`...-preview-native-audio-09-2025`); it is being
+# removed 2026-03-19.
+LIVE_MODEL = "gemini-live-2.5-flash"                       # Developer API (TEXT out)
+VERTEX_LIVE_MODEL = "gemini-live-2.5-flash-native-audio"   # Vertex AI (AUDIO out)
 
 # Live expects 16-bit PCM mono; 16 kHz is the standard input rate.
 INPUT_SAMPLE_RATE = 16000
@@ -117,18 +126,34 @@ class LiveTranscriber:
         self,
         *,
         client=None,
-        model: str = LIVE_MODEL,
+        model: str | None = None,
         audio_source=None,
         language_code: str = "en-US",
         confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
         sample_rate: int = INPUT_SAMPLE_RATE,
     ) -> None:
         self._client = client
+        # None => auto-select the model for the active backend at connect time
+        # (Vertex needs the native-audio id; the Developer API uses the half-cascade).
         self._model = model
         self._audio_source = audio_source
         self._language_code = language_code
         self._threshold = confidence_threshold
         self._sample_rate = sample_rate
+
+    @staticmethod
+    def _vertex_enabled() -> bool:
+        """True when the env selects the Vertex backend (flag set + project present).
+
+        Vertex authenticates with ADC (gcloud) instead of an API key, which is the
+        working path while the Developer API's new AQ. auth keys 401.
+        """
+        import os
+
+        return (
+            os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", "0") == "1"
+            and bool(os.environ.get("GOOGLE_CLOUD_PROJECT"))
+        )
 
     def _ensure_client(self):
         if self._client is not None:
@@ -138,15 +163,18 @@ class LiveTranscriber:
         from google import genai
         from google.genai import types
 
-        http_options = types.HttpOptions(api_version="v1beta")
-        project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-        location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
-        if os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", "0") == "1" and project:
+        if self._vertex_enabled():
+            # Vertex Live speaks v1beta1; the Developer API path uses v1beta.
+            project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+            location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
             self._client = genai.Client(
-                vertexai=True, project=project, location=location, http_options=http_options
+                vertexai=True,
+                project=project,
+                location=location,
+                http_options=types.HttpOptions(api_version="v1beta1"),
             )
         else:
-            self._client = genai.Client(http_options=http_options)
+            self._client = genai.Client(http_options=types.HttpOptions(api_version="v1beta"))
         return self._client
 
     def transcribe(self, expected_words: list[str]) -> tuple[list[str], float]:
@@ -160,8 +188,14 @@ class LiveTranscriber:
         from google.genai import types
 
         client = self._ensure_client()
+        is_vertex = self._vertex_enabled()
+        # Vertex's only GA Live model is native-audio, which requires AUDIO output;
+        # the Developer API's half-cascade model gives TEXT. Either way we read only
+        # the input transcription, so any spoken audio the native model emits is
+        # ignored. Model id is auto-selected per backend unless one was injected.
+        model = self._model or (VERTEX_LIVE_MODEL if is_vertex else LIVE_MODEL)
         config = types.LiveConnectConfig(
-            response_modalities=["TEXT"],
+            response_modalities=["AUDIO"] if is_vertex else ["TEXT"],
             input_audio_transcription=types.AudioTranscriptionConfig(),
             system_instruction=_bias_instruction(expected_words),
         )
@@ -172,7 +206,7 @@ class LiveTranscriber:
 
         transcript_parts: list[str] = []
         total_bytes = 0
-        async with client.aio.live.connect(model=self._model, config=config) as session:
+        async with client.aio.live.connect(model=model, config=config) as session:
             # Stream audio; the SDK accepts a sync or async iterable of chunks.
             if hasattr(source, "__aiter__"):
                 async for chunk in source:

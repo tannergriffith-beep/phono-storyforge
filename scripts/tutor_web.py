@@ -20,6 +20,14 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Load app/.env so GOOGLE_API_KEY (and any Vertex settings) reach the Gemini Live
+# voice path. The web launcher otherwise inherits only the shell environment, so a
+# key sitting in app/.env would never reach the LiveTranscriber and voice would
+# silently fall back to typed input.
+load_dotenv(Path(__file__).resolve().parent.parent / "app" / ".env")
+
 _DEFAULT_DATA_DIR = Path("artifacts") / "tutor_data"
 
 
