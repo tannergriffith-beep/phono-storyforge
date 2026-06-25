@@ -41,7 +41,7 @@ Everything load-bearing here is **deterministic, non-LLM Python** that the proje
 - **Voice read-aloud + verifier-gated LLM books (Stage B, done).** Gemini Live transcribes the child's read-aloud (`app/voice/`, with a `FakeTranscriber` for offline tests) and feeds the *unchanged* `record_read()`; a verifier-gated LLM generator (`app/tutor/llm_book.py`, propose → `check_decodability` → revise) is wired into the loop as an optional content source behind the same `BookProvider` seam (`--llm-book`). Voice is creds-gated and degrades to typed input if Gemini Live is unavailable.
 - **Web read-along + live mastery viz (Stage C, done).** A FastAPI + vanilla-JS app (`app/web/`, launched via `scripts/tutor_web.py`) drives the real loop in the browser over a WebSocket: a miscue heatmap lights per word, mastery bars animate as BKT updates, and the next-target panel shifts on screen. Browser-mic voice is layered on additively; the typed path stands alone if voice is flaky.
 - **Decodable-book generation pipeline — implemented and verified end-to-end.** A multi-stage ADK `SequentialAgent` writes a phonically-decodable story, illustrates it (real cut-paper art, on-brand-verified), and exports it to Google Docs/Drive with a Gmail parent report. The Docs/Drive and Gmail write paths are verified against real accounts.
-- **What's honestly *not* done.** The live per-session loop generates decodable *text* (deterministic builder by default, or the verifier-gated LLM generator); the richer *illustrated* ADK pipeline is not yet folded into the per-session loop. The de-circularized evidence study is Stage D (see *Evidence* and Roadmap). **152 offline unit tests pass** (`uv run pytest tests/unit`).
+- **What's honestly *not* done.** The live per-session loop generates decodable *text* (deterministic builder by default, or the verifier-gated LLM generator); the richer *illustrated* ADK pipeline is not yet folded into the per-session loop. The de-circularized evidence study (Stage D) is done; see *Evidence*. **249 offline unit tests pass** (`uv run pytest tests/unit`).
 
 ## The content engine: verifier-gated decodable-book generation
 
@@ -84,7 +84,8 @@ Result (n=30, 40 sessions): **probe accuracy +0.06, true mean latent mastery +0.
 | **A** | Wire the closed loop into a real stateful product (`app/tutor`, `SessionLog`, typed-transcript entry path) | ✅ Done |
 | **B** | Gemini Live voice read-aloud → transcript (replaces typed input); verifier-gated LLM book generator wired into the loop as an optional content source | ✅ Done |
 | **C** | Web read-along UI + live mastery-graph visualization (the filmable demo) | ✅ Done |
-| **D** | Self-improving content flywheel + de-circularized evidence study | ⬜ Planned |
+| **D** | De-circularized evidence study (independent learner + externally-validated `decompose`) | ✅ Done |
+| **D′** | Self-improving content flywheel (every real session → an eval datapoint) | ⬜ Planned |
 
 The voice loop (Stage B) drops in behind the existing `TutorSession.record_read(prepared, spoken)` signature unchanged — `spoken` simply arrives from ASR instead of stdin.
 
