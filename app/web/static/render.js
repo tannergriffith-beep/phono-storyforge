@@ -28,6 +28,7 @@ export function renderPrepared(msg) {
   // subscribe to `prepared` directly.
 
   // Reset + reveal the take-home book panel (only when the feature is enabled).
+  state.learnerId = msg.learner_id || "";
   state.learnerName = msg.learner_name || "";
   const bookGen = $("book-gen");
   bookGen.hidden = !state.illustratedEnabled;

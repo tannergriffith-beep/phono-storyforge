@@ -245,6 +245,9 @@ input:focus, textarea:focus { outline: none; border-color: var(--coral); }
 .surface-inset { background: var(--pearl); border-radius: var(--r-md); }
 
 /* --- Mean meter (top bar hero number) --- */
+.topbar-right { display: flex; align-items: center; gap: var(--space-4); }
+.topbar-btn { background: rgba(236, 229, 219, 0.14); color: var(--parchment); border: 1.5px solid rgba(236, 229, 219, 0.35); font-size: var(--fs-sm); }
+.topbar-btn:hover { border-color: var(--gold); }
 .mean-meter { display: flex; align-items: center; gap: var(--space-3); min-width: 280px; }
 .mean-label {
   font-size: var(--fs-data); text-transform: uppercase; letter-spacing: 1px;
@@ -426,14 +429,32 @@ input:focus, textarea:focus { outline: none; border-color: var(--coral); }
 /* --- 5f. Journey timeline (DESIGN §17) ------------------------------------ */
 .journey { padding: var(--space-4); overflow-x: auto; }
 .journey-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--space-4); }
-.journey-grid { display: grid; grid-auto-flow: column; gap: var(--space-4); }
-.journey-row-label { font-size: 11px; color: var(--tundora); text-transform: uppercase; letter-spacing: 0.08em; }
-.journey-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 48px; }
-.journey-target { font-family: var(--font-mono); font-weight: 700; }
-.journey-target.changed { color: var(--coral-text); }     /* the visible adaptation */
 .journey-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--sage); }
-.journey-dot.today { background: var(--coral); box-shadow: 0 0 0 4px rgba(219,126,101,0.25); }
-.journey-mean { font-family: var(--font-mono); font-size: var(--fs-data); color: var(--tundora); }
+.journey-dot.today { background: var(--coral); box-shadow: 0 0 0 4px rgba(219, 126, 101, 0.25); }
+
+/* Journey view (overlay-style section) + row-based timeline layout. */
+.journey-view .journey-head { display: flex; align-items: baseline; gap: var(--space-3); margin-bottom: var(--space-4); }
+.journey-view .journey-head #journey-close { margin-left: auto; }
+.jtl { display: flex; flex-direction: column; gap: var(--space-2); min-width: max-content; }
+.jrow { display: flex; align-items: center; gap: var(--space-3); }
+.jlabel {
+  width: 64px; flex: 0 0 64px; text-align: right;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--tundora);
+}
+.jcells { display: flex; gap: var(--space-2); flex: 1; }
+.jcell { flex: 1 1 0; min-width: 44px; text-align: center; }
+.jcell.journey-target { font-family: var(--font-mono); font-weight: 700; color: var(--navy); }
+.jcell.journey-target.changed { color: var(--coral-text); }   /* the visible adaptation */
+.jcell.journey-mastered { font-family: var(--font-mono); font-size: 11px; color: var(--sage); }
+.jcell.journey-mean { font-family: var(--font-mono); font-size: var(--fs-data); color: var(--tundora); }
+
+.jspark-wrap { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-2); }
+.journey-spark { flex: 1; height: 40px; min-width: 200px; }
+.spark-area { fill: rgba(235, 186, 122, 0.25); }
+.spark-line { fill: none; stroke: var(--sage); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.spark-end { fill: var(--gold); }
+
+.journey-empty { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); padding: var(--space-6); color: var(--tundora); text-align: center; }
 
 /* --- 5g. AdaptBeat caption (DESIGN §7/§16) -------------------------------- */
 .adapt-caption {

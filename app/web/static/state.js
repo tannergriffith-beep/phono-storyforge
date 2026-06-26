@@ -11,6 +11,7 @@ export const state = {
   targetPositions: [],        // positions of words exercising the target grapheme
   mic: { ctx: null, stream: null, node: null, recording: false },
   illustratedEnabled: false,  // creds-gated take-home book feature
+  learnerId: "",              // current learner (for the Journey read)
   learnerName: "",            // for the "Generate <name>'s book" label
 };
 

@@ -198,6 +198,7 @@ class TutorSession:
         profile.sessions_completed += 1
         self.store.save(profile)
 
+        mean_mastery = _mean_mastery(profile)
         log = SessionLog.build(
             learner_id=profile.learner_id,
             session_index=prepared.session_index,
@@ -206,6 +207,7 @@ class TutorSession:
             assessment=assessment,
             delta=delta,
             generation_source=getattr(book, "generation_source", "deterministic"),
+            mean_mastery=mean_mastery,
         )
         if self.log_store is not None:
             self.log_store.append(log)
@@ -222,7 +224,7 @@ class TutorSession:
             assessment=assessment,
             delta=delta,
             log=log,
-            mean_mastery=_mean_mastery(profile),
+            mean_mastery=mean_mastery,
             next_objective=next_objective,
             next_target_p_mastery=next_mastery.p_mastery if next_mastery else 0.0,
         )

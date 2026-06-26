@@ -29,6 +29,7 @@ import { WhyCard } from "./components/whyCard.js";
 import { MasteryPath } from "./components/masteryPath.js";
 import { ModeToggle } from "./components/modeToggle.js";
 import { AdaptBeat } from "./components/adaptBeat.js";
+import { Journey } from "./components/journey.js";
 
 // ---- Actions ----------------------------------------------------------------
 
@@ -74,6 +75,8 @@ MasteryPath.mount();
 ModeToggle.mount();
 // AdaptBeat choreographs the climax on `outcome` (deferred until Insight is open).
 AdaptBeat.mount();
+// Journey: the cross-session "loop, not generator" proof (reads persisted logs).
+Journey.mount();
 
 // ---- Button wiring ----------------------------------------------------------
 

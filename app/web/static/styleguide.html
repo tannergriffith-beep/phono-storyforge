@@ -169,19 +169,28 @@
     <section class="sg-section">
       <h2>JourneyTimeline <span class="sg-tag">§17 · proves "loop, not generator"</span></h2>
       <p class="sg-note">Target row shifts (adaptation, coral where it changed) while the mean row rises (learning). Needs the new <span class="sg-tag">mean_mastery</span> SessionLog field (Phase 2).</p>
-      <div class="sg-card journey">
+      <div class="sg-card journey journey-view">
         <div class="journey-head">
           <strong>Ada's journey</strong>
           <span class="muted">7 sessions · mastery 21% → 58%</span>
         </div>
-        <div class="journey-grid">
-          <div class="journey-cell"><span class="journey-target">a</span><span class="journey-dot"></span><span class="journey-mean">.21</span></div>
-          <div class="journey-cell"><span class="journey-target">a</span><span class="journey-dot"></span><span class="journey-mean">.29</span></div>
-          <div class="journey-cell"><span class="journey-target changed">e</span><span class="journey-dot"></span><span class="journey-mean">.35</span></div>
-          <div class="journey-cell"><span class="journey-target">e</span><span class="journey-dot"></span><span class="journey-mean">.41</span></div>
-          <div class="journey-cell"><span class="journey-target changed">i</span><span class="journey-dot"></span><span class="journey-mean">.47</span></div>
-          <div class="journey-cell"><span class="journey-target">i</span><span class="journey-dot"></span><span class="journey-mean">.52</span></div>
-          <div class="journey-cell"><span class="journey-target changed">o</span><span class="journey-dot today"></span><span class="journey-mean">.58</span></div>
+        <div class="jtl">
+          <div class="jrow"><span class="jlabel">target</span><div class="jcells">
+            <span class="jcell journey-target">a</span><span class="jcell journey-target">a</span><span class="jcell journey-target changed">e</span><span class="jcell journey-target">e</span><span class="jcell journey-target changed">i</span><span class="jcell journey-target">i</span><span class="jcell journey-target changed">o</span>
+          </div></div>
+          <div class="jrow"><span class="jlabel">session</span><div class="jcells">
+            <span class="jcell"><span class="journey-dot"></span></span><span class="jcell"><span class="journey-dot"></span></span><span class="jcell"><span class="journey-dot"></span></span><span class="jcell"><span class="journey-dot"></span></span><span class="jcell"><span class="journey-dot"></span></span><span class="jcell"><span class="journey-dot"></span></span><span class="jcell"><span class="journey-dot today"></span></span>
+          </div></div>
+          <div class="jrow"><span class="jlabel">mean</span><div class="jcells">
+            <span class="jcell journey-mean">21%</span><span class="jcell journey-mean">29%</span><span class="jcell journey-mean">35%</span><span class="jcell journey-mean">41%</span><span class="jcell journey-mean">47%</span><span class="jcell journey-mean">52%</span><span class="jcell journey-mean">58%</span>
+          </div></div>
+        </div>
+        <div class="jspark-wrap"><span class="jlabel">trend</span>
+          <svg class="journey-spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+            <polygon points="0,30 0,23.7 16.7,21.3 33.3,18.9 50,16.5 66.7,14.1 83.3,11.8 100,9.5 100,30" class="spark-area"/>
+            <polyline points="0,23.7 16.7,21.3 33.3,18.9 50,16.5 66.7,14.1 83.3,11.8 100,9.5" class="spark-line"/>
+            <circle cx="100" cy="9.5" r="2.2" class="spark-end"/>
+          </svg>
         </div>
       </div>
     </section>

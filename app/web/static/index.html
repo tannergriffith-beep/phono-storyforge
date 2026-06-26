@@ -15,10 +15,13 @@
         <p class="tagline">a closed-loop adaptive reading tutor</p>
       </div>
     </div>
-    <div class="mean-meter" title="Mean mastery across the grapheme inventory">
-      <span class="mean-label">Mastery</span>
-      <div class="mean-track"><div id="mean-fill" class="mean-fill"></div></div>
-      <span id="mean-value" class="mean-value">—</span>
+    <div class="topbar-right">
+      <button id="journey-btn" type="button" class="ghost topbar-btn" hidden>📈 Journey</button>
+      <div class="mean-meter" title="Mean mastery across the grapheme inventory">
+        <span class="mean-label">Mastery</span>
+        <div class="mean-track"><div id="mean-fill" class="mean-fill"></div></div>
+        <span id="mean-value" class="mean-value">—</span>
+      </div>
     </div>
   </header>
 
@@ -138,6 +141,17 @@
           <div id="book-pages" class="book-pages"></div>
         </div>
       </div>
+    </section>
+
+    <!-- Journey timeline (DESIGN §17): a second view reachable from the top bar.
+         Rendered by journey.js over persisted SessionLogs. -->
+    <section id="journey-view" class="card journey" hidden>
+      <div class="journey-head">
+        <strong id="journey-title">Journey</strong>
+        <span id="journey-summary" class="muted"></span>
+        <button id="journey-close" type="button" class="ghost">Close ✕</button>
+      </div>
+      <div id="journey-body"></div>
     </section>
   </main>
 
