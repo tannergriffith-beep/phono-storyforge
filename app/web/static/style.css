@@ -454,12 +454,38 @@ input:focus, textarea:focus { outline: none; border-color: var(--coral); }
 .topbar h1 { font-size: var(--fs-h1); letter-spacing: 0.3px; }
 .tagline { margin: 0; font-size: var(--fs-data); color: var(--gold); }
 
-/* --- Layout --- */
-.layout {
-  display: grid; grid-template-columns: 1fr 340px; gap: var(--space-5);
-  padding: var(--space-5); max-width: 1180px; margin: 0 auto; align-items: start;
+/* --- Layout (single column; Reading mode is full-bleed, DESIGN §8/§12) --- */
+.session-shell {
+  max-width: 920px; margin: 0 auto; padding: var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-5);
 }
-.flow { display: flex; flex-direction: column; gap: var(--space-5); }
+
+/* --- Session shell: Read ⇄ Insight split (DESIGN §5/§8/§18) --- */
+.session-head { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4); }
+.toggle-row { display: flex; justify-content: center; }
+.stage { position: relative; margin: var(--space-5) 0; }
+.face { opacity: 0; transition: opacity var(--dur-fast) ease; }
+.face.is-active { opacity: 1; }
+.face[hidden] { display: none; }
+
+.reading-title { font-size: var(--fs-sm); color: var(--tundora); font-weight: 600; text-align: center; margin-bottom: var(--space-2); }
+.reading-actions { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: var(--space-5); }
+.reading-actions .mic { min-height: 48px; padding: 12px 24px; font-size: var(--fs-lg); border-radius: var(--r-pill); }
+/* Reading page: today's practice words softly gold-underlined (warmth, never error). */
+.reading-page .rw.tgt-word { border-bottom: 3px solid var(--gold); }
+
+.operator-controls { margin-top: var(--space-5); border-top: 1px dashed var(--color-border); padding-top: var(--space-3); }
+.operator-controls > summary { cursor: pointer; font-size: var(--fs-sm); color: var(--tundora); list-style: none; }
+.operator-controls > summary::-webkit-details-marker { display: none; }
+.operator-controls > summary::before { content: "▸ "; }
+.operator-controls[open] > summary::before { content: "▾ "; }
+.operator-controls textarea { width: 100%; margin: 8px 0; }
+
+.insight-record { margin: 0 0 var(--space-4); }
+.mastery-block { margin: var(--space-4) 0; padding: var(--space-4); background: var(--white); border-radius: var(--r-md); border: 1px solid var(--color-border-soft); }
+.mastery-block h4 { margin-bottom: var(--space-3); }
+
+.stage-footer { display: flex; justify-content: flex-end; gap: var(--space-3); }
 
 /* --- Setup --- */
 .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin: 14px 0; }
@@ -525,10 +551,7 @@ button.mic.recording { background: var(--coral); color: var(--white); border-col
 .next-target .next-g { color: var(--coral-text); font-weight: 700; }
 #next-btn { margin-top: 14px; }
 
-/* --- Mastery sidebar (now hosts the MasteryPath, §6) --- */
-.mastery { position: sticky; top: 20px; }
-.mastery-hint { font-size: var(--fs-data); color: var(--tundora); margin: 4px 0 14px; }
-
+/* --- MasteryPath node states (§6; the path now lives in Insight mode) --- */
 /* In-progress (started but not yet mastered, and not the current target). */
 .grapheme-node.progress {
   background: rgba(82, 113, 100, 0.14);
@@ -561,8 +584,8 @@ button.mic.recording { background: var(--coral); color: var(--white); border-col
  * 7. RESPONSIVE + REDUCED MOTION
  * ========================================================================== */
 @media (max-width: 880px) {
-  .layout { grid-template-columns: 1fr; }
-  .mastery { position: static; }
+  /* Reading mode is mobile-first / better on a tablet (DESIGN §12). */
+  .session-shell { padding: var(--space-3); }
   /* Loop rail collapses to icons-only with the active node labeled (DESIGN §12). */
   .loop-node .ln-sub { display: none; }
   .loop-node:not(.lit) .ln-name { display: none; }

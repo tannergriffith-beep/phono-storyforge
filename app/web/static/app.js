@@ -27,6 +27,7 @@ import { renderPrepared, renderOutcome, applyPreset } from "./render.js";
 import { LoopRail } from "./components/loopRail.js";
 import { WhyCard } from "./components/whyCard.js";
 import { MasteryPath } from "./components/masteryPath.js";
+import { ModeToggle } from "./components/modeToggle.js";
 
 // ---- Actions ----------------------------------------------------------------
 
@@ -68,6 +69,8 @@ LoopRail.mount($("loop-rail"));
 WhyCard.mount();
 // MasteryPath renders the phonics path on `prepared` and animates it on `outcome`.
 MasteryPath.mount();
+// ModeToggle owns the Read ⇄ Insight view-switch + the privacy boundary.
+ModeToggle.mount();
 
 // ---- Button wiring ----------------------------------------------------------
 

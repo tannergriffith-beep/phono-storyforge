@@ -27,93 +27,115 @@
   <nav id="loop-rail" class="loop-rail"
        aria-label="The adaptive loop — each step lights as it runs"></nav>
 
-  <main class="layout">
-    <!-- Left: the session flow -->
-    <div class="flow">
-      <section id="setup" class="card">
-        <h2>Start a session</h2>
-        <div class="setup-grid">
-          <label>Learner id <input id="learner-id" value="ada" /></label>
-          <label>Name <input id="learner-name" value="Ada" /></label>
-          <label>Age <input id="learner-age" type="number" value="6" min="3" max="12" /></label>
-          <label>Interest <input id="learner-interest" value="dinosaurs" /></label>
-        </div>
-        <button id="start-btn" class="primary">Begin →</button>
-        <p id="conn-status" class="status">connecting…</p>
-      </section>
+  <main class="session-shell">
+    <!-- Setup is the empty state of the Session screen (DESIGN §8). -->
+    <section id="setup" class="card">
+      <h2>Start a session</h2>
+      <div class="setup-grid">
+        <label>Learner id <input id="learner-id" value="ada" /></label>
+        <label>Name <input id="learner-name" value="Ada" /></label>
+        <label>Age <input id="learner-age" type="number" value="6" min="3" max="12" /></label>
+        <label>Interest <input id="learner-interest" value="dinosaurs" /></label>
+      </div>
+      <button id="start-btn" class="primary">Begin →</button>
+      <p id="conn-status" class="status">connecting…</p>
+    </section>
 
-      <section id="session" class="card" hidden>
-        <div class="objective">
-          <div class="objective-head">
-            <span class="pill" id="session-pill">session #0</span>
-            <span class="target-chip">target <b id="target-grapheme">—</b>
-              <span id="target-level" class="muted"></span></span>
+    <section id="session" class="card" hidden>
+      <div class="session-head">
+        <span class="pill" id="session-pill">session #0</span>
+        <span class="target-chip">target <b id="target-grapheme">—</b>
+          <span id="target-level" class="muted"></span></span>
+      </div>
+
+      <!-- Mode toggle: two faces of one screen (DESIGN §5/§18). Wired by modeToggle.js. -->
+      <div class="toggle-row">
+        <div class="mode-toggle" role="group" aria-label="View mode">
+          <button id="mode-reading" type="button" aria-pressed="true">📖 Reading</button>
+          <button id="mode-insight" type="button" aria-pressed="false">📊 Insight<span class="pip"></span></button>
+        </div>
+      </div>
+
+      <div class="stage">
+        <!-- READING FACE (child): the words only — no red, no stats (DESIGN §5). -->
+        <div id="reading-face" class="face is-active">
+          <h3 id="reading-title" class="reading-title"></h3>
+          <div id="read-celebrate" class="read-celebrate" hidden>Great reading! 🌟</div>
+          <div id="reading-page" class="reading-page"></div>
+          <div class="reading-actions">
+            <button id="mic-btn" type="button" class="ghost mic">🎤 Read aloud</button>
+            <p id="voice-status" class="voice-status" aria-live="polite"></p>
           </div>
+          <!-- Operator tools, quiet by default so the transcript is never the
+               primary CTA (DESIGN risk #5). Used for the offline/filmed demo. -->
+          <details class="operator-controls">
+            <summary>⌨ Type or use a preset</summary>
+            <label class="read-label" for="transcript">What did the child read aloud?</label>
+            <textarea id="transcript" rows="2" placeholder="type the read-aloud, or use a preset…"></textarea>
+            <div class="presets">
+              <button data-preset="perfect" type="button" class="ghost">Perfect read</button>
+              <button data-preset="one" type="button" class="ghost">One miscue</button>
+              <button data-preset="struggle" type="button" class="ghost">Struggling</button>
+            </div>
+          </details>
+        </div>
+
+        <!-- INSIGHT FACE (adult/judge): Why → running record → fluency →
+             scaffolds → mastery path → next-target. Red is fine here (post-hoc). -->
+        <div id="insight-face" class="face" hidden>
           <!-- "Why this book?" reasoned moment (DESIGN §5); rendered by whyCard.js. -->
           <div id="why-card"></div>
-        </div>
 
-        <div class="book">
-          <div class="book-head">
-            <h3 id="book-title">—</h3>
-            <span id="book-source" class="source-badge"></span>
+          <div class="book insight-record">
+            <div class="book-head">
+              <h3 id="book-title">—</h3>
+              <span id="book-source" class="source-badge"></span>
+            </div>
+            <p id="book-text" class="book-text"></p>
+            <p class="legend">
+              <span class="swatch correct"></span>correct
+              <span class="swatch substitution"></span>substitution
+              <span class="swatch omission"></span>omission
+              <span class="swatch fixed"></span>self-fixed
+            </p>
           </div>
-          <p id="book-text" class="book-text"></p>
-          <p class="legend">
-            <span class="swatch correct"></span>correct
-            <span class="swatch substitution"></span>substitution
-            <span class="swatch omission"></span>omission
-            <span class="swatch fixed"></span>self-fixed
-          </p>
-        </div>
 
-        <div class="read-controls">
-          <label class="read-label">What did the child read aloud?</label>
-          <textarea id="transcript" rows="2" placeholder="type the read-aloud, or use a preset…"></textarea>
-          <div class="presets">
-            <button data-preset="perfect" class="ghost">Perfect read</button>
-            <button data-preset="one" class="ghost">One miscue</button>
-            <button data-preset="struggle" class="ghost">Struggling</button>
-            <button id="mic-btn" class="ghost mic">🎤 Read aloud</button>
-            <button id="score-btn" class="primary">Score read ▸</button>
-          </div>
-          <p id="voice-status" class="voice-status"></p>
-        </div>
-
-        <div id="results" hidden>
           <div id="fluency" class="fluency"></div>
           <div id="scaffolds" class="scaffolds"></div>
-          <div id="next-target" class="next-target"></div>
-          <button id="next-btn" class="primary">Next session →</button>
-        </div>
 
-        <!-- Opt-in illustrated take-home book (creds-gated; hidden by default). -->
-        <div id="book-gen" class="book-gen" hidden>
-          <h4>Take-home book</h4>
-          <p class="muted">Generate <b id="book-gen-name">this learner</b>'s illustrated,
-            decodable book for today's target. Runs the full story pipeline — takes a few minutes.</p>
-          <button id="gen-book-btn" class="primary">📚 Generate illustrated book</button>
-          <p id="book-progress" class="voice-status"></p>
-          <div id="book-result" class="book-result" hidden>
-            <div class="book-result-head">
-              <a id="book-link" href="#" target="_blank" rel="noopener">Open the Google Doc ↗</a>
-              <span id="book-decodable" class="source-badge"></span>
-            </div>
-            <p id="book-note" class="muted"></p>
-            <div id="book-pages" class="book-pages"></div>
+          <div class="mastery-block">
+            <h4 class="t-label">Mastery — the phonics path</h4>
+            <div id="mastery-path" class="mastery-path"></div>
+            <div id="mastery-detail" class="mastery-detail" aria-live="polite"></div>
           </div>
-        </div>
-      </section>
-    </div>
 
-    <!-- Right: the mastery PATH (DESIGN §6) — graphemes as nodes along the
-         level sequence; replaces the always-on 30-bar scroll. -->
-    <aside class="card mastery">
-      <h2>Mastery <span class="muted">the phonics path</span></h2>
-      <p class="mastery-hint">tap a sound to see its mastery</p>
-      <div id="mastery-path" class="mastery-path"></div>
-      <div id="mastery-detail" class="mastery-detail" aria-live="polite"></div>
-    </aside>
+          <div id="next-target" class="next-target"></div>
+        </div>
+      </div>
+
+      <!-- Footer flow: the one primary CTA (DESIGN §8/§18). -->
+      <div class="stage-footer">
+        <button id="score-btn" type="button" class="primary">Score read ▸</button>
+        <button id="next-btn" type="button" class="primary" hidden>Next session →</button>
+      </div>
+
+      <!-- Opt-in illustrated take-home book coda (creds-gated; hidden by default). -->
+      <div id="book-gen" class="book-gen" hidden>
+        <h4>Take-home book</h4>
+        <p class="muted">Generate <b id="book-gen-name">this learner</b>'s illustrated,
+          decodable book for today's target. Runs the full story pipeline — takes a few minutes.</p>
+        <button id="gen-book-btn" type="button" class="primary">📚 Generate illustrated book</button>
+        <p id="book-progress" class="voice-status"></p>
+        <div id="book-result" class="book-result" hidden>
+          <div class="book-result-head">
+            <a id="book-link" href="#" target="_blank" rel="noopener">Open the Google Doc ↗</a>
+            <span id="book-decodable" class="source-badge"></span>
+          </div>
+          <p id="book-note" class="muted"></p>
+          <div id="book-pages" class="book-pages"></div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script type="module" src="/static/app.js"></script>

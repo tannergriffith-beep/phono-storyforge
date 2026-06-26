@@ -1,10 +1,10 @@
 // app/web/static/render.js
 //
-// Legacy single-screen renderers (the current Stage C surface). Behavior is
-// preserved verbatim from the original app.js; only the wiring moved to modules.
-// Phase 2's later screens (MasteryPath, Read⇄Insight split, Adapt beat) will
-// replace pieces of renderOutcome/renderBars — for now they keep the working
-// demo intact while the LoopRail lands on top.
+// Shared renderers for the two faces of the Session screen. renderPrepared
+// populates both the Reading face (child-safe words) and the Insight face
+// (running-record host) from one payload; renderOutcome paints the post-hoc
+// heatmap into Insight only and flips Reading to the child-safe celebration.
+// Dedicated components own the rest: WhyCard, MasteryPath, LoopRail, ModeToggle.
 
 "use strict";
 
@@ -18,14 +18,14 @@ import { endBookGen, bookProgress } from "./book.js";
 export function renderPrepared(msg) {
   $("setup").hidden = false;
   $("session").hidden = false;
-  $("results").hidden = true;
   $("transcript").value = "";
   voiceStatus("");
 
   $("session-pill").textContent = `session #${msg.session_index}`;
   $("target-grapheme").textContent = `/${msg.objective.target_grapheme}/`;
   $("target-level").textContent = msg.objective.target_level;
-  // The planner rationale is now rendered by the WhyCard component (#why-card).
+  // Planner rationale -> WhyCard (#why-card); mastery -> MasteryPath; both
+  // subscribe to `prepared` directly.
 
   // Reset + reveal the take-home book panel (only when the feature is enabled).
   state.learnerName = msg.learner_name || "";
@@ -40,12 +40,28 @@ export function renderPrepared(msg) {
 
   state.words = msg.book.words;
   state.targetPositions = msg.book.target_word_positions || [];
+  const tgtPos = new Set(state.targetPositions);
 
-  $("book-title").textContent = msg.book.title || "Practice page";
+  const title = msg.book.title || "Practice page";
+  $("reading-title").textContent = title;
+  $("book-title").textContent = title;
   $("book-source").textContent = msg.book.generation_source;
+
+  // Render the words into BOTH faces from the same payload (DESIGN §18: the two
+  // faces are pure views of one payload). Reading = child-safe (target words
+  // softly underlined, never colored); Insight = running-record host for the
+  // post-hoc heatmap.
+  const rp = $("reading-page");
   const text = $("book-text");
+  rp.innerHTML = "";
   text.innerHTML = "";
   msg.book.words.forEach((w, i) => {
+    const rw = document.createElement("span");
+    rw.className = "rw" + (tgtPos.has(i) ? " tgt-word" : "");
+    rw.textContent = w;
+    rp.appendChild(rw);
+    rp.appendChild(document.createTextNode(" "));
+
     const span = document.createElement("span");
     span.className = "w";
     span.dataset.position = i;
@@ -54,8 +70,15 @@ export function renderPrepared(msg) {
     text.appendChild(document.createTextNode(" "));
   });
 
-  // The mastery sidebar is now the MasteryPath component (masteryPath.js),
-  // which subscribes to `prepared`/`outcome` directly.
+  // Reset the read flow: child-safe Reading state, scoring is the primary CTA,
+  // and the Insight result regions are cleared for the new session.
+  $("read-celebrate").hidden = true;
+  $("score-btn").hidden = false;
+  $("next-btn").hidden = true;
+  $("fluency").innerHTML = "";
+  $("scaffolds").innerHTML = "";
+  $("next-target").innerHTML = "";
+
   setMean(msg.mean_mastery);
 }
 
@@ -109,7 +132,12 @@ export function renderOutcome(msg) {
       : `<div class="muted">still consolidating /${nt.previous_grapheme}/.</div>`) +
     `<p class="rationale">${nt.rationale}</p>`;
 
-  $("results").hidden = false;
+  // Privacy boundary (DESIGN §18): stay child-safe in Reading; the running
+  // record + analysis live in Insight, reachable only by an adult tap (the
+  // ModeToggle sets a pip on `outcome`). Never auto-flip red into the child's view.
+  $("read-celebrate").hidden = false;
+  $("score-btn").hidden = true;
+  $("next-btn").hidden = false;
 }
 
 // Preset transcripts are built client-side from the known book words so filming
