@@ -26,6 +26,7 @@ import * as book from "./book.js";
 import { renderPrepared, renderOutcome, applyPreset } from "./render.js";
 import { LoopRail } from "./components/loopRail.js";
 import { WhyCard } from "./components/whyCard.js";
+import { MasteryPath } from "./components/masteryPath.js";
 
 // ---- Actions ----------------------------------------------------------------
 
@@ -65,6 +66,8 @@ ws.on("error", (m) => {
 LoopRail.mount($("loop-rail"));
 // WhyCard renders the planner rationale + evidence chips on each `prepared`.
 WhyCard.mount();
+// MasteryPath renders the phonics path on `prepared` and animates it on `outcome`.
+MasteryPath.mount();
 
 // ---- Button wiring ----------------------------------------------------------
 

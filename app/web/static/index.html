@@ -106,11 +106,13 @@
       </section>
     </div>
 
-    <!-- Right: the live mastery bars -->
+    <!-- Right: the mastery PATH (DESIGN §6) — graphemes as nodes along the
+         level sequence; replaces the always-on 30-bar scroll. -->
     <aside class="card mastery">
-      <h2>Mastery <span class="muted">live BKT P(L)</span></h2>
-      <p class="mastery-hint">bars animate as the read updates the model</p>
-      <div id="bars" class="bars"></div>
+      <h2>Mastery <span class="muted">the phonics path</span></h2>
+      <p class="mastery-hint">tap a sound to see its mastery</p>
+      <div id="mastery-path" class="mastery-path"></div>
+      <div id="mastery-detail" class="mastery-detail" aria-live="polite"></div>
     </aside>
   </main>
 

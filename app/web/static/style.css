@@ -525,22 +525,19 @@ button.mic.recording { background: var(--coral); color: var(--white); border-col
 .next-target .next-g { color: var(--coral-text); font-weight: 700; }
 #next-btn { margin-top: 14px; }
 
-/* --- Legacy mastery bars (the 30-bar sidebar — replaced by MasteryPath) --- */
+/* --- Mastery sidebar (now hosts the MasteryPath, §6) --- */
 .mastery { position: sticky; top: 20px; }
 .mastery-hint { font-size: var(--fs-data); color: var(--tundora); margin: 4px 0 14px; }
-.bars { display: flex; flex-direction: column; gap: 9px; max-height: 70vh; overflow-y: auto; }
-.bar-row { font-size: var(--fs-data); }
-.bar-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
-.bar-g { font-weight: 700; }
-.bar-row.target .bar-g { color: var(--coral-text); }
-.bar-row.review .bar-g::after { content: " ↻"; color: var(--plum); }
-.bar-p { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--tundora); }
-.bar-track { height: 12px; background: var(--white); border-radius: 6px; overflow: hidden; border: 1px solid var(--color-border-soft); }
-.bar-fill { height: 100%; width: 0%; border-radius: 6px; background: var(--gold); transition: width var(--dur-fill) var(--ease-out), background-color 0.6s ease; }
-.bar-row.target .bar-fill { background: var(--coral); }
-.bar-fill.mastered { background: var(--sage); }
-.bar-row.just-mastered { animation: pop 0.7s ease; }
-.bar-row.just-mastered .bar-g::before { content: "✓ "; color: var(--sage); }
+
+/* In-progress (started but not yet mastered, and not the current target). */
+.grapheme-node.progress {
+  background: rgba(82, 113, 100, 0.14);
+  border-color: rgba(82, 113, 100, 0.4);
+}
+/* Tap-to-reveal detail line (progressive disclosure of P(L), DESIGN §6). */
+.mastery-detail { margin-top: 14px; min-height: 20px; font-size: var(--fs-sm); color: var(--tundora); }
+.mastery-detail .md-g { font-family: var(--font-mono); font-weight: 700; color: var(--navy); }
+.mastery-detail .md-p { font-family: var(--font-mono); font-weight: 700; }
 
 @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
 

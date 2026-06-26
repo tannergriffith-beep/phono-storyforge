@@ -9,7 +9,6 @@
 export const state = {
   words: [],                  // expected token stream (positions index into this)
   targetPositions: [],        // positions of words exercising the target grapheme
-  bars: {},                   // grapheme -> {row, fill, pEl}  (legacy mastery bars)
   mic: { ctx: null, stream: null, node: null, recording: false },
   illustratedEnabled: false,  // creds-gated take-home book feature
   learnerName: "",            // for the "Generate <name>'s book" label

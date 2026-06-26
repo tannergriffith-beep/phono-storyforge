@@ -54,31 +54,9 @@ export function renderPrepared(msg) {
     text.appendChild(document.createTextNode(" "));
   });
 
-  renderBars(msg.mastery_bars);
+  // The mastery sidebar is now the MasteryPath component (masteryPath.js),
+  // which subscribes to `prepared`/`outcome` directly.
   setMean(msg.mean_mastery);
-}
-
-export function renderBars(bars) {
-  const container = $("bars");
-  container.innerHTML = "";
-  state.bars = {};
-  bars.forEach((b) => {
-    const row = document.createElement("div");
-    row.className =
-      "bar-row" + (b.is_target ? " target" : "") + (b.is_review ? " review" : "");
-    row.innerHTML =
-      `<div class="bar-head"><span class="bar-g"></span><span class="bar-p"></span></div>` +
-      `<div class="bar-track"><div class="bar-fill"></div></div>`;
-    row.querySelector(".bar-g").textContent = b.grapheme;
-    const fill = row.querySelector(".bar-fill");
-    const pEl = row.querySelector(".bar-p");
-    pEl.textContent = pct(b.p_mastery);
-    // Defer width so the transition runs from 0 -> value on first paint.
-    requestAnimationFrame(() => { fill.style.width = pct(b.p_mastery); });
-    if (b.p_mastery >= 0.85) fill.classList.add("mastered");
-    container.appendChild(row);
-    state.bars[b.grapheme] = { row, fill, pEl };
-  });
 }
 
 // ---- Render: outcome --------------------------------------------------------
@@ -96,17 +74,7 @@ export function renderOutcome(msg) {
     if (cell.spoken) span.title = `heard: ${cell.spoken}`;
   });
 
-  // Mastery bars: animate every grapheme this read moved to its new P(L).
-  msg.mastery_updates.forEach((u) => {
-    const bar = state.bars[u.grapheme];
-    if (!bar) return;
-    bar.fill.style.width = pct(u.p_after);
-    bar.pEl.textContent = pct(u.p_after);
-    bar.fill.classList.toggle("mastered", u.newly_mastered || u.p_after >= 0.85);
-    if (u.newly_mastered) {
-      bar.row.classList.add("just-mastered");
-    }
-  });
+  // Mastery updates are animated by the MasteryPath component (masteryPath.js).
   setMean(msg.mean_mastery);
 
   // Fluency readout.
