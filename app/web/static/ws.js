@@ -22,9 +22,9 @@ export function on(type, fn) {
 export function connect() {
   const proto = location.protocol === "https:" ? "wss" : "ws";
   ws = new WebSocket(`${proto}://${location.host}/ws`);
-  ws.onopen = () => setStatus("connected", "ok");
-  ws.onclose = () => setStatus("disconnected — refresh to reconnect", "err");
-  ws.onerror = () => setStatus("connection error", "err");
+  ws.onopen = () => announceConn(true, "connected");
+  ws.onclose = () => announceConn(false, "disconnected — refresh to reconnect");
+  ws.onerror = () => announceConn(false, "connection error");
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
     const list = handlers.get(msg.type);
@@ -49,4 +49,11 @@ export function setStatus(text, cls) {
   if (!el) return;
   el.textContent = text;
   el.className = "status" + (cls ? " " + cls : "");
+}
+
+/** Update the inline status AND notify the DegradeBanner (which survives the
+ *  Setup card being hidden once a session is active). */
+function announceConn(ok, text) {
+  setStatus(text, ok ? "ok" : "err");
+  document.dispatchEvent(new CustomEvent("phono:connection", { detail: { ok, text } }));
 }

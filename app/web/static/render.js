@@ -16,8 +16,12 @@ import { endBookGen, bookProgress } from "./book.js";
 // ---- Render: prepared -------------------------------------------------------
 
 export function renderPrepared(msg) {
-  $("setup").hidden = false;
+  // Setup is the empty state of the Session screen (DESIGN §8) — collapse it
+  // once a session is live so it stops lingering above #session. Connection
+  // health now lives in the DegradeBanner, which survives this being hidden.
+  $("setup").hidden = true;
   $("session").hidden = false;
+  $("journey-view").hidden = true;
   $("transcript").value = "";
   voiceStatus("");
 

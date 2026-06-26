@@ -32,6 +32,16 @@
        aria-label="The adaptive loop — each step lights as it runs"></nav>
 
   <main class="session-shell">
+    <!-- DegradeBanner (DESIGN §9): graceful-degradation notices — voice/Live
+         quota loss, illustration-pipeline failures, and connection drops — kept
+         visible even after the Setup card (which hosts #conn-status) is hidden.
+         A polite live region so it's announced without stealing focus. -->
+    <div id="degrade-banner" class="degrade-banner" role="status" aria-live="polite" hidden>
+      <span class="degrade-icon" aria-hidden="true">⚠️</span>
+      <span class="degrade-msg"></span>
+      <button type="button" class="degrade-dismiss" aria-label="Dismiss notice">✕</button>
+    </div>
+
     <!-- Setup is the empty state of the Session screen (DESIGN §8). -->
     <section id="setup" class="card">
       <h2>Start a session</h2>
@@ -61,8 +71,10 @@
       </div>
 
       <div class="stage">
-        <!-- READING FACE (child): the words only — no red, no stats (DESIGN §5). -->
-        <div id="reading-face" class="face is-active">
+        <!-- READING FACE (child): the words only — no red, no stats (DESIGN §5).
+             tabindex=-1 so the ModeToggle can move focus here on a view switch. -->
+        <div id="reading-face" class="face is-active" role="region"
+             aria-label="Reading view — the child's page" tabindex="-1">
           <h3 id="reading-title" class="reading-title"></h3>
           <div id="read-celebrate" class="read-celebrate" hidden>Great reading! 🌟</div>
           <div id="reading-page" class="reading-page"></div>
@@ -86,7 +98,8 @@
 
         <!-- INSIGHT FACE (adult/judge): Why → running record → fluency →
              scaffolds → mastery path → next-target. Red is fine here (post-hoc). -->
-        <div id="insight-face" class="face" hidden>
+        <div id="insight-face" class="face" role="region"
+             aria-label="Insight view — the adult running record" tabindex="-1" hidden>
           <!-- "Why this book?" reasoned moment (DESIGN §5); rendered by whyCard.js. -->
           <div id="why-card"></div>
 
@@ -114,7 +127,7 @@
           </div>
 
           <!-- The Adapt climax caption (DESIGN §7/§16); resolved by adaptBeat.js. -->
-          <p id="adapt-caption" class="adapt-caption" aria-live="polite"></p>
+          <p id="adapt-caption" class="adapt-caption" aria-live="polite" aria-atomic="true"></p>
 
           <div id="next-target" class="next-target"></div>
         </div>

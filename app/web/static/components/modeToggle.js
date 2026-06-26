@@ -24,7 +24,10 @@ let reduce = false;
 let readingBtn, insightBtn, readingFace, insightFace;
 let fadeTimer = null;
 
-function setMode(next) {
+// opts.focus moves keyboard/SR focus to the incoming face after the swap — set
+// for user-initiated switches (click/keypress), not the programmatic reset on a
+// new `prepared` (which would yank focus mid-render).
+function setMode(next, opts = {}) {
   if (next === mode) { if (next === "insight") clearPip(); return; }
   const outFace = mode === "reading" ? readingFace : insightFace;
   const inFace = next === "reading" ? readingFace : insightFace;
@@ -42,7 +45,10 @@ function setMode(next) {
     outFace.classList.remove("is-active");
     inFace.hidden = false;
     // next frame so the opacity transition runs from 0 -> 1
-    requestAnimationFrame(() => inFace.classList.add("is-active"));
+    requestAnimationFrame(() => {
+      inFace.classList.add("is-active");
+      if (opts.focus) inFace.focus();
+    });
   };
 
   clearTimeout(fadeTimer);
@@ -62,8 +68,8 @@ function setPip() { if (mode !== "insight") insightBtn.classList.add("has-pip");
 function onKey(e) {
   const tag = (e.target && e.target.tagName ? e.target.tagName : "").toLowerCase();
   if (tag === "input" || tag === "textarea" || e.metaKey || e.ctrlKey || e.altKey) return;
-  if (e.key === "r" || e.key === "R") setMode("reading");
-  else if (e.key === "i" || e.key === "I") setMode("insight");
+  if (e.key === "r" || e.key === "R") setMode("reading", { focus: true });
+  else if (e.key === "i" || e.key === "I") setMode("insight", { focus: true });
 }
 
 export const ModeToggle = {
@@ -75,8 +81,8 @@ export const ModeToggle = {
     if (!readingBtn || !insightBtn) return;
     reduce = prefersReducedMotion();
 
-    readingBtn.addEventListener("click", () => setMode("reading"));
-    insightBtn.addEventListener("click", () => setMode("insight"));
+    readingBtn.addEventListener("click", () => setMode("reading", { focus: true }));
+    insightBtn.addEventListener("click", () => setMode("insight", { focus: true }));
     document.addEventListener("keydown", onKey);
 
     // A new session starts child-facing with no pip (privacy default).

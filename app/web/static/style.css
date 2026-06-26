@@ -494,6 +494,10 @@ input:focus, textarea:focus { outline: none; border-color: var(--coral); }
 .face { opacity: 0; transition: opacity var(--dur-fast) ease; }
 .face.is-active { opacity: 1; }
 .face[hidden] { display: none; }
+/* Managed-focus region: the ModeToggle moves focus here on a view switch so
+ * keyboard + screen-reader users follow the swap. Focus is programmatic (not a
+ * user-operated control), so no visible ring (DESIGN §11). */
+.face:focus { outline: none; }
 
 .reading-title { font-size: var(--fs-sm); color: var(--tundora); font-weight: 600; text-align: center; margin-bottom: var(--space-2); }
 .reading-actions { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: var(--space-5); }
@@ -537,7 +541,10 @@ input:focus, textarea:focus { outline: none; border-color: var(--coral); }
 /* NB: these miscue colors are Insight-mode (post-hoc) semantics; Phase 2's
  * Reading mode never applies them to the child's live page (DESIGN §5/§11). */
 .book-text .w.correct { background: rgba(82, 113, 100, 0.22); }
-.book-text .w.substitution { background: var(--coral); color: var(--white); }
+/* Each miscue kind carries a SHAPE, not just a hue, so the running record
+ * survives color-blindness (DESIGN §11): substitution = solid underline,
+ * omission = strike-through, self-correction/hesitation = dashed underline. */
+.book-text .w.substitution { background: var(--coral); color: var(--white); border-bottom: 2px solid rgba(255, 255, 255, 0.85); }
 .book-text .w.omission { background: var(--gold); color: var(--navy); text-decoration: line-through; }
 .book-text .w.self_correction,
 .book-text .w.hesitation { background: rgba(235, 186, 122, 0.5); border-bottom: 2px dashed var(--tundora); }
@@ -606,6 +613,23 @@ button.mic.recording { background: var(--coral); color: var(--white); border-col
 .book-page-n { flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%; background: var(--navy); color: var(--parchment); font-size: 11px; text-align: center; line-height: 20px; }
 .book-page-t { color: var(--tundora); }
 #book-note { margin: 6px 0 0; }
+
+/* --- DegradeBanner (DESIGN §9): the one graceful-degradation surface --- */
+.degrade-banner {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: 10px 14px; border-radius: var(--r-md);
+  background: rgba(201, 96, 63, 0.10);
+  border: 1.5px solid var(--coral-text);
+  font-size: var(--fs-sm);
+}
+.degrade-banner[hidden] { display: none; }
+.degrade-banner .degrade-icon { font-size: 18px; line-height: 1; }
+.degrade-banner .degrade-msg { flex: 1; color: var(--navy); }
+.degrade-banner .degrade-dismiss {
+  background: transparent; border: none; color: var(--tundora);
+  font-size: 15px; line-height: 1; cursor: pointer; padding: 2px 6px;
+}
+.degrade-banner .degrade-dismiss:hover { color: var(--coral-text); }
 
 /* ============================================================================
  * 7. RESPONSIVE + REDUCED MOTION

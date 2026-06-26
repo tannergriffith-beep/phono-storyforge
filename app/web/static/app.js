@@ -30,6 +30,7 @@ import { MasteryPath } from "./components/masteryPath.js";
 import { ModeToggle } from "./components/modeToggle.js";
 import { AdaptBeat } from "./components/adaptBeat.js";
 import { Journey } from "./components/journey.js";
+import { DegradeBanner } from "./components/degradeBanner.js";
 
 // ---- Actions ----------------------------------------------------------------
 
@@ -77,6 +78,9 @@ ModeToggle.mount();
 AdaptBeat.mount();
 // Journey: the cross-session "loop, not generator" proof (reads persisted logs).
 Journey.mount();
+// DegradeBanner: the single graceful-degradation surface (DESIGN §9). Mount
+// before connect() so it catches the very first connection signal.
+DegradeBanner.mount();
 
 // ---- Button wiring ----------------------------------------------------------
 
