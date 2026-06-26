@@ -1,207 +1,580 @@
 /* app/web/static/style.css
- * Phono StoryForge — locked brand palette (app/brand.py):
- *   Deep Navy #192255 · Japonica/coral #DB7E65 · Warm Gold #EBBA7A
- *   Sage #527164 · Plum #9C6D8B · Pearl Bush #ECE5DB · Parchment #F0E9DF
- *   Tundora #483E45
- * Vanilla CSS only; mastery bars + heatmap animate via CSS transitions. */
+ * =============================================================================
+ * Phono StoryForge — DESIGN SYSTEM (docs/DESIGN.md §10).
+ *
+ * Phase 1 of the DESIGN.md migration. This is design-system-first and
+ * BACKWARD-COMPATIBLE: every selector the current index.html / app.js relies on
+ * is still here (restyled onto tokens), so the live loop, voice, and take-home
+ * book keep working unchanged. New component classes (loop rail, mode toggle,
+ * mastery path, why card, reading page, journey) are added below for Phase 2.
+ *
+ * Layers, in order:
+ *   1. Tokens          — locked brand palette + roles, spacing, radii, motion, type
+ *   2. Base / reset    — element defaults
+ *   3. Typography      — the three type roles (display · reading · data)
+ *   4. Primitives      — buttons, badges, pills, inputs, cards, meter
+ *   5. New components   — LoopRail · ModeToggle · MasteryPath · WhyCard ·
+ *                        ReadingPage · Journey  (used by Phase 2 screens)
+ *   6. Legacy surface  — the current single-screen markup (still functional)
+ *   7. Responsive + reduced-motion
+ *
+ * Locked brand (app/brand.py): Navy #192255 · Coral #DB7E65 · Gold #EBBA7A ·
+ * Sage #527164 · Plum #9C6D8B · Pearl #ECE5DB · Parchment #F0E9DF · Tundora #483E45.
+ * ============================================================================= */
 
+/* ============================================================================
+ * 1. TOKENS
+ * ========================================================================== */
 :root {
-  --navy: #192255;
-  --coral: #DB7E65;
-  --gold: #EBBA7A;
-  --sage: #527164;
-  --plum: #9C6D8B;
-  --pearl: #ECE5DB;
-  --parchment: #F0E9DF;
-  --tundora: #483E45;
-  --shadow: rgba(72, 62, 69, 0.18);
+  /* --- Locked brand palette (roles per DESIGN.md §10.1) --- */
+  --navy: #192255;        /* text, top bar, darkest shapes */
+  --coral: #db7e65;       /* primary action, target, energy — fills/glows */
+  --coral-text: #c9603f;  /* a11y: darker coral for text on light (DESIGN §10.2) */
+  --coral-hover: #cf6f55;
+  --gold: #ebba7a;        /* target tint, highlights — on-dark / fills only */
+  --sage: #527164;        /* mastered / success / progress */
+  --plum: #9c6d8b;        /* reasoning & "why", sparingly */
+  --pearl: #ece5db;       /* inset surfaces, tracks */
+  --parchment: #f0e9df;   /* page & card ground */
+  --tundora: #483e45;     /* secondary text, soft shadow */
+  --white: #fff;
+
+  /* --- Semantic aliases (kept separate from raw accents) --- */
+  --color-text: var(--navy);
+  --color-text-2: var(--tundora);
+  --color-bg: var(--pearl);
+  --color-surface: var(--parchment);
+  --color-surface-raised: var(--white);
+  --color-success: var(--sage);
+  --color-attention: var(--coral);     /* target / action */
+  --color-reasoning: var(--plum);      /* why / planner rationale */
+  --color-warmth: var(--gold);         /* highlight / target tint */
+  --color-border: #d7cdbf;
+  --color-border-soft: #e0d6c8;
+  --track: rgba(72, 62, 69, 0.12);
+
+  /* --- Elevation --- */
+  --shadow-color: rgba(72, 62, 69, 0.18);
+  --shadow-sm: 0 2px 8px var(--shadow-color);
+  --shadow-md: 0 4px 18px var(--shadow-color);
+  --shadow-lg: 0 12px 36px rgba(25, 34, 85, 0.16);
+
+  /* --- Spacing scale (4px base) --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* --- Radii --- */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --r-pill: 999px;
+
+  /* --- Type scale --- */
+  --fs-data: 12px;
+  --fs-sm: 13px;
+  --fs-base: 15px;
+  --fs-lg: 18px;
+  --fs-h3: 20px;
+  --fs-h2: 26px;
+  --fs-h1: 22px;       /* top-bar wordmark; display headers go larger inline */
+  --fs-display: 44px;
+  --fs-read: 30px;     /* reading surface (DESIGN §10.3: 28–32px) */
+
+  /* --- Type faces (DESIGN §10.3, three roles) --- */
+  --font-ui: "Trebuchet MS", "Segoe UI", ui-rounded, system-ui, sans-serif;
+  /* Reading surface: prefer dyslexia-friendly faces if locally installed; no
+   * network/external fonts (offline constraint) — degrades to a humanist stack. */
+  --font-read: "OpenDyslexic", "Lexend", "Atkinson Hyperlegible", ui-rounded,
+    "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Menlo", monospace;
+
+  /* --- Motion (DESIGN §10.4) --- */
+  --dur-fast: 200ms;
+  --dur-node: 320ms;          /* loop node lights */
+  --dur-fill: 1000ms;         /* mastery fill */
+  --dur-climax: 1500ms;       /* the Adapt beat */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);   /* existing fill curve — keep */
+  --ease-snap: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* ============================================================================
+ * 2. BASE / RESET  (a minimal reset; the harness adds nothing here)
+ * ========================================================================== */
 * { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
-  background: var(--pearl);
-  color: var(--navy);
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  background: var(--color-bg);
+  color: var(--color-text);
   line-height: 1.5;
 }
 
-h1, h2, h3 { margin: 0; }
-.muted { color: var(--tundora); font-weight: 400; font-size: 0.8em; }
+h1, h2, h3, h4 { margin: 0; }
+p { margin: 0; }
+a { color: var(--coral-text); }
 
-/* ---- Top bar ---- */
+/* Visible keyboard focus on every interactive control (DESIGN §11). */
+:focus-visible {
+  outline: 3px solid var(--coral-text);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+/* Screen-reader-only utility for aria-live regions and labels. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ============================================================================
+ * 3. TYPOGRAPHY  (three roles: display/UI · reading · data)
+ * ========================================================================== */
+.t-display {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.t-read {
+  font-family: var(--font-read);
+  font-size: var(--fs-read);
+  line-height: 2;
+  letter-spacing: 0.02em;
+  word-spacing: 0.08em;
+}
+.t-data,
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.t-label {
+  font-size: var(--fs-data);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-2);
+  font-weight: 700;
+}
+.muted { color: var(--color-text-2); font-weight: 400; font-size: 0.8em; }
+.measure { max-width: 65ch; }
+
+/* ============================================================================
+ * 4. PRIMITIVES
+ * ========================================================================== */
+
+/* --- Buttons (coral-contrast fix: ≥18px/700 white-on-coral, DESIGN §10.2) --- */
+button,
+.btn {
+  cursor: pointer;
+  font: inherit;
+  border: none;
+  border-radius: var(--r-md);
+  padding: 10px 18px;
+  font-weight: 700;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease,
+    transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+button:active,
+.btn:active { transform: translateY(1px); }
+button:disabled,
+.btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+button.primary,
+.btn-primary {
+  background: var(--coral);
+  color: var(--white);
+  font-size: var(--fs-lg);     /* ≥18px keeps white-on-coral within AA Large */
+  box-shadow: var(--shadow-sm);
+}
+button.primary:hover,
+.btn-primary:hover { background: var(--coral-hover); }
+
+button.ghost,
+.btn-ghost {
+  background: var(--white);
+  color: var(--navy);
+  border: 1.5px solid var(--color-border);
+}
+button.ghost:hover,
+.btn-ghost:hover { border-color: var(--coral); }
+
+/* A glow used to promote the primary CTA (e.g. after the Adapt beat). */
+.btn-glow { animation: cta-glow 1.6s ease-in-out infinite; }
+@keyframes cta-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(219, 126, 101, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(219, 126, 101, 0); }
+}
+
+/* --- Badges + pills --- */
+.pill {
+  background: var(--navy); color: var(--parchment);
+  padding: 3px 12px; border-radius: var(--r-pill); font-size: var(--fs-data);
+}
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 2px 10px; border-radius: var(--r-pill);
+}
+.badge-source { color: var(--tundora); text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-success { background: rgba(82, 113, 100, 0.16); color: var(--sage); }
+.badge-reasoning { background: rgba(156, 109, 139, 0.16); color: var(--plum); }
+
+/* --- Inputs --- */
+input, textarea {
+  font: inherit; padding: 10px 12px;
+  border: 1.5px solid var(--color-border); border-radius: var(--r-sm);
+  background: var(--white); color: var(--navy);
+}
+input:focus, textarea:focus { outline: none; border-color: var(--coral); }
+
+/* --- Cards / surfaces --- */
+.card {
+  background: var(--color-surface); border-radius: var(--r-lg);
+  padding: var(--space-5); box-shadow: var(--shadow-md);
+}
+.surface-inset { background: var(--pearl); border-radius: var(--r-md); }
+
+/* --- Mean meter (top bar hero number) --- */
+.mean-meter { display: flex; align-items: center; gap: var(--space-3); min-width: 280px; }
+.mean-label {
+  font-size: var(--fs-data); text-transform: uppercase; letter-spacing: 1px;
+  color: var(--gold);
+}
+.mean-track {
+  flex: 1; height: 10px; background: rgba(236, 229, 219, 0.25);
+  border-radius: 6px; overflow: hidden;
+}
+.mean-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--sage), var(--gold));
+  transition: width var(--dur-fill) var(--ease-out);
+}
+.mean-value {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-weight: 700; min-width: 42px; text-align: right;
+}
+
+/* ============================================================================
+ * 5. NEW COMPONENTS  (DESIGN.md §4, §6, §5, §17 — wired up in Phase 2)
+ * ========================================================================== */
+
+/* --- 5a. LoopRail (the hero object, DESIGN §4) ---------------------------- */
+.loop-rail {
+  display: flex; align-items: stretch; gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--navy);
+  overflow-x: auto;
+}
+.loop-node {
+  flex: 1 1 0; min-width: 92px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: var(--space-2) var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  color: rgba(236, 229, 219, 0.55);
+  position: relative;
+  transition: color var(--dur-node) ease, background-color var(--dur-node) ease;
+}
+.loop-node .ln-index {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  border: 2px solid rgba(236, 229, 219, 0.35);
+  transition: all var(--dur-node) ease;
+}
+.loop-node .ln-name { font-size: 11px; font-weight: 700; letter-spacing: 0.02em; }
+.loop-node .ln-sub {
+  font-family: var(--font-mono); font-size: 9px;
+  color: rgba(236, 229, 219, 0.4); text-align: center;
+}
+/* arrow connectors */
+.loop-node + .loop-node::before {
+  content: "→"; position: absolute; left: -13px; top: 14px;
+  color: rgba(236, 229, 219, 0.3); font-size: 14px;
+}
+/* lit: this node is currently running */
+.loop-node.lit { color: var(--gold); }
+.loop-node.lit .ln-index { border-color: var(--gold); color: var(--gold); }
+/* done: guardrail passed → green ✓ (DESIGN §4) */
+.loop-node.done { color: #cfe0d6; }
+.loop-node.done .ln-index {
+  background: var(--sage); border-color: var(--sage); color: var(--white);
+}
+.loop-node.done .ln-index::after { content: "✓"; }
+.loop-node.done .ln-index { font-size: 0; }   /* hide number, show ✓ */
+.loop-node.done .ln-index::after { font-size: 14px; }
+/* Verify node — the differentiator; give it a subtle ring when done. */
+.loop-node[data-node="verify"].done .ln-index {
+  box-shadow: 0 0 0 3px rgba(82, 113, 100, 0.3);
+}
+.loop-node.pulse .ln-index { animation: node-pulse 1s ease-in-out infinite; }
+@keyframes node-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(235, 186, 122, 0.5); }
+  50% { box-shadow: 0 0 0 7px rgba(235, 186, 122, 0); }
+}
+
+/* --- 5b. ModeToggle (Read ⇄ Insight segmented control, DESIGN §5/§18) ----- */
+.mode-toggle {
+  display: inline-flex; gap: 2px; padding: 4px;
+  background: var(--pearl); border-radius: var(--r-pill);
+}
+.mode-toggle button {
+  border-radius: var(--r-pill); padding: 8px 18px; font-size: var(--fs-sm);
+  background: transparent; color: var(--tundora); font-weight: 700;
+  position: relative;
+}
+.mode-toggle button[aria-pressed="true"] {
+  background: var(--white); color: var(--navy); box-shadow: var(--shadow-sm);
+}
+/* notification pip on the Insight tab when the target advanced (DESIGN §18) */
+.mode-toggle button .pip {
+  position: absolute; top: 4px; right: 8px;
+  width: 9px; height: 9px; border-radius: 50%; background: var(--coral);
+  display: none;
+}
+.mode-toggle button.has-pip .pip { display: block; }
+
+/* --- 5c. MasteryPath (replaces the 30-bar scroll, DESIGN §6) -------------- */
+.mastery-path {
+  display: flex; align-items: center; gap: var(--space-2);
+  flex-wrap: wrap; padding: var(--space-2) 0;
+}
+.grapheme-node {
+  --gn: var(--pearl);
+  display: grid; place-items: center;
+  min-width: 46px; height: 46px; padding: 0 10px;
+  border-radius: var(--r-md);
+  font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+  background: var(--gn); color: var(--navy);
+  border: 2px solid transparent; cursor: pointer;
+  transition: transform var(--dur-node) var(--ease-snap),
+    background-color var(--dur-fill) var(--ease-out), border-color var(--dur-node) ease;
+}
+.grapheme-node.mastered { --gn: var(--sage); color: var(--white); box-shadow: 0 0 0 2px rgba(82,113,100,0.25); }
+.grapheme-node.current {
+  --gn: var(--coral); color: var(--white);
+  transform: scale(1.12); box-shadow: 0 0 0 4px rgba(219, 126, 101, 0.25);
+}
+.grapheme-node.locked {
+  background: transparent; color: var(--tundora);
+  border: 2px dashed var(--color-border);
+}
+.grapheme-node.just-mastered { animation: pop 0.7s ease; }
+/* connector dashes between path nodes */
+.mastery-path .gn-link { width: 14px; height: 2px; background: var(--color-border); }
+
+/* --- 5d. WhyCard (planner rationale + evidence chips, DESIGN §5) ---------- */
+.why-card {
+  background: rgba(156, 109, 139, 0.1);
+  border-left: 4px solid var(--plum);
+  border-radius: var(--r-md); padding: var(--space-4);
+}
+.why-card h4 { color: var(--plum); font-size: var(--fs-data); text-transform: uppercase;
+  letter-spacing: 0.1em; margin-bottom: 6px; }
+.why-card .why-text { font-size: var(--fs-base); color: var(--navy); }
+.evidence-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: var(--space-2); }
+.evidence-chip {
+  font-family: var(--font-mono); font-size: var(--fs-data);
+  background: var(--white); border: 1px solid var(--color-border-soft);
+  border-radius: var(--r-pill); padding: 3px 10px; color: var(--tundora);
+}
+
+/* --- 5e. ReadingPage (child-facing — calm, full-bleed, NO red, DESIGN §5) - */
+.reading-page {
+  font-family: var(--font-read); font-size: var(--fs-read);
+  line-height: 2; letter-spacing: 0.02em; word-spacing: 0.08em;
+  color: var(--navy); text-align: center;
+  padding: clamp(20px, 5vw, 56px); max-width: 24ch; margin: 0 auto;
+}
+.reading-page .rw {
+  display: inline-block; padding: 2px 4px; border-radius: 8px;
+  transition: background-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+/* karaoke glow on the current word — shows WHERE we are, never what's wrong */
+.reading-page .rw.current {
+  background: rgba(235, 186, 122, 0.35);
+  box-shadow: 0 0 18px rgba(235, 186, 122, 0.5);
+}
+/* target grapheme softly gold-tinted INSIDE words (reads as warmth, never error) */
+.reading-page .tgt { color: var(--coral-text); border-bottom: 3px solid var(--gold); }
+/* child-safe celebration state after a scored read (no red ever) */
+.read-celebrate {
+  text-align: center; color: var(--sage); font-weight: 700; font-size: var(--fs-h3);
+  padding: var(--space-6);
+}
+
+/* --- 5f. Journey timeline (DESIGN §17) ------------------------------------ */
+.journey { padding: var(--space-4); overflow-x: auto; }
+.journey-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--space-4); }
+.journey-grid { display: grid; grid-auto-flow: column; gap: var(--space-4); }
+.journey-row-label { font-size: 11px; color: var(--tundora); text-transform: uppercase; letter-spacing: 0.08em; }
+.journey-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 48px; }
+.journey-target { font-family: var(--font-mono); font-weight: 700; }
+.journey-target.changed { color: var(--coral-text); }     /* the visible adaptation */
+.journey-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--sage); }
+.journey-dot.today { background: var(--coral); box-shadow: 0 0 0 4px rgba(219,126,101,0.25); }
+.journey-mean { font-family: var(--font-mono); font-size: var(--fs-data); color: var(--tundora); }
+
+/* --- 5g. AdaptBeat caption (DESIGN §7/§16) -------------------------------- */
+.adapt-caption {
+  font-size: var(--fs-h3); font-weight: 700; color: var(--navy);
+  text-align: center; padding: var(--space-4);
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.adapt-caption.show { opacity: 1; transform: none; }
+
+/* ============================================================================
+ * 6. LEGACY SURFACE  (current single-screen markup — kept functional)
+ *    Restyled onto tokens; Phase 2 progressively replaces these with §5.
+ * ========================================================================== */
+
+/* --- Top bar --- */
 .topbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 24px;
-  background: var(--navy); color: var(--parchment);
-  box-shadow: 0 2px 12px var(--shadow);
+  padding: 14px 24px; background: var(--navy); color: var(--parchment);
+  box-shadow: 0 2px 12px var(--shadow-color);
 }
 .brand { display: flex; align-items: center; gap: 14px; }
 .logo { font-size: 34px; }
-.topbar h1 { font-size: 22px; letter-spacing: 0.3px; }
-.tagline { margin: 0; font-size: 12px; color: var(--gold); }
+.topbar h1 { font-size: var(--fs-h1); letter-spacing: 0.3px; }
+.tagline { margin: 0; font-size: var(--fs-data); color: var(--gold); }
 
-.mean-meter { display: flex; align-items: center; gap: 10px; min-width: 280px; }
-.mean-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); }
-.mean-track { flex: 1; height: 10px; background: rgba(236,229,219,0.25); border-radius: 6px; overflow: hidden; }
-.mean-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--sage), var(--gold));
-  transition: width 1.1s cubic-bezier(.22,.61,.36,1); }
-.mean-value { font-variant-numeric: tabular-nums; font-weight: 700; min-width: 42px; text-align: right; }
-
-/* ---- Layout ---- */
+/* --- Layout --- */
 .layout {
-  display: grid; grid-template-columns: 1fr 340px; gap: 20px;
-  padding: 20px; max-width: 1180px; margin: 0 auto; align-items: start;
+  display: grid; grid-template-columns: 1fr 340px; gap: var(--space-5);
+  padding: var(--space-5); max-width: 1180px; margin: 0 auto; align-items: start;
 }
-.flow { display: flex; flex-direction: column; gap: 20px; }
-.card {
-  background: var(--parchment); border-radius: 16px; padding: 20px;
-  box-shadow: 0 4px 18px var(--shadow);
-}
+.flow { display: flex; flex-direction: column; gap: var(--space-5); }
 
-/* ---- Setup ---- */
-.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
-.setup-grid label { display: flex; flex-direction: column; font-size: 13px; gap: 4px; }
-input, textarea {
-  font: inherit; padding: 8px 10px; border: 1.5px solid #d7cdbf; border-radius: 8px;
-  background: #fff; color: var(--navy);
-}
-input:focus, textarea:focus { outline: none; border-color: var(--coral); }
-.status { font-size: 12px; color: var(--tundora); margin: 8px 0 0; }
+/* --- Setup --- */
+.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin: 14px 0; }
+.setup-grid label { display: flex; flex-direction: column; font-size: var(--fs-sm); gap: 4px; }
+.status { font-size: var(--fs-data); color: var(--tundora); margin: 8px 0 0; }
 .status.ok { color: var(--sage); }
-.status.err { color: var(--coral); }
+.status.err { color: var(--coral-text); }
 
-button { cursor: pointer; font: inherit; border: none; border-radius: 10px; padding: 9px 16px; font-weight: 600; }
-button.primary { background: var(--coral); color: #fff; box-shadow: 0 2px 8px var(--shadow); }
-button.primary:hover { background: #cf6f55; }
-button.ghost { background: #fff; color: var(--navy); border: 1.5px solid #d7cdbf; }
-button.ghost:hover { border-color: var(--coral); }
-button:disabled { opacity: 0.5; cursor: default; }
+/* --- Objective --- */
+.objective-head { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.target-chip { background: var(--white); border: 2px solid var(--coral); border-radius: var(--r-pill); padding: 3px 14px; font-size: 14px; }
+.target-chip b { color: var(--coral-text); font-size: 1.05em; }
+.rationale { font-size: var(--fs-sm); color: var(--tundora); margin: 8px 0 0; }
 
-/* ---- Objective ---- */
-.objective-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.pill { background: var(--navy); color: var(--parchment); padding: 3px 12px; border-radius: 999px; font-size: 12px; }
-.target-chip { background: #fff; border: 2px solid var(--coral); border-radius: 999px; padding: 3px 14px; font-size: 14px; }
-.target-chip b { color: var(--coral); font-size: 1.05em; }
-.rationale { font-size: 13px; color: var(--tundora); margin: 8px 0 0; }
-
-/* ---- Book / read-along ---- */
-.book { margin: 18px 0; padding: 18px; background: #fff; border-radius: 12px; }
+/* --- Book / read-along (legacy combined view) --- */
+.book { margin: 18px 0; padding: 18px; background: var(--white); border-radius: var(--r-md); }
 .book-head { display: flex; justify-content: space-between; align-items: baseline; }
 .source-badge { font-size: 11px; color: var(--tundora); text-transform: uppercase; letter-spacing: 0.5px; }
-.book-text { font-size: 26px; line-height: 1.7; margin: 12px 0 6px; font-weight: 600; }
-.book-text .w {
-  padding: 2px 6px; border-radius: 7px; transition: background-color 0.6s ease, color 0.3s ease;
-  background: transparent;
-}
-.book-text .w.correct { background: rgba(82,113,100,0.22); }
-.book-text .w.substitution { background: var(--coral); color: #fff; }
+/* The legacy combined book uses the reading face now too (a11y quick win). */
+.book-text { font-family: var(--font-read); font-size: var(--fs-read); line-height: 1.9; margin: 12px 0 6px; font-weight: 600; }
+.book-text .w { padding: 2px 6px; border-radius: 7px; transition: background-color 0.6s ease, color 0.3s ease; background: transparent; }
+/* NB: these miscue colors are Insight-mode (post-hoc) semantics; Phase 2's
+ * Reading mode never applies them to the child's live page (DESIGN §5/§11). */
+.book-text .w.correct { background: rgba(82, 113, 100, 0.22); }
+.book-text .w.substitution { background: var(--coral); color: var(--white); }
 .book-text .w.omission { background: var(--gold); color: var(--navy); text-decoration: line-through; }
 .book-text .w.self_correction,
-.book-text .w.hesitation { background: rgba(235,186,122,0.5); border-bottom: 2px dashed var(--tundora); }
+.book-text .w.hesitation { background: rgba(235, 186, 122, 0.5); border-bottom: 2px dashed var(--tundora); }
 
-.legend { font-size: 12px; color: var(--tundora); display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.legend { font-size: var(--fs-data); color: var(--tundora); display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .swatch { display: inline-block; width: 13px; height: 13px; border-radius: 4px; margin-right: 4px; vertical-align: -2px; }
-.swatch.correct { background: rgba(82,113,100,0.4); }
+.swatch.correct { background: rgba(82, 113, 100, 0.4); }
 .swatch.substitution { background: var(--coral); }
 .swatch.omission { background: var(--gold); }
-.swatch.fixed { background: rgba(235,186,122,0.5); border-bottom: 2px dashed var(--tundora); }
+.swatch.fixed { background: rgba(235, 186, 122, 0.5); border-bottom: 2px dashed var(--tundora); }
 
-/* ---- Read controls ---- */
-.read-label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; }
-.presets { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+/* --- Read controls --- */
+.read-label { font-size: var(--fs-sm); font-weight: 600; display: block; margin-bottom: 6px; }
+.presets { display: flex; gap: var(--space-2); margin-top: var(--space-2); flex-wrap: wrap; }
 .presets #score-btn { margin-left: auto; }
-button.mic.recording { background: var(--coral); color: #fff; border-color: var(--coral); animation: rec-pulse 1.2s ease-in-out infinite; }
-@keyframes rec-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(219,126,101,0.5); } 50% { box-shadow: 0 0 0 6px rgba(219,126,101,0); } }
-.voice-status { font-size: 12px; color: var(--plum); margin: 8px 0 0; min-height: 16px; }
+button.mic.recording { background: var(--coral); color: var(--white); border-color: var(--coral); animation: rec-pulse 1.2s ease-in-out infinite; }
+@keyframes rec-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(219, 126, 101, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(219, 126, 101, 0); }
+}
+.voice-status { font-size: var(--fs-data); color: var(--plum); margin: 8px 0 0; min-height: 16px; }
 
-/* ---- Results ---- */
-#results { margin-top: 18px; border-top: 1.5px dashed #d7cdbf; padding-top: 16px; }
+/* --- Results --- */
+#results { margin-top: 18px; border-top: 1.5px dashed var(--color-border); padding-top: var(--space-4); }
 .fluency { display: flex; gap: 18px; flex-wrap: wrap; }
-.stat { background: #fff; border-radius: 10px; padding: 8px 14px; text-align: center; min-width: 78px; }
-.stat .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat { background: var(--white); border-radius: var(--r-md); padding: 8px 14px; text-align: center; min-width: 78px; }
+.stat .v { font-size: 22px; font-weight: 700; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .stat .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--tundora); }
 
-.scaffolds { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
-.scaffold {
-  background: rgba(156,109,139,0.12); border-left: 4px solid var(--plum);
-  padding: 8px 12px; border-radius: 8px; font-size: 14px;
-}
+.scaffolds { margin-top: 14px; display: flex; flex-direction: column; gap: var(--space-2); }
+.scaffold { background: rgba(156, 109, 139, 0.12); border-left: 4px solid var(--plum); padding: 8px 12px; border-radius: var(--r-sm); font-size: 14px; }
 .scaffold b { color: var(--plum); }
 
-.next-target {
-  margin-top: 16px; padding: 14px; border-radius: 12px; background: #fff;
-  border: 2px solid #d7cdbf;
-}
-.next-target.advanced { border-color: var(--sage); background: rgba(82,113,100,0.08); }
-.next-target h4 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--tundora); }
+.next-target { margin-top: var(--space-4); padding: 14px; border-radius: var(--r-md); background: var(--white); border: 2px solid var(--color-border); }
+.next-target.advanced { border-color: var(--sage); background: rgba(82, 113, 100, 0.08); }
+.next-target h4 { margin: 0 0 4px; font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.5px; color: var(--tundora); }
 .next-target .adv-badge { color: var(--sage); font-weight: 700; }
-.next-target .next-g { color: var(--coral); font-weight: 700; }
+.next-target .next-g { color: var(--coral-text); font-weight: 700; }
 #next-btn { margin-top: 14px; }
 
-/* ---- Mastery bars ---- */
+/* --- Legacy mastery bars (the 30-bar sidebar — replaced by MasteryPath) --- */
 .mastery { position: sticky; top: 20px; }
-.mastery-hint { font-size: 12px; color: var(--tundora); margin: 4px 0 14px; }
+.mastery-hint { font-size: var(--fs-data); color: var(--tundora); margin: 4px 0 14px; }
 .bars { display: flex; flex-direction: column; gap: 9px; max-height: 70vh; overflow-y: auto; }
-.bar-row { font-size: 12px; }
+.bar-row { font-size: var(--fs-data); }
 .bar-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
 .bar-g { font-weight: 700; }
-.bar-row.target .bar-g { color: var(--coral); }
+.bar-row.target .bar-g { color: var(--coral-text); }
 .bar-row.review .bar-g::after { content: " ↻"; color: var(--plum); }
-.bar-p { font-variant-numeric: tabular-nums; color: var(--tundora); }
-.bar-track { height: 12px; background: #fff; border-radius: 6px; overflow: hidden; border: 1px solid #e0d6c8; }
-.bar-fill {
-  height: 100%; width: 0%; border-radius: 6px;
-  background: var(--gold);
-  transition: width 1.0s cubic-bezier(.22,.61,.36,1), background-color 0.6s ease;
-}
+.bar-p { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--tundora); }
+.bar-track { height: 12px; background: var(--white); border-radius: 6px; overflow: hidden; border: 1px solid var(--color-border-soft); }
+.bar-fill { height: 100%; width: 0%; border-radius: 6px; background: var(--gold); transition: width var(--dur-fill) var(--ease-out), background-color 0.6s ease; }
 .bar-row.target .bar-fill { background: var(--coral); }
 .bar-fill.mastered { background: var(--sage); }
-@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
 .bar-row.just-mastered { animation: pop 0.7s ease; }
 .bar-row.just-mastered .bar-g::before { content: "✓ "; color: var(--sage); }
 
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
+
+/* --- Illustrated take-home book (opt-in coda) --- */
+.book-gen { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1.5px dashed var(--color-border); }
+.book-gen h4 { margin: 0 0 4px; color: var(--navy); }
+.book-gen p { margin: 0 0 10px; font-size: var(--fs-sm); }
+#gen-book-btn:disabled { opacity: 0.55; cursor: progress; }
+.book-result { margin-top: var(--space-3); padding: var(--space-3); background: var(--white); border: 1.5px solid var(--color-border-soft); border-radius: var(--r-md); }
+#book-link { display: inline-block; font-weight: 700; color: var(--coral-text); text-decoration: none; margin-right: 10px; }
+#book-link:hover { text-decoration: underline; }
+.book-result-head { display: flex; align-items: baseline; gap: 10px; }
+.book-pages { margin-top: var(--space-3); display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3); }
+.book-page { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--color-border-soft); border-radius: var(--r-md); background: var(--parchment); font-size: var(--fs-sm); }
+.book-thumb { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: var(--r-sm); display: block; background: var(--white); }
+.book-page-n { flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%; background: var(--navy); color: var(--parchment); font-size: 11px; text-align: center; line-height: 20px; }
+.book-page-t { color: var(--tundora); }
+#book-note { margin: 6px 0 0; }
+
+/* ============================================================================
+ * 7. RESPONSIVE + REDUCED MOTION
+ * ========================================================================== */
 @media (max-width: 880px) {
   .layout { grid-template-columns: 1fr; }
   .mastery { position: static; }
+  /* Loop rail collapses to icons-only with the active node labeled (DESIGN §12). */
+  .loop-node .ln-sub { display: none; }
+  .loop-node:not(.lit) .ln-name { display: none; }
+  .loop-node { min-width: 56px; }
 }
 
-/* ---- Illustrated take-home book (opt-in) ---- */
-.book-gen {
-  margin-top: 16px; padding-top: 16px;
-  border-top: 1.5px dashed #d7cdbf;
+/* Honor reduced-motion: snap instead of animate (DESIGN §10.4/§11). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
-.book-gen h4 { margin: 0 0 4px; color: var(--navy); }
-.book-gen p { margin: 0 0 10px; font-size: 13px; }
-#gen-book-btn:disabled { opacity: 0.55; cursor: progress; }
-.book-result {
-  margin-top: 12px; padding: 12px;
-  background: #fff; border: 1.5px solid #e0d6c8; border-radius: 12px;
-}
-#book-link {
-  display: inline-block; font-weight: 700; color: var(--coral);
-  text-decoration: none; margin-right: 10px;
-}
-#book-link:hover { text-decoration: underline; }
-.book-result-head { display: flex; align-items: baseline; gap: 10px; }
-.book-pages {
-  margin-top: 12px;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;
-}
-.book-page {
-  display: flex; flex-direction: column; gap: 6px;
-  padding: 8px; border: 1px solid #e0d6c8; border-radius: 10px; background: var(--parchment);
-  font-size: 13px;
-}
-.book-thumb {
-  width: 100%; aspect-ratio: 1 / 1; object-fit: cover;
-  border-radius: 8px; display: block; background: #fff;
-}
-.book-page-n {
-  flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%;
-  background: var(--navy); color: var(--parchment);
-  font-size: 11px; text-align: center; line-height: 20px;
-}
-.book-page-t { color: var(--tundora); }
-#book-note { margin: 6px 0 0; }
