@@ -262,20 +262,58 @@ def _illustrate_pages_sync(bible, page_texts: list[str], *, age: int, model: str
 
     Mirrors app.illustrator.illustrate_book but loops here so we can emit per-page
     progress, and threads the first on-brand page as the reference image so later
-    pages keep the characters identical. Call via asyncio.to_thread. Raises if the
-    image backend is unavailable so the caller can fall back to a text-only book.
+    pages keep the characters identical. Call via asyncio.to_thread.
+
+    Degradation is PER-PAGE, not all-or-nothing: the image model occasionally
+    returns no image for one page (an empty/text-only candidate), and at the image
+    model's ~2-req/min quota a long book is exactly when that is most likely. Rather
+    than discard every successfully-illustrated page, a failed page falls back to an
+    on-palette placeholder so the rest of the book keeps its real art. The book is
+    only fully text-only if the image backend is unavailable from the very first page
+    (the placeholder generator is offline, so that only happens for a real-model
+    page-1 failure when not in stub mode).
     """
+    import os
     import time
 
-    from app.illustrator import illustrate_page, make_image_client, make_image_generator
+    from app.illustrator import (
+        illustrate_page,
+        make_image_client,
+        make_image_generator,
+        make_stub_image_generator,
+    )
 
-    client = make_image_client()
-    generate_fn = make_image_generator(client, model=model)
+    # The offline placeholder generator: instant, on-palette, zero quota. It is the
+    # whole image source in stub mode, and the per-page fallback in real mode.
+    fallback_generate = make_stub_image_generator()
 
-    def timed_generate(prompt, refs):
-        out = generate_fn(prompt, refs)
-        time.sleep(2)  # gentle pacing for the image model's per-minute quota
-        return out
+    # Offline stub mode (PHONO_STUB_IMAGES): swap ONLY the image generator for the
+    # placeholder so routine UI/flow testing never touches the ~2-req/min image
+    # quota. Everything else (story LLM, decodability, palette verifier, thumbnails,
+    # Docs export) runs unchanged. No client, no pacing sleep.
+    if os.environ.get("PHONO_STUB_IMAGES") == "1":
+        timed_generate = fallback_generate
+    else:
+        client = make_image_client()
+        generate_fn = make_image_generator(client, model=model)
+
+        def timed_generate(prompt, refs):
+            out = generate_fn(prompt, refs)
+            time.sleep(2)  # gentle pacing for the image model's per-minute quota
+            return out
+
+    def _render(text: str, page_number: int, generate_fn):
+        return illustrate_page(
+            bible,
+            text,  # the decodable page text doubles as the scene description
+            age=age,
+            page_number=page_number,
+            generate_fn=generate_fn,
+            page_text=text,
+            max_attempts=2,
+            enforce="snap",
+            reference_images=list(reference) or None,
+        )
 
     pages = []
     reference: list[bytes] = []
@@ -283,20 +321,19 @@ def _illustrate_pages_sync(bible, page_texts: list[str], *, age: int, model: str
     for i, text in enumerate(page_texts, start=1):
         if progress:
             progress(f"Illustrating page {i} of {total}…")
-        page = illustrate_page(
-            bible,
-            text,  # the decodable page text doubles as the scene description
-            age=age,
-            page_number=i,
-            generate_fn=timed_generate,
-            page_text=text,
-            max_attempts=2,
-            enforce="snap",
-            reference_images=list(reference) or None,
-        )
+        try:
+            page = _render(text, i, timed_generate)
+            real = True
+        except Exception as exc:  # noqa: BLE001 - one bad page must not lose the rest
+            if progress:
+                progress(f"Page {i} unavailable ({exc}); using a placeholder for this page.")
+            page = _render(text, i, fallback_generate)
+            real = False
         pages.append(page)
-        if not reference:
-            reference.append(page.image_bytes)  # lock the first page as the ref
+        # Lock the reference to the first REAL page so a placeholder never becomes
+        # the character anchor every later page is matched against.
+        if real and not reference:
+            reference.append(page.image_bytes)
     return pages
 
 

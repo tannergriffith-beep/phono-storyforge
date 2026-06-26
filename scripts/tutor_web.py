@@ -42,7 +42,21 @@ def main() -> None:
         action="store_true",
         help="Enable the opt-in, creds-gated illustrated take-home book (ADK pipeline + Google Docs export).",
     )
+    parser.add_argument(
+        "--stub-images",
+        action="store_true",
+        help="Offline placeholder illustrations (zero image-gen quota) for routine UI/flow "
+        "testing. The story, decodability check, and Docs export still run for real.",
+    )
     args = parser.parse_args()
+
+    # Stub mode is read from the environment by the illustrator seam, so set it
+    # before the generator is imported. Lets repeated testing skip the ~2-req/min
+    # image model entirely; drop the flag for the one real end-to-end check.
+    if args.stub_images:
+        import os
+
+        os.environ["PHONO_STUB_IMAGES"] = "1"
 
     import uvicorn
 
