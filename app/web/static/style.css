@@ -617,6 +617,10 @@ button.mic.recording { background: var(--coral); color: var(--white); border-col
   .loop-node .ln-sub { display: none; }
   .loop-node:not(.lit) .ln-name { display: none; }
   .loop-node { min-width: 56px; }
+  /* Top bar: let the mastery meter shrink instead of overflowing (QA fix). */
+  .topbar { flex-wrap: wrap; gap: var(--space-3); }
+  .mean-meter { min-width: 0; flex: 1; }
+  .mean-meter .mean-label { display: none; }
 }
 
 /* Honor reduced-motion: snap instead of animate (DESIGN §10.4/§11). */
