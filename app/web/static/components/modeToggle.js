@@ -33,6 +33,10 @@ function setMode(next) {
   readingBtn.setAttribute("aria-pressed", String(next === "reading"));
   insightBtn.setAttribute("aria-pressed", String(next === "insight"));
 
+  // Announce the view change so the AdaptBeat can play a deferred climax when
+  // an adult crosses into Insight (DESIGN §18).
+  document.dispatchEvent(new CustomEvent("phono:mode", { detail: { mode: next } }));
+
   const swap = () => {
     outFace.hidden = true;
     outFace.classList.remove("is-active");

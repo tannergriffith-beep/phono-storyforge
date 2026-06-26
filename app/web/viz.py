@@ -223,5 +223,8 @@ def outcome_payload(outcome: SessionOutcome) -> dict:
             "rationale": nxt.rationale,
             "previous_grapheme": current,
             "advanced": nxt.target_grapheme != current,
+            # Current P(L) of the next target, so the Adapt-beat "ahead" node and
+            # its tap-detail are truthful rather than fabricated (DESIGN §7/§16).
+            "p_mastery": round(outcome.next_target_p_mastery, 4),
         },
     }

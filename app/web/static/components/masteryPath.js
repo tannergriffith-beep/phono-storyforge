@@ -70,21 +70,68 @@ function render(msg) {
   });
 }
 
-function update(msg) {
-  (msg.mastery_updates || []).forEach((u) => {
-    const node = nodes[u.grapheme];
-    if (!node) return;
-    node.p = u.p_after;
-    const cls = classOf(u.p_after, node.isTarget);
-    node.el.className = "grapheme-node " + cls;
-    node.el.setAttribute("aria-label", labelFor(u.grapheme, u.p_after, cls));
-    if (u.newly_mastered) {
-      // Re-trigger the pop animation reliably.
-      node.el.classList.remove("just-mastered");
-      void node.el.offsetWidth; // reflow
-      node.el.classList.add("just-mastered");
-    }
+// ---- Imperative ops (driven by the AdaptBeat on outcome, §7/§16) -----------
+
+/** Sync P(L) + reclassify for each update. `skip` defers one grapheme (the
+ *  just-finished target, which the Adapt beat animates itself). No pop here. */
+function applyUpdates(updates, opts = {}) {
+  (updates || []).forEach((u) => {
+    if (opts.skip && u.grapheme === opts.skip) return;
+    syncOne(u.grapheme, u.p_after);
   });
+}
+
+/** Set one grapheme's final P(L) state without any celebratory animation. */
+function syncOne(grapheme, p) {
+  const node = nodes[grapheme];
+  if (!node) return;
+  if (p != null) node.p = p;
+  const cls = classOf(node.p, node.isTarget);
+  node.el.className = "grapheme-node " + cls;
+  node.el.setAttribute("aria-label", labelFor(grapheme, node.p, cls));
+}
+
+/** The just-mastered node fills sage and pops (DESIGN §16 F2). */
+function popMastered(grapheme) {
+  const node = nodes[grapheme];
+  if (!node) return;
+  node.isTarget = false;
+  node.el.className = "grapheme-node mastered";
+  node.el.setAttribute("aria-label", labelFor(grapheme, node.p, "mastered"));
+  node.el.classList.remove("just-mastered");
+  void node.el.offsetWidth; // reflow so the animation re-triggers
+  node.el.classList.add("just-mastered");
+}
+
+/** The coral glow arrives: this node becomes the current target (DESIGN §16 F3). */
+function setCurrent(grapheme) {
+  const node = nodes[grapheme];
+  if (!node) return;
+  node.isTarget = true;
+  node.el.className = "grapheme-node current";
+  node.el.setAttribute("aria-label", labelFor(grapheme, node.p, "current"));
+}
+
+/** No-advance payoff: pulse the still-current target in place (DESIGN §16). */
+function pulse(grapheme) {
+  const node = nodes[grapheme];
+  if (!node) return;
+  node.el.classList.remove("pulse");
+  void node.el.offsetWidth;
+  node.el.classList.add("pulse");
+}
+
+/** Ensure a node exists so the glow can travel to the next target. Appended as
+ *  whatever its real P(L) classifies to (usually locked/ahead). */
+function ensureNode(grapheme, level, p) {
+  if (nodes[grapheme]) return;
+  if (!pathEl) return;
+  const el = makeNode({ grapheme, level: level || "", p_mastery: p || 0, is_target: false });
+  const link = document.createElement("span");
+  link.className = "gn-link";
+  pathEl.appendChild(link);
+  pathEl.appendChild(el);
+  nodes[grapheme] = { el, p: p || 0, level: level || "", isTarget: false };
 }
 
 function showDetail(grapheme) {
@@ -100,8 +147,13 @@ function showDetail(grapheme) {
 }
 
 export const MasteryPath = {
-  mount() {
-    on("prepared", render);
-    on("outcome", update);
-  },
+  // render() runs on `prepared`; the post-outcome animation is driven by the
+  // AdaptBeat via the imperative ops below (so the climax is one choreography).
+  mount() { on("prepared", render); },
+  applyUpdates,
+  syncOne,
+  popMastered,
+  setCurrent,
+  pulse,
+  ensureNode,
 };

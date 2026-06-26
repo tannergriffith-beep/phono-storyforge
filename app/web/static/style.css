@@ -369,6 +369,12 @@ input:focus, textarea:focus { outline: none; border-color: var(--coral); }
   border: 2px dashed var(--color-border);
 }
 .grapheme-node.just-mastered { animation: pop 0.7s ease; }
+/* No-advance payoff: pulse the still-current target in place (DESIGN §16). */
+.grapheme-node.pulse { animation: gn-pulse 0.9s ease-in-out 2; }
+@keyframes gn-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(219, 126, 101, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(219, 126, 101, 0); }
+}
 /* connector dashes between path nodes */
 .mastery-path .gn-link { width: 14px; height: 2px; background: var(--color-border); }
 
