@@ -387,6 +387,11 @@ input:focus, textarea:focus { outline: none; border-color: var(--coral); }
   background: var(--white); border: 1px solid var(--color-border-soft);
   border-radius: var(--r-pill); padding: 3px 10px; color: var(--tundora);
 }
+.evidence-chip.is-target { border-color: var(--coral); color: var(--coral-text); font-weight: 700; }
+.why-card .why-receipt {
+  font-family: var(--font-mono); font-size: 11px; color: var(--tundora);
+  margin-top: 10px; opacity: 0.85; word-break: break-word;
+}
 
 /* --- 5e. ReadingPage (child-facing — calm, full-bleed, NO red, DESIGN §5) - */
 .reading-page {

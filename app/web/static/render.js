@@ -25,7 +25,7 @@ export function renderPrepared(msg) {
   $("session-pill").textContent = `session #${msg.session_index}`;
   $("target-grapheme").textContent = `/${msg.objective.target_grapheme}/`;
   $("target-level").textContent = msg.objective.target_level;
-  $("rationale").textContent = msg.objective.rationale;
+  // The planner rationale is now rendered by the WhyCard component (#why-card).
 
   // Reset + reveal the take-home book panel (only when the feature is enabled).
   state.learnerName = msg.learner_name || "";

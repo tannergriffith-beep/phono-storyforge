@@ -15,6 +15,11 @@ export const pct = (x) => (Math.max(0, Math.min(1, x)) * 100).toFixed(1) + "%";
 export const stat = (v, k) =>
   `<div class="stat"><div class="v">${v}</div><div class="k">${k}</div></div>`;
 
+/** Escape user/text content before interpolating into innerHTML. */
+export const esc = (s) =>
+  String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
 /** True when the user has asked the OS to reduce motion (DESIGN §10.4/§11). */
 export const prefersReducedMotion = () =>
   !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);

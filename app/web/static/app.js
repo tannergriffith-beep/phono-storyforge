@@ -25,6 +25,7 @@ import * as voice from "./voice.js";
 import * as book from "./book.js";
 import { renderPrepared, renderOutcome, applyPreset } from "./render.js";
 import { LoopRail } from "./components/loopRail.js";
+import { WhyCard } from "./components/whyCard.js";
 
 // ---- Actions ----------------------------------------------------------------
 
@@ -62,6 +63,8 @@ ws.on("error", (m) => {
 
 // LoopRail registers its own ws subscriptions (prepared/voice_status/outcome/error).
 LoopRail.mount($("loop-rail"));
+// WhyCard renders the planner rationale + evidence chips on each `prepared`.
+WhyCard.mount();
 
 // ---- Button wiring ----------------------------------------------------------
 
