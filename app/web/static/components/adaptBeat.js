@@ -19,13 +19,12 @@
 
 "use strict";
 
-import { $, esc, prefersReducedMotion } from "../dom.js";
+import { $, esc, motionReduced } from "../dom.js";
 import { on } from "../ws.js";
 import { MasteryPath } from "./masteryPath.js";
 
 let mode = "reading";
 let pending = null; // {adv, prevG, nextG, prevMastered, name}
-let reduce = false;
 let speed = 1;
 let learnerName = "this reader";
 
@@ -41,6 +40,7 @@ function play() {
   pending = null;
   if (!b) return;
   const cap = captionEl();
+  const reduce = motionReduced(); // live: honors OS setting + in-app Calm toggle
   const ms = (x) => (reduce ? 0 : x * speed);
 
   if (b.adv) {
@@ -88,7 +88,6 @@ function onOutcome(msg) {
 
 export const AdaptBeat = {
   mount() {
-    reduce = prefersReducedMotion();
     speed = location.search.indexOf("demo") !== -1 ? 1.5 : 1;
     on("prepared", (m) => {
       learnerName = m.learner_name || "this reader";

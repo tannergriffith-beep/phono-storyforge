@@ -16,11 +16,10 @@
 
 "use strict";
 
-import { $, prefersReducedMotion } from "../dom.js";
+import { $, motionReduced } from "../dom.js";
 import { on } from "../ws.js";
 
 let mode = "reading";
-let reduce = false;
 let readingBtn, insightBtn, readingFace, insightFace;
 let fadeTimer = null;
 
@@ -52,7 +51,7 @@ function setMode(next, opts = {}) {
   };
 
   clearTimeout(fadeTimer);
-  if (reduce) {
+  if (motionReduced()) { // live: OS setting + in-app Calm toggle
     swap();
   } else {
     outFace.classList.remove("is-active"); // fade the current face out first
@@ -79,7 +78,6 @@ export const ModeToggle = {
     readingFace = $("reading-face");
     insightFace = $("insight-face");
     if (!readingBtn || !insightBtn) return;
-    reduce = prefersReducedMotion();
 
     readingBtn.addEventListener("click", () => setMode("reading", { focus: true }));
     insightBtn.addEventListener("click", () => setMode("insight", { focus: true }));

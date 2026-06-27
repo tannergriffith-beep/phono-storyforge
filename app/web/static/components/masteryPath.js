@@ -19,7 +19,13 @@
 import { $, esc } from "../dom.js";
 import { on } from "../ws.js";
 
-const MASTERY_BAR = 0.85; // matches the BKT mastery threshold used elsewhere
+// Must match the authoritative backend cutoff (app/phonics_db.py
+// MASTERY_THRESHOLD = 0.95), which gates newly_mastered, the planner's target
+// selection, and the Journey "sounds learned" count. A lower value here would
+// show "knows this well" for a sound the backend still treats as unmastered.
+// (If the server ever runs a non-default threshold, viz.py should emit an
+// authoritative per-bar state instead of the client re-deriving it.)
+const MASTERY_BAR = 0.95;
 
 let nodes = {};   // grapheme -> { el, p, level }
 let pathEl = null;

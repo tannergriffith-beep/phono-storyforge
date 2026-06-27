@@ -23,3 +23,10 @@ export const esc = (s) =>
 /** True when the user has asked the OS to reduce motion (DESIGN §10.4/§11). */
 export const prefersReducedMotion = () =>
   !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+/** True when motion should be suppressed: the OS setting OR the in-app "Calm
+ *  mode" toggle (ReaderSettings sets body.reader-calm). Read LIVE at animation
+ *  time — the JS choreography (setTimeout-driven) isn't covered by the CSS calm
+ *  rule, so a cached-at-mount flag would ignore a mid-session Calm toggle. */
+export const motionReduced = () =>
+  prefersReducedMotion() || document.body.classList.contains("reader-calm");

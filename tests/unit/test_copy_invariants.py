@@ -103,3 +103,22 @@ def test_topbar_chrome_exposes_no_score():
     assert "mastery" not in topbar.lower(), "top-bar must not show a 'Mastery' readout"
     assert "%" not in topbar, "top-bar must not expose a percentage/score"
     assert _contains_forbidden(topbar) == [], "top-bar chrome must be jargon-free"
+
+
+# ---- Guard 4: the session-head chrome is jargon-free ------------------------
+# .session-head sits OUTSIDE both faces and above the mode toggle, so it is
+# always visible to the child during reading — not the exempt "For grown-ups"
+# view. It must obey the same lexicon as the Reading face (voice-lexicon.md:
+# never "target"/"objective" or zero-indexed "session #0").
+
+def test_session_head_chrome_has_no_jargon():
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    head = _slice(html, '<div class="session-head">', "</div>")
+    # Visible text only — id/class attribute names (target-chip, target-grapheme)
+    # are not user-facing and legitimately carry these stems.
+    text = re.sub(r"<[^>]+>", " ", head)
+    hits = _contains_forbidden(text)
+    assert not hits, f"forbidden lexicon {hits} in the always-visible session-head chrome"
+    low = text.lower()
+    assert "target" not in low, "session-head must not show 'target' (use 'tonight's sound')"
+    assert "session #" not in low, "session-head must not show a zero-indexed 'session #N'"

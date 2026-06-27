@@ -25,7 +25,9 @@ export function renderPrepared(msg) {
   $("transcript").value = "";
   voiceStatus("");
 
-  $("session-pill").textContent = `session #${msg.session_index}`;
+  // Parent-facing, 1-indexed, lexicon-approved (voice-lexicon: never "session #0").
+  $("session-pill").textContent =
+    msg.session_index === 0 ? "Your first story together" : `Story ${msg.session_index + 1} together`;
   $("target-grapheme").textContent = `/${msg.objective.target_grapheme}/`;
   $("target-level").textContent = msg.objective.target_level;
   // Planner rationale -> WhyCard (#why-card); mastery -> MasteryPath; both

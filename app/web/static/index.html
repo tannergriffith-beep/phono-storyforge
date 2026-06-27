@@ -44,10 +44,13 @@
     </div>
     <div class="topbar-right">
       <button id="journey-btn" type="button" class="ghost topbar-btn"><svg class="icon" aria-hidden="true"><use href="#i-shelf"/></svg> Shelf</button>
-      <!-- Growth, framed by effort — never an accuracy %/score (design-system §1/§10).
-           A qualitative sage bar that grows as more sounds are practiced; no number. -->
-      <div class="mean-meter" aria-label="Reading progress — growing as you practice more sounds together">
-        <span class="mean-label">Sounds we've practiced</span>
+      <!-- Growth, framed qualitatively — never an accuracy %/score (design-system §1/§10).
+           A sage bar that fills as overall reading grows (mean mastery, shown with
+           no number). The label describes growth, not a count of sounds practiced —
+           the fill is mastery-weighted, so a count label would misread as "no
+           progress" after real practice on not-yet-secure sounds. -->
+      <div class="mean-meter" aria-label="Your reader's reading is growing as you practice together">
+        <span class="mean-label">Their reading is growing</span>
         <div class="mean-track"><div id="mean-fill" class="mean-fill"></div></div>
       </div>
     </div>
@@ -90,8 +93,8 @@
 
     <section id="session" class="card" hidden>
       <div class="session-head">
-        <span class="pill" id="session-pill">session #0</span>
-        <span class="target-chip">target <b id="target-grapheme">—</b>
+        <span class="pill" id="session-pill">Your first story together</span>
+        <span class="target-chip">Tonight's sound <b id="target-grapheme">—</b>
           <span id="target-level" class="muted"></span></span>
       </div>
 

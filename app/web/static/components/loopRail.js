@@ -17,7 +17,7 @@
 "use strict";
 
 import { on } from "../ws.js";
-import { prefersReducedMotion } from "../dom.js";
+import { motionReduced } from "../dom.js";
 
 const NODES = [
   { id: "plan", n: 1, name: "Plan", sub: "select_objective" },
@@ -29,7 +29,6 @@ const NODES = [
 ];
 
 let els = {};        // id -> node element
-let reduce = false;
 const timers = [];   // pending stagger timeouts (cleared on reset)
 
 function build(container) {
@@ -52,7 +51,7 @@ function clearTimers() {
   while (timers.length) clearTimeout(timers.pop());
 }
 function after(ms, fn) {
-  timers.push(setTimeout(fn, reduce ? 0 : ms));
+  timers.push(setTimeout(fn, motionReduced() ? 0 : ms));
 }
 
 function setNode(id, cls) {
@@ -70,7 +69,7 @@ function reset() {
 function onPrepared() {
   reset();
   const seq = ["plan", "generate", "verify"];
-  const step = reduce ? 0 : 150; // DESIGN §10.4 stagger
+  const step = motionReduced() ? 0 : 150; // DESIGN §10.4 stagger
   seq.forEach((id, i) => {
     after(i * step, () => setNode(id, "lit"));
     after(i * step + 160, () => setNode(id, "done"));
@@ -103,7 +102,6 @@ function onError() {
 export const LoopRail = {
   mount(container) {
     if (!container) return;
-    reduce = prefersReducedMotion();
     build(container);
     on("prepared", onPrepared);
     on("voice_status", beginAssess); // server's "transcribing…" marks read done
