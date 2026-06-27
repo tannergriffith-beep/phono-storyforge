@@ -168,8 +168,13 @@ export const ReaderSettings = {
         panel.hidden = true; toggle.setAttribute("aria-expanded", "false");
       }
     });
-    panel.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") { panel.hidden = true; toggle.setAttribute("aria-expanded", "false"); toggle.focus(); }
+    // Escape closes from anywhere while open — the toggle keeps focus after it
+    // opens the panel, so a panel-scoped listener would never fire (mirrors the
+    // document-level outside-click handler above).
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !panel.hidden) {
+        panel.hidden = true; toggle.setAttribute("aria-expanded", "false"); toggle.focus();
+      }
     });
 
     host.append(toggle, panel);

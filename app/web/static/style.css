@@ -518,6 +518,10 @@ input:focus, textarea:focus { outline: none; border-color: var(--coral); }
   border-radius: var(--r-md); box-shadow: var(--shadow-lg); padding: var(--space-4);
   display: flex; flex-direction: column; gap: var(--space-3);
 }
+/* The .rs-panel display:flex rule outranks the UA [hidden] default, so it must
+   restore display:none when JS sets panel.hidden (same fix as .face/.degrade-banner
+   above). Without this the popover is stuck open over the child's reading words. */
+.rs-panel[hidden] { display: none; }
 .rs-group { border: none; margin: 0; padding: 0; }
 .rs-group legend { font-size: var(--fs-data); text-transform: uppercase; letter-spacing: 1px; color: var(--stone-600); margin-bottom: 6px; padding: 0; }
 .rs-seg { display: flex; align-items: center; gap: 6px; }

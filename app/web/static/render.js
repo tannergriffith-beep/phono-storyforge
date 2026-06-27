@@ -50,7 +50,7 @@ export function renderPrepared(msg) {
   const title = msg.book.title || "Practice page";
   $("reading-title").textContent = title;
   $("book-title").textContent = title;
-  $("book-source").textContent = msg.book.generation_source;
+  $("book-source").textContent = sourceLabel(msg.book.generation_source);
 
   // Render the words into BOTH faces from the same payload (DESIGN §18: the two
   // faces are pure views of one payload). Reading = child-safe (target words
@@ -171,6 +171,20 @@ export function applyPreset(kind) {
   }
   const kept = words.filter((_, i) => !drop.has(i));
   $("transcript").value = kept.join(" ");
+}
+
+// The book-source badge sits in the grown-ups view. The raw generation_source
+// values ("deterministic"/"llm"/…) are engineer-facing flywheel signals; for a
+// parent we say the one thing that builds trust — the story only uses sounds the
+// reader already knows — while staying honest about hand-built vs AI-written.
+function sourceLabel(source) {
+  switch (source) {
+    case "llm":
+    case "llm_offtarget":
+      return "Written for these sounds";
+    default: // deterministic, deterministic_fallback
+      return "Made for these sounds";
+  }
 }
 
 // Growth bar only — width reflects overall progress, but no number/score is ever
