@@ -50,10 +50,14 @@ function play() {
     // F3: the coral glow travels to the next target.
     setTimeout(() => MasteryPath.setCurrent(b.nextG), ms(450));
     // F4: the sentence lands — "chosen from her reading, not a worksheet."
+    // Only claim the prev sound was just learned when it actually crossed the
+    // bar this read; advancement can also happen because it was already secure,
+    // and telling a parent their child "knows it now" then would be untrue.
     setTimeout(() => {
       if (!cap) return;
-      cap.innerHTML =
-        `${esc(b.name)} knows the /${esc(b.prevG)}/ sound now. Next we'll practice <b>/${esc(b.nextG)}/</b>.`;
+      cap.innerHTML = b.prevMastered
+        ? `${esc(b.name)} knows the /${esc(b.prevG)}/ sound now. Next we'll practice <b>/${esc(b.nextG)}/</b>.`
+        : `${esc(b.name)} is ready for a new sound. Next we'll practice <b>/${esc(b.nextG)}/</b>.`;
       cap.classList.add("show");
     }, ms(900));
   } else {
