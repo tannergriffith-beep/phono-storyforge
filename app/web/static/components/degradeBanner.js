@@ -1,6 +1,6 @@
 // app/web/static/components/degradeBanner.js
 //
-// DEGRADE BANNER (docs/DESIGN.md §9) — the one graceful-degradation surface.
+// DEGRADE BANNER (archive/legacy-design/DESIGN.md (legacy, archived) §9) — the one graceful-degradation surface.
 // Voice/Live-quota loss, illustration-pipeline failures, and connection drops
 // used to surface only as plain status text inside the Setup card (#conn-status)
 // — which disappears once a session starts. This promotes them to a dismissible
@@ -18,7 +18,8 @@ import { on } from "../ws.js";
 
 let bannerEl, msgEl, iconEl, dismissBtn;
 
-const ICON = { warn: "⚠️", err: "⚠️", ok: "✓" };
+// Calm marks, never an alarm triangle (design-system §13).
+const ICON = { warn: "ⓘ", err: "ⓘ", ok: "✓" };
 
 function show(message, severity = "warn") {
   if (!bannerEl || !message) return;
@@ -50,7 +51,7 @@ export const DegradeBanner = {
     document.addEventListener("phono:connection", (e) => {
       const d = e.detail || {};
       if (d.ok) clear();
-      else show(d.text || "Connection lost — refresh to reconnect.", "err");
+      else show(d.text || "We lost the connection for a moment — refresh if it doesn't come back.", "err");
     });
 
     // The loop is running again — drop any stale notice.

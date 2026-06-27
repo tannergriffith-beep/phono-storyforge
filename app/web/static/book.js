@@ -12,7 +12,7 @@ export function generateBook() {
   const btn = $("gen-book-btn");
   btn.disabled = true;
   $("book-result").hidden = true;
-  bookProgress("Starting…");
+  bookProgress("Making the book…");
   ws.send({ action: "generate_book" });
 }
 
@@ -28,27 +28,28 @@ export function endBookGen() {
 
 export function renderBookReady(msg) {
   endBookGen();
-  bookProgress("Done — the illustrated book is ready.");
+  bookProgress("The book is ready!");
 
   // Doc link — present unless the export degraded to pages-only.
   const link = $("book-link");
   if (msg.shareable_url) {
     link.href = msg.shareable_url;
-    link.textContent = msg.title ? `Open “${msg.title}” ↗` : "Open the Google Doc ↗";
+    link.textContent = msg.title ? `Open “${msg.title}” ↗` : "Open the book ↗";
     link.hidden = false;
   } else {
     link.hidden = true;
   }
 
-  $("book-decodable").textContent = msg.decodable ? "decodable ✓" : "decodability unverified";
+  // Quiet reassurance, never a clinical "unverified" badge.
+  $("book-decodable").textContent = msg.decodable ? "made from sounds they know ✓" : "";
 
-  // A short note when something degraded, so the result is never misleading.
+  // Calm notes when something degraded — the book is still a gift, never broken.
   const notes = {
     illustrated_pages_only:
-      "Pages illustrated, but the Google Docs export was unavailable — showing the pages here.",
-    text_only: "Illustrations were unavailable, so this is a text-only book.",
+      "The pictures are ready — the shareable link wasn't available tonight, so here are the pages.",
+    text_only: "We couldn't add pictures tonight, so this is a word-only book — still made just for them.",
     text_only_pages_only:
-      "Illustrations and the Docs export were unavailable — showing the page text only.",
+      "Just the words tonight — pictures and the link weren't available, but the story is all theirs.",
   };
   $("book-note").textContent = notes[msg.source] || "";
 
@@ -62,7 +63,9 @@ export function renderBookReady(msg) {
       const img = document.createElement("img");
       img.className = "book-thumb";
       img.src = p.image_ref;
-      img.alt = `page ${i + 1} illustration`;
+      // Decorative: the page text is shown adjacent, so the illustration is
+      // marked decorative for screen readers (design-system §17).
+      img.alt = "";
       div.appendChild(img);
     }
     const num = document.createElement("span");

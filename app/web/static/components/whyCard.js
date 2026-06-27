@@ -1,6 +1,6 @@
 // app/web/static/components/whyCard.js
 //
-// "Why this book?" (docs/DESIGN.md §5) — the Spotify "Because you listened to…"
+// "Why this book?" (archive/legacy-design/DESIGN.md (legacy, archived) §5) — the Spotify "Because you listened to…"
 // reasoned moment. It makes the Plan node legible: the planner didn't pick a
 // worksheet, it chose this child's lowest unmastered sound from their own
 // mastery evidence.
@@ -31,29 +31,26 @@ function render(msg) {
   const review = obj.review_graphemes || [];
   const name = msg.learner_name || "this reader";
 
-  const byG = {};
-  (msg.mastery_bars || []).forEach((b) => { byG[b.grapheme] = b; });
-  const tgtP = byG[g] ? byG[g].p_mastery : 0;
-
-  // Warm, parent-facing sentence. Grapheme is server-controlled; name is escaped.
+  // Warm, parent-facing sentence — composed from structured fields, NOT echoed
+  // from the planner's raw (technical) rationale. Grapheme is server-controlled;
+  // name is escaped. No percentages, no "mastery"/"unmastered" (voice-lexicon).
   const sentence = review.length
-    ? `Today we practice <b>/${g}/</b> — the next unmastered sound on ${esc(name)}'s path. ` +
+    ? `Tonight we practice the <b>/${g}/</b> sound — the next one ${esc(name)} is ready for. ` +
       `We'll also revisit ${review.map((r) => `/${esc(r)}/`).join(" and ")} to keep ` +
-      `${review.length > 1 ? "them" : "it"} sharp.`
-    : `Today we practice <b>/${g}/</b> — the next unmastered sound on ${esc(name)}'s path, ` +
-      `chosen by the planner from mastery evidence, not a fixed worksheet.`;
+      `${review.length > 1 ? "them" : "it"} familiar.`
+    : `Tonight we practice the <b>/${g}/</b> sound — the next one ${esc(name)} is ready for, ` +
+      `chosen from how they read last time, not a fixed worksheet.`;
 
-  const chips = [`<span class="evidence-chip is-target">/${g}/ · ${pctInt(tgtP)} · focus</span>`];
+  const chips = [`<span class="evidence-chip is-target">/${g}/ · tonight's sound</span>`];
   review.forEach((r) =>
-    chips.push(`<span class="evidence-chip">/${esc(r)}/ ${pctInt(byG[r] ? byG[r].p_mastery : 0)} ✓</span>`)
+    chips.push(`<span class="evidence-chip">/${esc(r)}/ · keeping it familiar</span>`)
   );
 
   el.innerHTML =
     `<div class="why-card">` +
-    `<h4>Why this book?</h4>` +
+    `<h4>Why this story?</h4>` +
     `<p class="why-text">${sentence}</p>` +
     `<div class="evidence-chips">${chips.join("")}</div>` +
-    `<p class="why-receipt" title="the planner's raw rationale">${esc(obj.rationale)}</p>` +
     `</div>`;
 }
 

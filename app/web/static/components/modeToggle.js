@@ -1,6 +1,6 @@
 // app/web/static/components/modeToggle.js
 //
-// READ ⇄ INSIGHT (docs/DESIGN.md §5/§18) — the two faces of one screen, the
+// READ ⇄ INSIGHT (archive/legacy-design/DESIGN.md (legacy, archived) §5/§18) — the two faces of one screen, the
 // single highest-value move in the redesign. It dissolves two UX risks at once:
 // the child never sees their misses in red (Reading is child-safe), and the one
 // surface stops overwhelming all three viewers.

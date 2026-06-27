@@ -1,6 +1,6 @@
 // app/web/static/components/masteryPath.js
 //
-// THE MASTERY PATH (docs/DESIGN.md §6) — replaces the always-on 340px / 30-bar
+// THE MASTERY PATH (archive/legacy-design/DESIGN.md (legacy, archived) §6) — replaces the always-on 340px / 30-bar
 // scroll. Graphemes are nodes along the level sequence:
 //   mastered  -> sage-filled        (P(L) >= MASTERY_BAR)
 //   current   -> coral, glowing, up  (this session's target)
@@ -32,9 +32,17 @@ function classOf(p, isTarget) {
   return "locked";
 }
 
+// Plain language for parents — no "mastery", no percentages (design-system §12,
+// voice-lexicon). The qualitative state IS the message.
+const STATE_WORDS = {
+  current: "practicing today",
+  mastered: "knows this well",
+  progress: "getting there",
+  locked: "coming up",
+};
+
 function labelFor(g, p, cls) {
-  const state = { current: "current target", mastered: "mastered", progress: "in progress", locked: "ahead" }[cls];
-  return `${g}, ${state}, mastery ${Math.round(p * 100)} percent`;
+  return `the ${g} sound — ${STATE_WORDS[cls]}`;
 }
 
 function makeNode(bar) {
@@ -139,11 +147,14 @@ function showDetail(grapheme) {
   const node = nodes[grapheme];
   if (!node) return;
   const cls = classOf(node.p, node.isTarget);
-  const stateLabel = { current: "today's target", mastered: "mastered ✓", progress: "in progress", locked: "ahead" }[cls];
+  const stateLabel = {
+    current: "practicing today",
+    mastered: "knows this well ✓",
+    progress: "getting there",
+    locked: "coming up",
+  }[cls];
   detailEl.innerHTML =
-    `<span class="md-g">/${esc(grapheme)}/</span> ` +
-    (node.level ? `<span class="muted">${esc(node.level)}</span> · ` : "") +
-    `<span class="md-p">${Math.round(node.p * 100)}%</span> P(L) · ${stateLabel}`;
+    `<span class="md-g">the /${esc(grapheme)}/ sound</span> · ${stateLabel}`;
 }
 
 export const MasteryPath = {

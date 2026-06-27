@@ -1,6 +1,6 @@
 // app/web/static/components/loopRail.js
 //
-// THE HERO OBJECT (docs/DESIGN.md §4). A persistent rail of the six loop steps
+// THE HERO OBJECT (archive/legacy-design/DESIGN.md (legacy, archived) §4). A persistent rail of the six loop steps
 // that lights as each runs and turns green ✓ when its guardrail passes. It both
 // narrates the ADK architecture to a judge and is the app's IA spine.
 //

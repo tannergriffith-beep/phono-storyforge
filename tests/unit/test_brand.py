@@ -71,12 +71,19 @@ def test_build_page_prompt_composes_all_layers() -> None:
 
 
 def test_palette_helpers() -> None:
-    assert hex_to_rgb("#192255") == (25, 34, 85)
-    # An almost-navy snaps to Deep Navy with a small distance.
-    name, hex_value, dist = nearest_brand_color((26, 35, 86))
-    assert name == "Deep Navy" and hex_value == "#192255"
-    assert dist < 5
+    assert hex_to_rgb("#23262C") == (35, 38, 44)
+    # An almost-ink color snaps to the darkest brand color with a small distance.
+    name, hex_value, dist = nearest_brand_color((35, 40, 46))
+    assert name == "Deep Navy" and hex_value == "#23262C"
+    assert dist < 8
     # Every palette color snaps to itself at distance 0.
     for spec in BRAND_COLORS.values():
         n, h, d = nearest_brand_color(hex_to_rgb(spec["hex"]))
         assert d == 0.0
+
+
+def test_palette_is_reading_room() -> None:
+    # Locks the Phase-7 rebrand: the illustration palette IS the Reading Room set.
+    assert BRAND_COLORS["Japonica"]["hex"] == "#5C2A33"   # bookcloth claret signature
+    assert BRAND_COLORS["Parchment"]["hex"] == "#F4EDDE"  # page cream
+    assert BRAND_COLORS["Deep Navy"]["hex"] == "#23262C"  # printer's ink

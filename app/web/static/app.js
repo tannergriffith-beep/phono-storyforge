@@ -31,6 +31,16 @@ import { ModeToggle } from "./components/modeToggle.js";
 import { AdaptBeat } from "./components/adaptBeat.js";
 import { Journey } from "./components/journey.js";
 import { DegradeBanner } from "./components/degradeBanner.js";
+import { ReaderSettings } from "./components/readerSettings.js";
+import { Onboarding } from "./components/onboarding.js";
+import { SessionArc } from "./components/sessionArc.js";
+
+// The technical loop is opt-in (educators/demos); parents see the human arc.
+const showLoopInternals = (() => {
+  try {
+    return localStorage.getItem("phono.devLoop") === "1" || /[?&]loop\b/.test(location.search);
+  } catch { return false; }
+})();
 
 // ---- Actions ----------------------------------------------------------------
 
@@ -45,9 +55,10 @@ function startSession() {
 }
 
 function scoreRead() {
-  // Advance the rail to Assess immediately (the typed path has no inbound echo
-  // before the outcome arrives); the outcome handler then closes it on Adapt.
-  LoopRail.beginAssess();
+  // Advance both the human arc and (if shown) the technical rail immediately —
+  // the typed path has no inbound echo before the outcome arrives.
+  SessionArc.beginScore();
+  if (showLoopInternals) LoopRail.beginAssess();
   ws.send({ action: "submit", transcript: $("transcript").value.trim() });
 }
 
@@ -66,8 +77,13 @@ ws.on("error", (m) => {
   book.endBookGen();
 });
 
-// LoopRail registers its own ws subscriptions (prepared/voice_status/outcome/error).
-LoopRail.mount($("loop-rail"));
+// SessionArc: the parent-facing "where we are tonight" (always on).
+SessionArc.mount($("session-arc"));
+// LoopRail: the technical six-node loop — opt-in only (educators/demos).
+if (showLoopInternals) {
+  $("loop-rail").hidden = false;
+  LoopRail.mount($("loop-rail"));
+}
 // WhyCard renders the planner rationale + evidence chips on each `prepared`.
 WhyCard.mount();
 // MasteryPath renders the phonics path on `prepared` and animates it on `outcome`.
@@ -81,6 +97,10 @@ Journey.mount();
 // DegradeBanner: the single graceful-degradation surface (DESIGN §9). Mount
 // before connect() so it catches the very first connection signal.
 DegradeBanner.mount();
+// ReaderSettings: type/size/spacing/calm controls — applies persisted prefs on load.
+ReaderSettings.mount();
+// Onboarding: the warm on-ramp; fills the hidden setup fields then starts the session.
+Onboarding.mount({ onStart: startSession });
 
 // ---- Button wiring ----------------------------------------------------------
 

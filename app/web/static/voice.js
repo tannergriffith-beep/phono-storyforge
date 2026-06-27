@@ -36,7 +36,7 @@ export async function toggleMic() {
     state.mic = { ctx, stream, node, recording: true };
     ws.send({ action: "read_start" });
     setMicUI(true);
-    voiceStatus("🎤 listening… click Stop when the child finishes the page");
+    voiceStatus("Listening… tap Stop when they finish the page.");
   } catch (err) {
     voiceStatus("mic unavailable: " + err.message + " — use the typed presets instead");
   }
@@ -68,7 +68,9 @@ function downsampleTo16k(f32, inRate) {
 function setMicUI(recording) {
   const btn = $("mic-btn");
   if (!btn) return;
-  btn.textContent = recording ? "⏹ Stop" : "🎤 Read aloud";
+  // Keep the line icon across states (PR11); only the label changes.
+  const icon = '<svg class="icon" aria-hidden="true"><use href="#i-mic"/></svg> ';
+  btn.innerHTML = icon + (recording ? "Stop" : "Read aloud");
   btn.classList.toggle("recording", recording);
   btn.setAttribute("aria-pressed", recording ? "true" : "false");
 }

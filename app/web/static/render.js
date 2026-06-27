@@ -8,7 +8,7 @@
 
 "use strict";
 
-import { $, pct, stat } from "./dom.js";
+import { $, pct, stat, esc } from "./dom.js";
 import { state } from "./state.js";
 import { voiceStatus } from "./voice.js";
 import { endBookGen, bookProgress } from "./book.js";
@@ -37,7 +37,7 @@ export function renderPrepared(msg) {
   const bookGen = $("book-gen");
   bookGen.hidden = !state.illustratedEnabled;
   if (state.illustratedEnabled) {
-    $("book-gen-name").textContent = state.learnerName || "this learner";
+    $("book-gen-name").textContent = state.learnerName || "your reader";
     $("book-result").hidden = true;
     bookProgress("");
     endBookGen();
@@ -105,14 +105,24 @@ export function renderOutcome(msg) {
   // Mastery updates are animated by the MasteryPath component (masteryPath.js).
   setMean(msg.mean_mastery);
 
-  // Fluency readout.
+  // How it went — effort first (words read together, self-corrections as wins);
+  // the teacher's metrics (accuracy/WCPM) are demoted into an opt-in disclosure,
+  // never the headline (design-system §12; effort never accuracy).
   const f = msg.fluency;
-  $("fluency").innerHTML = [
-    stat(Math.round(f.accuracy * 100) + "%", "accuracy"),
-    stat(Math.round(f.wcpm), "wcpm"),
-    stat(`${f.words_correct}/${f.total_words}`, "correct"),
-    stat(f.errors, "errors"),
-  ].join("");
+  const fixes = f.self_corrections || 0;
+  $("fluency").innerHTML =
+    `<div class="effort-stats">` +
+      stat(f.total_words, "words read together") +
+      (fixes ? stat(fixes, "fixed it themselves") : "") +
+    `</div>` +
+    `<details class="teacher-numbers">` +
+      `<summary>Teacher's numbers</summary>` +
+      `<div class="tn-grid">` +
+        stat(Math.round(f.accuracy * 100) + "%", "accuracy") +
+        stat(Math.round(f.wcpm), "words / min") +
+        stat(`${f.words_correct}/${f.total_words}`, "read correctly") +
+      `</div>` +
+    `</details>`;
 
   // Grapheme-targeted scaffolds for each miss.
   const sc = $("scaffolds");
@@ -124,18 +134,19 @@ export function renderOutcome(msg) {
     sc.appendChild(div);
   });
 
-  // Next target — highlight when the loop advanced.
+  // What's next — plain language, keeping the *advancement* signal (the proof the
+  // next story changes) but dropping the "loop adapted" engineer framing and the
+  // raw planner rationale (design-system §10; voice-lexicon).
   const nt = msg.next_target;
+  const nm = state.learnerName || "your reader";
   const box = $("next-target");
   box.className = "next-target" + (nt.advanced ? " advanced" : "");
   box.innerHTML =
-    `<h4>Tomorrow's target</h4>` +
-    `<div>Next session will target <span class="next-g">/${nt.target_grapheme}/</span> ` +
-    `<span class="muted">(${nt.target_level})</span></div>` +
+    `<h4>What's next</h4>` +
     (nt.advanced
-      ? `<div class="adv-badge">↳ the target ADVANCED from /${nt.previous_grapheme}/ — the loop adapted.</div>`
-      : `<div class="muted">still consolidating /${nt.previous_grapheme}/.</div>`) +
-    `<p class="rationale">${nt.rationale}</p>`;
+      ? `<div class="adv-badge">${esc(nm)} is ready for a new sound — next we'll practice ` +
+        `<span class="next-g">/${esc(nt.target_grapheme)}/</span>.</div>`
+      : `<div>We'll keep practicing <span class="next-g">/${esc(nt.previous_grapheme)}/</span> — one more story.</div>`);
 
   // Privacy boundary (DESIGN §18): stay child-safe in Reading; the running
   // record + analysis live in Insight, reachable only by an adult tap (the
@@ -162,7 +173,10 @@ export function applyPreset(kind) {
   $("transcript").value = kept.join(" ");
 }
 
+// Growth bar only — width reflects overall progress, but no number/score is ever
+// shown (design-system §1/§10: effort never accuracy). The numeric readout was
+// removed in PR2; this drives the qualitative sage fill alone.
 function setMean(x) {
-  $("mean-fill").style.width = pct(x);
-  $("mean-value").textContent = (x * 100).toFixed(0) + "%";
+  const fill = $("mean-fill");
+  if (fill) fill.style.width = pct(x);
 }

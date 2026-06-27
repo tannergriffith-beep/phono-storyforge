@@ -1,13 +1,12 @@
 // app/web/static/components/journey.js
 //
-// THE JOURNEY (docs/DESIGN.md §17) — the screen that proves "loop, not
-// generator." A horizontal strip where the TARGET row shifts (adaptation) while
-// the MEAN row rises (learning) — the whole thesis at a glance. It's a pure read
-// over persisted SessionLogs (the `journey` action), so it's the one view that
-// shows the loop closing over time.
+// THE JOURNEY (redesign PR9) — promoted from a hidden modal to a first-class,
+// effort-framed space. The emotional centerpiece is THE SHELF: every story the
+// child has finished, as a little bound book they earned. Below it, the quiet
+// proof the loop adapts (the sound practiced shifts, the growth line rises).
 //
-// Empty state (session #1): never show an empty chart frame — show one coral dot
-// and an invitation, and let the line grow as the loop runs.
+// Framed by EFFORT, never accuracy (design-system §12): no percentages, no
+// accuracy headline. Pure read over persisted SessionLogs (the `journey` action).
 
 "use strict";
 
@@ -15,10 +14,27 @@ import { $, esc } from "../dom.js";
 import * as ws from "../ws.js";
 import { state } from "../state.js";
 
+// Deterministic spine color from a title, so a child's shelf is stable across
+// loads without any backend/schema change. Palette = brand cloth colors.
+const SPINES = ["#5C2A33", "#3E5247", "#2C5E7A", "#6E5320", "#6E4A55", "#4A222A"];
+function spineColor(title) {
+  let h = 0;
+  for (let i = 0; i < title.length; i++) h = (h * 31 + title.charCodeAt(i)) >>> 0;
+  return SPINES[h % SPINES.length];
+}
+
 function open() {
-  if (!state.learnerId) return;
   $("journey-view").hidden = false;
-  $("journey-body").innerHTML = `<p class="muted">Loading ${esc(state.learnerName || "the")} journey…</p>`;
+  if (!state.learnerId) {
+    $("journey-title").textContent = "Your shelf";
+    $("journey-summary").textContent = "";
+    $("journey-body").innerHTML =
+      `<div class="journey-empty"><span class="journey-dot today"></span>` +
+      `<p>Read your first story tonight — this is where the books you finish will live.</p></div>`;
+    return;
+  }
+  $("journey-title").textContent = `${esc(state.learnerName || "Your")}${state.learnerName ? "'s" : ""} shelf`;
+  $("journey-body").innerHTML = `<p class="muted">Gathering your books…</p>`;
   ws.send({ action: "journey", learner_id: state.learnerId });
 }
 
@@ -26,7 +42,7 @@ function close() {
   $("journey-view").hidden = true;
 }
 
-// A simple SVG area+line sparkline for the mean trend (gold endpoint dot).
+// A calm growth line — the rise IS the proof; no axis, no numbers (gold endpoint).
 function sparkline(means) {
   if (means.length < 2) return "";
   const W = 100, H = 30;
@@ -36,7 +52,8 @@ function sparkline(means) {
   const area = `0,${H} ${line} ${W},${H}`;
   const ex = x(means.length - 1).toFixed(1), ey = y(means[means.length - 1]).toFixed(1);
   return (
-    `<svg class="journey-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">` +
+    `<svg class="journey-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" ` +
+    `role="img" aria-label="Reading is growing over time">` +
     `<polygon points="${area}" class="spark-area"/>` +
     `<polyline points="${line}" class="spark-line"/>` +
     `<circle cx="${ex}" cy="${ey}" r="2.2" class="spark-end"/>` +
@@ -44,77 +61,89 @@ function sparkline(means) {
   );
 }
 
-const meanPct = (m) => (m == null ? "—" : Math.round(m * 100) + "%");
+function shelf(sessions) {
+  // One spine per finished story; de-dupe repeated titles so the shelf reads as
+  // a collection, not a log.
+  const seen = new Set();
+  const books = [];
+  sessions.forEach((s) => {
+    const title = (s.book_title || "").trim();
+    if (!title || seen.has(title)) return;
+    seen.add(title);
+    books.push(title);
+  });
+  const spines = books
+    .map(
+      (t) =>
+        `<span class="shelf-spine" style="background:${spineColor(t)}" title="${esc(t)}">` +
+        `<span class="shelf-title">${esc(t)}</span></span>`
+    )
+    .join("");
+  return `<div class="shelf" role="list" aria-label="Books finished">${spines}</div>`;
+}
 
 function render(msg) {
   const name = msg.learner_name || "This reader";
-  $("journey-title").textContent = `${name}'s journey`;
+  $("journey-title").textContent = `${esc(name)}'s shelf`;
   const body = $("journey-body");
   const sessions = msg.sessions || [];
-  const s = msg.summary || {};
 
-  // Empty / first-session state — the line grows; never an empty frame.
-  if (sessions.length <= 1) {
-    $("journey-summary").textContent = sessions.length
-      ? "1 session · the line is just beginning"
-      : "";
+  if (sessions.length === 0) {
+    $("journey-summary").textContent = "";
     body.innerHTML =
-      `<div class="journey-empty">` +
-      `<span class="journey-dot today"></span>` +
-      `<p>${esc(name)}'s journey begins — read your first story to start the line.</p>` +
-      `</div>`;
+      `<div class="journey-empty"><span class="journey-dot today"></span>` +
+      `<p>${esc(name)}'s shelf is waiting — read your first story to add a book.</p></div>`;
     return;
   }
 
+  const soundsLearned = sessions.reduce((n, s) => n + (s.newly_mastered || []).length, 0);
+  const storyWord = sessions.length === 1 ? "story" : "stories";
   $("journey-summary").textContent =
-    `${s.count} sessions · mastery ${meanPct(s.first_mean)} → ${meanPct(s.last_mean)}`;
+    `${sessions.length} ${storyWord} together` +
+    (soundsLearned ? ` · ${soundsLearned} new sound${soundsLearned === 1 ? "" : "s"} learned` : "");
 
   const means = sessions.map((x) => x.mean_mastery).filter((m) => m != null);
 
-  // Row-based layout so columns align across the four rows (flex:1 per cell).
+  // The quiet adaptation proof: the sound practiced shifts; sounds get learned.
   const cell = (inner, cls, title) =>
-    `<span class="jcell${cls ? " " + cls : ""}"${title ? ` title="${title}"` : ""}>${inner}</span>`;
-
-  const targetRow = sessions
-    .map((x) => cell(esc(x.target_grapheme), "journey-target" + (x.target_changed ? " changed" : "")))
+    `<span class="jcell${cls ? " " + cls : ""}"${title ? ` title="${esc(title)}"` : ""}>${inner}</span>`;
+  const soundRow = sessions
+    .map((x) => cell(`/${esc(x.target_grapheme)}/`, "journey-target" + (x.target_changed ? " changed" : "")))
     .join("");
-  const dotRow = sessions
+  const storyRow = sessions
     .map((x, i) => {
       const today = i === sessions.length - 1;
-      const t = `session ${x.session_index}: ${esc(x.book_title || "")} · acc ${Math.round(
-        x.accuracy * 100
-      )}% · ${Math.round(x.wcpm)} WCPM`;
-      return cell(`<span class="journey-dot${today ? " today" : ""}"></span>`, "", t);
+      return cell(`<span class="journey-dot${today ? " today" : ""}"></span>`, "", x.book_title || `story ${i + 1}`);
     })
     .join("");
-  const masteredRow = sessions
-    .map((x) =>
-      cell((x.newly_mastered || []).map((g) => `✓${esc(g)}`).join(" "), "journey-mastered")
-    )
+  const learnedRow = sessions
+    .map((x) => cell((x.newly_mastered || []).map((g) => `✓${esc(g)}`).join(" "), "journey-mastered"))
     .join("");
-  const meanRow = sessions.map((x) => cell(meanPct(x.mean_mastery), "journey-mean")).join("");
 
   const row = (label, cells) =>
     `<div class="jrow"><span class="jlabel">${label}</span><div class="jcells">${cells}</div></div>`;
 
   body.innerHTML =
-    `<div class="jtl">` +
-    row("target", targetRow) +
-    row("session", dotRow) +
-    row("mastered", masteredRow) +
-    row("mean", meanRow) +
-    `</div>` +
-    `<div class="jspark-wrap"><span class="jlabel">trend</span>${sparkline(means)}</div>`;
+    shelf(sessions) +
+    (means.length >= 2
+      ? `<div class="jspark-wrap"><span class="jlabel">growing</span>${sparkline(means)}</div>`
+      : "") +
+    `<details class="journey-detail"><summary>Story by story</summary><div class="jtl">` +
+    row("sound", soundRow) +
+    row("story", storyRow) +
+    row("learned", learnedRow) +
+    `</div></details>`;
 }
 
 export const Journey = {
   mount() {
     const btn = $("journey-btn");
-    if (btn) btn.addEventListener("click", open);
+    if (btn) {
+      btn.hidden = false; // first-class: always reachable
+      btn.addEventListener("click", open);
+    }
     const closeBtn = $("journey-close");
     if (closeBtn) closeBtn.addEventListener("click", close);
-    // Reveal the Journey entry point once a learner exists.
-    ws.on("prepared", () => { if (btn) btn.hidden = false; });
     ws.on("journey", render);
   },
 };

@@ -1,6 +1,6 @@
 // app/web/static/components/adaptBeat.js
 //
-// THE ADAPT CLIMAX (docs/DESIGN.md §7/§16) — the demo's payoff. It turns "a
+// THE ADAPT CLIMAX (archive/legacy-design/DESIGN.md (legacy, archived) §7/§16) — the demo's payoff. It turns "a
 // number changed" into "the AI just decided." ~1.5s of choreography fired after
 // a read is scored and the planner's target advanced.
 //
@@ -53,7 +53,7 @@ function play() {
     setTimeout(() => {
       if (!cap) return;
       cap.innerHTML =
-        `${esc(b.name)} mastered /${esc(b.prevG)}/. Tomorrow we practice <b>/${esc(b.nextG)}/</b>.`;
+        `${esc(b.name)} knows the /${esc(b.prevG)}/ sound now. Next we'll practice <b>/${esc(b.nextG)}/</b>.`;
       cap.classList.add("show");
     }, ms(900));
   } else {

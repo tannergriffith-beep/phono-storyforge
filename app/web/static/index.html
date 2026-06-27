@@ -3,33 +3,64 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Phono StoryForge — Live Tutor</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E📖%3C/text%3E%3C/svg%3E" />
+  <title>StoryForge by Phono — read together tonight</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235C2A33' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M12 6C9.5 4.3 6 4 3 5v14c3-1 6.5-.7 9 1 2.5-1.7 6-2 9-1V5c-3-1-6.5-.7-9 1Z'/%3E%3Cpath d='M12 6v14'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/static/style.css" />
+  <!-- Reading Room design tokens (Phase 7, PR1). Loaded last so it re-points
+       the semantic token layer; remove this line to roll back to the prior palette. -->
+  <link rel="stylesheet" href="/static/tokens.css" />
 </head>
 <body>
+  <!-- Editorial line-icon sprite (PR11): 24px grid, 1.6 stroke, currentColor.
+       Replaces functional emoji. Decorative uses carry aria-hidden. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-book" viewBox="0 0 24 24">
+        <path d="M12 6C9.5 4.3 6 4 3 5v14c3-1 6.5-.7 9 1 2.5-1.7 6-2 9-1V5c-3-1-6.5-.7-9 1Z"/>
+        <path d="M12 6v14"/>
+      </symbol>
+      <symbol id="i-shelf" viewBox="0 0 24 24">
+        <path d="M5 5h3v13H5zM10 7h3v11h-3z"/>
+        <path d="M16.5 5.5l2.8.8-3.2 12-2.8-.8z"/>
+        <path d="M3 20h18"/>
+      </symbol>
+      <symbol id="i-mic" viewBox="0 0 24 24">
+        <rect x="9" y="3" width="6" height="11" rx="3"/>
+        <path d="M6 11a6 6 0 0 0 12 0M12 17v3M9 20h6"/>
+      </symbol>
+      <symbol id="i-star" viewBox="0 0 24 24">
+        <path d="M12 3.5l2.6 5.7 6.2.6-4.7 4.1 1.4 6.1L12 17l-5.5 3.1 1.4-6.1L3.2 9.8l6.2-.6z"/>
+      </symbol>
+    </defs>
+  </svg>
+
   <header class="topbar">
     <div class="brand">
-      <span class="logo">📖</span>
+      <span class="logo"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg></span>
       <div>
-        <h1>Phono StoryForge</h1>
-        <p class="tagline">a closed-loop adaptive reading tutor</p>
+        <h1>StoryForge</h1>
+        <p class="tagline">by Phono · read together, one story at a time</p>
       </div>
     </div>
     <div class="topbar-right">
-      <button id="journey-btn" type="button" class="ghost topbar-btn" hidden>📈 Journey</button>
-      <div class="mean-meter" title="Mean mastery across the grapheme inventory">
-        <span class="mean-label">Mastery</span>
+      <button id="journey-btn" type="button" class="ghost topbar-btn"><svg class="icon" aria-hidden="true"><use href="#i-shelf"/></svg> Shelf</button>
+      <!-- Growth, framed by effort — never an accuracy %/score (design-system §1/§10).
+           A qualitative sage bar that grows as more sounds are practiced; no number. -->
+      <div class="mean-meter" aria-label="Reading progress — growing as you practice more sounds together">
+        <span class="mean-label">Sounds we've practiced</span>
         <div class="mean-track"><div id="mean-fill" class="mean-fill"></div></div>
-        <span id="mean-value" class="mean-value">—</span>
       </div>
     </div>
   </header>
 
-  <!-- The Loop rail (DESIGN §4): persistent across the top of the session;
-       lights node-by-node as the real loop runs. Rendered by loopRail.js. -->
-  <nav id="loop-rail" class="loop-rail"
-       aria-label="The adaptive loop — each step lights as it runs"></nav>
+  <!-- The human session arc (PR8): the parent-facing "where we are tonight".
+       Rendered by sessionArc.js; advances on the same ws events. -->
+  <nav id="session-arc" class="session-arc" aria-label="Where we are tonight"></nav>
+
+  <!-- The technical six-node loop (loopRail.js) is kept for educators/demos but
+       hidden by default; reveal with ?loop or localStorage phono.devLoop=1. -->
+  <nav id="loop-rail" class="loop-rail" hidden
+       aria-label="Behind the scenes — the adaptive loop"></nav>
 
   <main class="session-shell">
     <!-- DegradeBanner (DESIGN §9): graceful-degradation notices — voice/Live
@@ -42,17 +73,19 @@
       <button type="button" class="degrade-dismiss" aria-label="Dismiss notice">✕</button>
     </div>
 
-    <!-- Setup is the empty state of the Session screen (DESIGN §8). -->
-    <section id="setup" class="card">
-      <h2>Start a session</h2>
-      <div class="setup-grid">
-        <label>Learner id <input id="learner-id" value="ada" /></label>
-        <label>Name <input id="learner-name" value="Ada" /></label>
-        <label>Age <input id="learner-age" type="number" value="6" min="3" max="12" /></label>
-        <label>Interest <input id="learner-interest" value="dinosaurs" /></label>
+    <!-- The warm on-ramp + setup (design-system §14). Onboarding.js renders the
+         reassurance-first flow here and fills the hidden fields below, which
+         prepare() still reads — so the backend contract is unchanged. -->
+    <section id="setup" class="card setup">
+      <div id="onboarding" class="onboarding"></div>
+      <div class="setup-fields" hidden aria-hidden="true">
+        <input id="learner-id" value="" />
+        <input id="learner-name" value="" />
+        <input id="learner-age" type="number" value="6" min="3" max="13" />
+        <input id="learner-interest" value="" />
       </div>
-      <button id="start-btn" class="primary">Begin →</button>
-      <p id="conn-status" class="status">connecting…</p>
+      <button id="start-btn" class="primary" hidden>Begin →</button>
+      <p id="conn-status" class="status" hidden></p>
     </section>
 
     <section id="session" class="card" hidden>
@@ -64,9 +97,9 @@
 
       <!-- Mode toggle: two faces of one screen (DESIGN §5/§18). Wired by modeToggle.js. -->
       <div class="toggle-row">
-        <div class="mode-toggle" role="group" aria-label="View mode">
-          <button id="mode-reading" type="button" aria-pressed="true">📖 Reading</button>
-          <button id="mode-insight" type="button" aria-pressed="false">📊 Insight<span class="pip"></span></button>
+        <div class="mode-toggle" role="group" aria-label="Choose view">
+          <button id="mode-reading" type="button" aria-pressed="true">Reading</button>
+          <button id="mode-insight" type="button" aria-pressed="false">For grown-ups<span class="pip"></span></button>
         </div>
       </div>
 
@@ -75,11 +108,15 @@
              tabindex=-1 so the ModeToggle can move focus here on a view switch. -->
         <div id="reading-face" class="face is-active" role="region"
              aria-label="Reading view — the child's page" tabindex="-1">
-          <h3 id="reading-title" class="reading-title"></h3>
-          <div id="read-celebrate" class="read-celebrate" hidden>Great reading! 🌟</div>
+          <div class="reading-bar">
+            <h3 id="reading-title" class="reading-title"></h3>
+            <!-- Reader Settings: type/size/spacing/calm — the decode is sacred. -->
+            <div id="reader-settings" class="reader-settings"></div>
+          </div>
+          <div id="read-celebrate" class="read-celebrate" hidden>Great reading! <svg class="icon icon-star" aria-hidden="true"><use href="#i-star"/></svg></div>
           <div id="reading-page" class="reading-page"></div>
           <div class="reading-actions">
-            <button id="mic-btn" type="button" class="ghost mic">🎤 Read aloud</button>
+            <button id="mic-btn" type="button" class="primary mic"><svg class="icon" aria-hidden="true"><use href="#i-mic"/></svg> Read aloud</button>
             <p id="voice-status" class="voice-status" aria-live="polite"></p>
           </div>
           <!-- Operator tools, quiet by default so the transcript is never the
@@ -110,10 +147,10 @@
             </div>
             <p id="book-text" class="book-text"></p>
             <p class="legend">
-              <span class="swatch correct"></span>correct
-              <span class="swatch substitution"></span>substitution
-              <span class="swatch omission"></span>omission
-              <span class="swatch fixed"></span>self-fixed
+              <span class="swatch correct"></span>read it
+              <span class="swatch substitution"></span>swapped a sound
+              <span class="swatch omission"></span>skipped
+              <span class="swatch fixed"></span>fixed it themselves
             </p>
           </div>
 
@@ -121,7 +158,7 @@
           <div id="scaffolds" class="scaffolds"></div>
 
           <div class="mastery-block">
-            <h4 class="t-label">Mastery — the phonics path</h4>
+            <h4 class="t-label">Sounds we're building</h4>
             <div id="mastery-path" class="mastery-path"></div>
             <div id="mastery-detail" class="mastery-detail" aria-live="polite"></div>
           </div>
@@ -135,16 +172,17 @@
 
       <!-- Footer flow: the one primary CTA (DESIGN §8/§18). -->
       <div class="stage-footer">
-        <button id="score-btn" type="button" class="primary">Score read ▸</button>
-        <button id="next-btn" type="button" class="primary" hidden>Next session →</button>
+        <button id="score-btn" type="button" class="primary">How did it go? ▸</button>
+        <button id="next-btn" type="button" class="primary" hidden>Read another →</button>
       </div>
 
       <!-- Opt-in illustrated take-home book coda (creds-gated; hidden by default). -->
       <div id="book-gen" class="book-gen" hidden>
-        <h4>Take-home book</h4>
-        <p class="muted">Generate <b id="book-gen-name">this learner</b>'s illustrated,
-          decodable book for today's target. Runs the full story pipeline — takes a few minutes.</p>
-        <button id="gen-book-btn" type="button" class="primary">📚 Generate illustrated book</button>
+        <h4>A book to keep</h4>
+        <p class="muted">Turn tonight's story into a little illustrated book
+          <b id="book-gen-name">your reader</b> can keep — made just for them,
+          from the sounds they know. Takes a couple of minutes.</p>
+        <button id="gen-book-btn" type="button" class="primary"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg> Make tonight's book</button>
         <p id="book-progress" class="voice-status"></p>
         <div id="book-result" class="book-result" hidden>
           <div class="book-result-head">
