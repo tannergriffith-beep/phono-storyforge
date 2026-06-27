@@ -119,7 +119,7 @@ class Character(BaseModel):
     clothing: str = Field(..., description="Outfit described with brand-palette colors.")
     palette_colors: list[str] = Field(
         default_factory=list,
-        description="Brand color NAMES used for this character (e.g. ['Japonica', 'Deep Navy']).",
+        description="Brand color NAMES used for this character (e.g. ['Claret', 'Ink']).",
     )
     defining_features: str = Field(
         ..., description="The 1-2 traits that keep them recognizable on every page."

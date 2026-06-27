@@ -30,19 +30,18 @@ from app.schemas import CharacterBible
 # ---------------------------------------------------------------------------
 # Palette (locked). Roles per toolkit-builder/DESIGN-SYSTEM.md v4.
 # ---------------------------------------------------------------------------
-# Reading Room palette (Phase 7, PR12 — the rebrand's illustration guardrail).
-# NOTE: the dict KEYS are stable identifiers (referenced by the palette verifier
-# and its tests); the hex VALUES are the current Reading Room brand colors. Roles
-# describe how each is used in cut-paper illustration.
+# Reading Room palette (Phase 7 — the rebrand's illustration guardrail). The dict
+# KEYS are semantic brand-color names (referenced by the palette verifier, the
+# illustrator's character cycle, and their tests); VALUES are the brand hexes.
 BRAND_COLORS: dict[str, dict[str, str]] = {
-    "Deep Navy":    {"hex": "#23262C", "role": "text, line accents, darkest shapes (printer's ink)"},
-    "Japonica":     {"hex": "#5C2A33", "role": "primary signature accent (bookcloth claret)"},
-    "Warm Gold":    {"hex": "#B0863F", "role": "highlights, warmth, celebration (gold leaf)"},
-    "Sage":         {"hex": "#7C9486", "role": "secondary accent (calm sage green)"},
-    "Strikemaster": {"hex": "#2C5E7A", "role": "decorative accent — use sparingly (deep tide blue)"},
-    "Pearl Bush":   {"hex": "#F8F4EA", "role": "base background surface (warm paper)"},
-    "Parchment":    {"hex": "#F4EDDE", "role": "warmer background surface (page cream)"},
-    "Tundora":      {"hex": "#3A3D42", "role": "soft shadows, secondary darks"},
+    "Ink":    {"hex": "#23262C", "role": "text, line accents, darkest shapes (printer's ink)"},
+    "Claret": {"hex": "#5C2A33", "role": "primary signature accent (bookcloth claret)"},
+    "Gold":   {"hex": "#B0863F", "role": "highlights, warmth, celebration (gold leaf)"},
+    "Sage":   {"hex": "#7C9486", "role": "secondary accent (calm sage green)"},
+    "Tide":   {"hex": "#2C5E7A", "role": "decorative accent — use sparingly (deep tide blue)"},
+    "Paper":  {"hex": "#F8F4EA", "role": "base background surface (warm paper)"},
+    "Cream":  {"hex": "#F4EDDE", "role": "warmer background surface (page cream)"},
+    "Shadow": {"hex": "#3A3D42", "role": "soft shadows, secondary darks"},
 }
 
 # Plain-language palette line for prompts (image models read color words better

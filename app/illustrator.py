@@ -47,9 +47,9 @@ HERO_IMAGE_MODEL = "gemini-3-pro-image"
 CHARACTER_BIBLE_STATE_KEY = "character_bible"
 
 # Warm accent colors cycled across characters so each gets a distinct, on-brand
-# identity. Deep Navy is reserved for line/hair, Strikemaster ("the character
-# color") used sparingly, backgrounds stay oatmeal/parchment.
-CHARACTER_PALETTE_CYCLE: list[str] = ["Japonica", "Warm Gold", "Sage", "Strikemaster"]
+# identity. Ink is reserved for line/hair, Tide ("the character color") used
+# sparingly, backgrounds stay Paper/Cream.
+CHARACTER_PALETTE_CYCLE: list[str] = ["Claret", "Gold", "Sage", "Tide"]
 
 
 # ---------------------------------------------------------------------------
@@ -90,7 +90,7 @@ def build_character_bible(
         if isinstance(spec, str):
             spec = CharacterSpec(name=spec)
         accent = CHARACTER_PALETTE_CYCLE[i % len(CHARACTER_PALETTE_CYCLE)]
-        palette_colors = [accent, "Deep Navy"]
+        palette_colors = [accent, "Ink"]
         trait = spec.trait.strip() or f"a {accent.lower()} paper outfit"
         appearance = (
             f"built from layered torn-paper shapes — a rounded {accent.lower()} "
@@ -243,8 +243,8 @@ def make_stub_image_generator(*, size: int = 768):
 
     from app.brand import hex_to_rgb
 
-    ground = hex_to_rgb(BRAND_COLORS["Parchment"]["hex"])
-    navy = hex_to_rgb(BRAND_COLORS["Deep Navy"]["hex"])
+    ground = hex_to_rgb(BRAND_COLORS["Cream"]["hex"])
+    navy = hex_to_rgb(BRAND_COLORS["Ink"]["hex"])
     accents = [hex_to_rgb(BRAND_COLORS[name]["hex"]) for name in CHARACTER_PALETTE_CYCLE]
 
     def _generate(prompt: str, reference_images: list[bytes] | None = None) -> bytes:

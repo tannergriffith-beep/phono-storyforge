@@ -25,7 +25,7 @@ def _bible() -> CharacterBible:
                 species="a young child",
                 appearance="round torn-paper head, short navy paper hair",
                 clothing="a warm coral shirt",
-                palette_colors=["Japonica", "Deep Navy"],
+                palette_colors=["Claret", "Ink"],
                 defining_features="warm coral shirt and a gold paper star badge",
             )
         ],
@@ -56,7 +56,7 @@ def test_character_bible_block_is_stable_and_complete() -> None:
     block = character_bible_block(_bible())
     assert "Sam" in block
     assert "cozy kitchen" in block
-    assert "Japonica" in block
+    assert "Claret" in block
     # Deterministic.
     assert character_bible_block(_bible()) == block
 
@@ -74,7 +74,7 @@ def test_palette_helpers() -> None:
     assert hex_to_rgb("#23262C") == (35, 38, 44)
     # An almost-ink color snaps to the darkest brand color with a small distance.
     name, hex_value, dist = nearest_brand_color((35, 40, 46))
-    assert name == "Deep Navy" and hex_value == "#23262C"
+    assert name == "Ink" and hex_value == "#23262C"
     assert dist < 8
     # Every palette color snaps to itself at distance 0.
     for spec in BRAND_COLORS.values():
@@ -84,6 +84,6 @@ def test_palette_helpers() -> None:
 
 def test_palette_is_reading_room() -> None:
     # Locks the Phase-7 rebrand: the illustration palette IS the Reading Room set.
-    assert BRAND_COLORS["Japonica"]["hex"] == "#5C2A33"   # bookcloth claret signature
-    assert BRAND_COLORS["Parchment"]["hex"] == "#F4EDDE"  # page cream
-    assert BRAND_COLORS["Deep Navy"]["hex"] == "#23262C"  # printer's ink
+    assert BRAND_COLORS["Claret"]["hex"] == "#5C2A33"  # bookcloth claret signature
+    assert BRAND_COLORS["Cream"]["hex"] == "#F4EDDE"   # page cream
+    assert BRAND_COLORS["Ink"]["hex"] == "#23262C"     # printer's ink

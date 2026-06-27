@@ -16,7 +16,9 @@
 import { $ } from "../dom.js";
 
 const KEY = "phono.reader";
-const DEFAULTS = { font: "serif", size: 1, spacing: "normal", calm: false };
+// Default to the easy-reading sans (Lexend) for the child's passage — the
+// decode is sacred. The storybook serif remains a one-tap choice here.
+const DEFAULTS = { font: "sans", size: 1, spacing: "normal", calm: false };
 const SIZES = [1, 1.15, 1.3, 1.5]; // multipliers on --fs-read
 
 function load() {

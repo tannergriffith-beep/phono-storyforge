@@ -96,7 +96,11 @@
   --font-mono:"Source Code Pro",ui-monospace,"SF Mono",Menlo,monospace;
 
   /* ---- Reader Settings hooks (driven by readerSettings.js in PR4) -------- */
-  --reading-font:var(--font-read);
+  /* The child's reading passage defaults to the easy-reading sans (Lexend) —
+   * accessibility-first per "the decode is sacred"; the storybook serif (Literata)
+   * stays the brand/display face for covers, titles, the shelf, and chrome.
+   * Families can switch back to the serif in Reader Settings. */
+  --reading-font:var(--font-read-sans);
   --reading-scale:1;
   --reading-letter-spacing:0.005em;
   --reading-word-spacing:normal;
