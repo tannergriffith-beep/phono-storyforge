@@ -52,8 +52,8 @@ content-engine section (README.md:46–71), commit e7d815b._
 _Cite the content-engine mermaid (README.md:50–64) — three concrete instances of the same pattern:_
 
 - **Decodability QA loop.** A `LoopAgent` wrapping a custom `BaseAgent` re-runs the writer until `check_decodability` (same `decompose` engine) confirms **zero** violations or halts — an undecodable word can't ship. In the per-session loop this is `app/tutor/llm_book.py` (propose → `check_decodability` → feed violations back; decodability is a HARD gate that raises rather than returning a violation). (README.md:66, build-plan Stage B Part 1)
-- **Palette verifier.** `app/skills/palette_verifier.py` proves every Nano Banana (`gemini-2.5-flash-image` via Vertex) page stays on the locked Phono palette via `nearest_brand_color` (tol 80 / 10% budget); reject-and-regenerate or snap on drift. (README.md:67, build-plan Phase 5)
-- **Doc export.** Deterministic Doc assembly in `app/doc_export.py` — LLM writes the text, deterministic code assembles the Doc (OpenDyslexic body / Poppins title; real images embedded inline). (README.md:69)
+- **Palette verifier.** `app/skills/palette_verifier.py` proves every Nano Banana (`gemini-2.5-flash-image` via Vertex) page stays on the brand palette defined in `app/brand.py` via `nearest_brand_color` (tol 80 / 10% budget); reject-and-regenerate or snap on drift. (README.md:67, build-plan Phase 5)
+- **Doc export.** Deterministic Doc assembly in `app/doc_export.py` — LLM writes the text, deterministic code assembles the Doc (dyslexia-friendly body typeface for legibility / display title; real images embedded inline). (README.md:69)
 - Three independent **guardrails** that halt rather than silently continue: phonics decodability loop, export-result validator, Gmail-draft validator. (README.md:101)
 
 ### 2e. ADK / capstone concepts to name-check (README.md:93–102)

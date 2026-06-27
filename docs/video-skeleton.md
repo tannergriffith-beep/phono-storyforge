@@ -10,7 +10,7 @@
 
 ## Shot 0 — Cold open / problem (0:00–0:30, ~30s)
 
-- **On screen:** title card (Phono StoryForge, brand palette) → one line of the problem; optionally a generic/scarce decodable-book stock image.
+- **On screen:** title card (Phono StoryForge) → one line of the problem; optionally a generic/scarce decodable-book stock image.
 - **Says (rough):** "Struggling and dyslexic readers are told to read decodable books at their level — but those books are scarce and generic, and nothing watches what the child *misreads* to pick what to practice next. Phono StoryForge closes that loop."
 - **Source for claim:** README "The Problem" (README.md:7–9).
 - **Risk:** none (static).
@@ -52,7 +52,7 @@
 
 ## Shot 4 — Illustrated book: polish (3:45–4:35, ~50s)
 
-- **On screen:** the sample illustrated book — `results/sample_book/page_01.png … page_06.png` ("Sam the Fox", 6 decodable pages, cut-paper art), ideally scrolling in the actual Google Doc. Optionally the propose/verify diagram (README.md:50–64).
+- **On screen:** the sample illustrated book — `results/sample_book/page_01.png … page_06.png` ("Sam the Fox", 6 decodable pages, current illustration style — legacy look), ideally scrolling in the actual Google Doc. Optionally the propose/verify diagram (README.md:50–64).
 - **Says (rough):** "Every page is guaranteed decodable — an LLM proposes, deterministic Python verifies: the decodability QA loop won't let an undecodable word ship, a palette verifier proves every illustration stays on-brand, and the Doc is assembled deterministically. The same proposes/verifies discipline, three times. And as of last week it's folded into the live loop, not a separate path."
 - **Sources:** README content engine (README.md:46–71), commit e7d815b, build-plan Phase 5 (build-plan.md:99–111).
 - **Risk:** low if using committed page PNGs. ⚠ if showing a *live* Google Doc, that needs `gws` creds + render rehearsal — prefer the committed PNGs / a pre-captured Doc screen-recording to de-risk.
