@@ -94,6 +94,7 @@ class SessionOutcome:
     log: SessionLog
     mean_mastery: float          # mean P(L) across the inventory after this session
     next_objective: Objective    # what the planner would target next -> visible adaptation
+    next_target_p_mastery: float = 0.0  # current P(L) of the next target (for the Adapt-beat ahead node)
 
 
 class TutorSession:
@@ -197,6 +198,7 @@ class TutorSession:
         profile.sessions_completed += 1
         self.store.save(profile)
 
+        mean_mastery = _mean_mastery(profile)
         log = SessionLog.build(
             learner_id=profile.learner_id,
             session_index=prepared.session_index,
@@ -205,6 +207,7 @@ class TutorSession:
             assessment=assessment,
             delta=delta,
             generation_source=getattr(book, "generation_source", "deterministic"),
+            mean_mastery=mean_mastery,
         )
         if self.log_store is not None:
             self.log_store.append(log)
@@ -212,6 +215,7 @@ class TutorSession:
         next_objective = select_objective(
             profile, session_index=profile.sessions_completed, threshold=self.threshold
         )
+        next_mastery = profile.masteries.get(next_objective.target_grapheme)
 
         return SessionOutcome(
             session_index=prepared.session_index,
@@ -220,6 +224,7 @@ class TutorSession:
             assessment=assessment,
             delta=delta,
             log=log,
-            mean_mastery=_mean_mastery(profile),
+            mean_mastery=mean_mastery,
             next_objective=next_objective,
+            next_target_p_mastery=next_mastery.p_mastery if next_mastery else 0.0,
         )

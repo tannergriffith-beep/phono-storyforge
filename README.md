@@ -12,7 +12,7 @@ Parents of dyslexic and struggling readers are told to "read decodable books at 
 
 The spine of the project is one loop, run per child, per session:
 
-```mermaid
+```javascript
 graph LR
     Store[(LearnerProfile<br/>persistent mastery)] --> Plan["select_objective()<br/>ZPD target from BKT"]
     Plan -->|Objective| Gen["generate decodable book"]
@@ -25,13 +25,13 @@ graph LR
 
 Everything load-bearing here is **deterministic, non-LLM Python** that the project already implements and unit-tests:
 
-| Step | Module | What it does |
-|---|---|---|
-| Plan | `app/skills/planner.py` `select_objective` | Picks the lowest unmastered grapheme (ZPD) from the child's BKT estimate, plus spaced-review picks. |
-| Decode/verify | `app/skills/decodability.py` `decompose` | The keystone: maps any word → ordered graphemes tagged by phonics level. Powers decodability, targeting, and miscue attribution from one source of truth. |
-| Assess | `app/skills/alignment.py` `assess` | Aligns expected vs. spoken text (running-record miscue types), then attributes each error down to the exact grapheme → `grapheme_evidence`. |
-| Update | `app/skills/mastery.py` `update_from_evidence` | 4-parameter Bayesian Knowledge Tracing; turns evidence into an updated per-grapheme knowledge state. |
-| Persist | `app/store/` | `LearnerProfile` (current mastery) + append-only `SessionLog` history. |
+| Step          | Module                                         | What it does                                                                                                                                              |
+| ------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plan          | `app/skills/planner.py` `select_objective`     | Picks the lowest unmastered grapheme (ZPD) from the child's BKT estimate, plus spaced-review picks.                                                       |
+| Decode/verify | `app/skills/decodability.py` `decompose`       | The keystone: maps any word → ordered graphemes tagged by phonics level. Powers decodability, targeting, and miscue attribution from one source of truth. |
+| Assess        | `app/skills/alignment.py` `assess`             | Aligns expected vs. spoken text (running-record miscue types), then attributes each error down to the exact grapheme → `grapheme_evidence`.               |
+| Update        | `app/skills/mastery.py` `update_from_evidence` | 4-parameter Bayesian Knowledge Tracing; turns evidence into an updated per-grapheme knowledge state.                                                      |
+| Persist       | `app/store/`                                   | `LearnerProfile` (current mastery) + append-only `SessionLog` history.                                                                                    |
 
 **The same code that runs the product loop is the code the evidence experiment exercises** (see *Evidence* below) — so the simulation isn't a detached toy; it's a calibration/regression harness for the production brain.
 
@@ -40,14 +40,14 @@ Everything load-bearing here is **deterministic, non-LLM Python** that the proje
 - **Closed-loop tutor — a real, stateful product (Stage A, done).** `app/tutor/TutorSession` runs the full loop above against a persistent `LearnerStore`, exposed through a typed-transcript entry path (`scripts/tutor_cli.py`). Run it twice for a child with strong reads and the target visibly advances (e.g. `a` → `e` → `i`), mastery rises, and everything persists across processes.
 - **Voice read-aloud + verifier-gated LLM books (Stage B, done).** Gemini Live transcribes the child's read-aloud (`app/voice/`, with a `FakeTranscriber` for offline tests) and feeds the *unchanged* `record_read()`; a verifier-gated LLM generator (`app/tutor/llm_book.py`, propose → `check_decodability` → revise) is wired into the loop as an optional content source behind the same `BookProvider` seam (`--llm-book`). Voice is creds-gated and degrades to typed input if Gemini Live is unavailable.
 - **Web read-along + live mastery viz (Stage C, done).** A FastAPI + vanilla-JS app (`app/web/`, launched via `scripts/tutor_web.py`) drives the real loop in the browser over a WebSocket: a miscue heatmap lights per word, mastery bars animate as BKT updates, and the next-target panel shifts on screen. Browser-mic voice is layered on additively; the typed path stands alone if voice is flaky.
-- **Decodable-book generation pipeline — implemented and verified end-to-end, and now folded into the live loop.** A multi-stage ADK `SequentialAgent` writes a phonically-decodable story, illustrates it (real cut-paper art, on-brand-verified), and exports it to Google Docs/Drive with a Gmail parent report. The Docs/Drive and Gmail write paths are verified against real accounts. This pipeline is no longer just a standalone path: the live per-session loop can trigger it directly from the web UI, reusing the same `story_planner`/QA-loop agents and exporting deterministically (`app/doc_export.py`) rather than via the agentic MCP exporter (which stays in `root_agent` for `adk web` and integration tests).
-- **What's honestly *not* done.** A self-improving content flywheel — every real session becomes an eval datapoint, with `check_decodability` as an always-on judge (roadmap item **D′**) — is planned but not built. The de-circularized evidence study (Stage D) is done; see *Evidence*. **260 offline unit tests pass** (`uv run pytest tests/unit`).
+- **Decodable-book generation pipeline — implemented and verified end-to-end, and now folded into the live loop.** A multi-stage ADK `SequentialAgent` writes a phonically-decodable story, illustrates it (real generated art, brand-palette-verified), and exports it to Google Docs/Drive with a Gmail parent report. The Docs/Drive and Gmail write paths are verified against real accounts. This pipeline is no longer just a standalone path: the live per-session loop can trigger it directly from the web UI, reusing the same `story_planner`/QA-loop agents and exporting deterministically (`app/doc_export.py`) rather than via the agentic MCP exporter (which stays in `root_agent` for `adk web` and integration tests).
+- **What's honestly not done.** A self-improving content flywheel — every real session becomes an eval datapoint, with `check_decodability` as an always-on judge (roadmap item **D′**) — is planned but not built. The de-circularized evidence study (Stage D) is done; see *Evidence*. **260 offline unit tests pass** (`uv run pytest tests/unit`).
 
 ## The content engine: verifier-gated decodable-book generation
 
 The illustrated-book pipeline is the "generate decodable book" node of the loop, and it embodies the project's core pattern — **an LLM/image model proposes, deterministic Python verifies**:
 
-```mermaid
+```javascript
 graph TD
     Profile([PhonicsProfile]) --> Planner[Story Planner]
     Planner -->|StoryOutline| Loop
@@ -64,7 +64,7 @@ graph TD
 ```
 
 - **Phonics QA guardrail:** a `LoopAgent` wrapping a custom `BaseAgent` re-runs the writer until `check_decodability` (the same `decompose`-based engine) confirms **zero** violations, or it halts. An undecodable word can't ship.
-- **On-brand illustration:** a per-book character bible + **Nano Banana** (`gemini-2.5-flash-image`, via Vertex) render each page as cut-paper collage; a **deterministic palette verifier** (`app/skills/palette_verifier.py`) proves every image stays on the locked Phono palette — the same propose/verify pattern as the phonics gate. Real images are embedded inline in the Doc (OpenDyslexic body, Poppins title).
+- **Brand-consistent illustration (propose/verify guardrail):** a per-book character bible + **Nano Banana** (`gemini-2.5-flash-image`, via Vertex) render each page; a **deterministic palette verifier** (`app/skills/palette_verifier.py`) proves every image stays on the brand palette defined in `app/brand.py` — the same propose/verify pattern as the phonics gate. Real images are embedded inline in the Doc, with a dyslexia-friendly body typeface for legibility. *(The specific palette and illustration style are implementation values currently in app/brand.py and are being reworked in a visual identity reboot — see DESIGN\_GUIDELINES.md. The guardrail mechanism is identity-independent: it enforces whatever palette brand.py defines.)*
 - **MCP write paths + guardrails:** Google's official `@googleworkspace/cli` (`gws`) in MCP stdio mode exposes Drive/Docs/Gmail; export and Gmail-draft callbacks validate the real `doc_id`/`shareable_url`/draft-ID before the pipeline continues.
   - **Note — export path for the live web flow:** the illustrated-book action folded into the live tutor exports the Doc **deterministically** via `app/doc_export.py` (the same propose/verify discipline as the decodability QA loop and palette verifier — the LLM writes the text, deterministic code assembles the Doc), since the agentic LLM-drives-MCP export (`formatter_export_agent`) remains in `root_agent` for `adk web` / integration tests but is not reliable standalone.
 
@@ -80,13 +80,13 @@ Result (n=30, 40 sessions): **probe accuracy +0.06, true mean latent mastery +0.
 
 ## Roadmap
 
-| Stage | Scope | Status |
-|---|---|---|
-| **A** | Wire the closed loop into a real stateful product (`app/tutor`, `SessionLog`, typed-transcript entry path) | ✅ Done |
-| **B** | Gemini Live voice read-aloud → transcript (replaces typed input); verifier-gated LLM book generator wired into the loop as an optional content source | ✅ Done |
-| **C** | Web read-along UI + live mastery-graph visualization (the filmable demo) | ✅ Done |
-| **D** | De-circularized evidence study (independent learner + externally-validated `decompose`) | ✅ Done |
-| **D′** | Self-improving content flywheel (every real session → an eval datapoint) | ⬜ Planned |
+| Stage  | Scope                                                                                                                                                 | Status    |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| **A**  | Wire the closed loop into a real stateful product (`app/tutor`, `SessionLog`, typed-transcript entry path)                                            | ✅ Done    |
+| **B**  | Gemini Live voice read-aloud → transcript (replaces typed input); verifier-gated LLM book generator wired into the loop as an optional content source | ✅ Done    |
+| **C**  | Web read-along UI + live mastery-graph visualization (the filmable demo)                                                                              | ✅ Done    |
+| **D**  | De-circularized evidence study (independent learner + externally-validated `decompose`)                                                               | ✅ Done    |
+| **D′** | Self-improving content flywheel (every real session → an eval datapoint)                                                                              | ⬜ Planned |
 
 The voice loop (Stage B) drops in behind the existing `TutorSession.record_read(prepared, spoken)` signature unchanged — `spoken` simply arrives from ASR instead of stdin.
 
@@ -107,19 +107,19 @@ Documented honestly rather than glossed over:
 
 - **Illustrated-book generation now reaches the live loop, with graceful degradation rather than a hard failure.** The illustrated-book ADK pipeline (Nano Banana art + Docs export) can be triggered directly from the live per-session loop (web UI), not just as a separate standalone path — see *Status* above. It degrades along two independent axes instead of failing outright: if illustration generation is unavailable, the result falls back to text-only pages; if Docs export is unavailable, it falls back to illustrated pages without a shareable Doc link.
 - **Voice is creds-gated and not exercised in CI.** Gemini Live transcription is real (`app/voice`) but requires Live access; without it the web/CLI paths degrade to typed input. The "never-punish" confidence repair is currently a no-op on the live path (Live returns no per-word confidence today) — it only fires in tests via `FakeTranscriber`.
-- **The evidence experiment has been de-circularized (Stage D, both halves done).** Previously the simulated learner and planner shared a ZPD assumption, making the result partly self-validating. Both leaks are now closed: the **segmenter half** — `decompose`/`_segment` (the basis of the "guaranteed decodable" claim) is externally validated against a hand-verified grapheme truth set and structural tiling laws swept over `/usr/share/dict/words` (~210k words) in `tests/unit/test_decompose_corpus.py`; and the **learner-model half** — the simulated learner now uses a logistic/IRT emission with per-grapheme difficulty (not BKT's linear slip/guess) and learning with no prerequisite gate plus forgetting (not the planner's ZPD thesis), so the tutor faces a genuine model mismatch. Adaptive still beats static on reading accuracy, mean mastery, and fluency (gaps ~halved but positive across all 12 cells of a parameter sweep); it does *not* reliably win the count past a hard 0.95 mastery bar. The remaining honesty caveat: the learner's constants are reasonable but uncalibrated, and WCPM is still a deterministic function of error count, not an independent timing measurement.
-- **`gws` CLI is pinned to `0.7.0`.** Google removed MCP server mode in `0.8.0` ([PR #275](https://github.com/googleworkspace/cli/pull/275)). The pin works today but is a deliberate pin to a version its maintainers moved past.
+- **The evidence experiment has been de-circularized (Stage D, both halves done).** Previously the simulated learner and planner shared a ZPD assumption, making the result partly self-validating. Both leaks are now closed: the **segmenter half** — `decompose`/`_segment` (the basis of the "guaranteed decodable" claim) is externally validated against a hand-verified grapheme truth set and structural tiling laws swept over `/usr/share/dict/words` (\~210k words) in `tests/unit/test_decompose_corpus.py`; and the **learner-model half** — the simulated learner now uses a logistic/IRT emission with per-grapheme difficulty (not BKT's linear slip/guess) and learning with no prerequisite gate plus forgetting (not the planner's ZPD thesis), so the tutor faces a genuine model mismatch. Adaptive still beats static on reading accuracy, mean mastery, and fluency (gaps \~halved but positive across all 12 cells of a parameter sweep); it does *not* reliably win the count past a hard 0.95 mastery bar. The remaining honesty caveat: the learner's constants are reasonable but uncalibrated, and WCPM is still a deterministic function of error count, not an independent timing measurement.
+- **gws CLI is pinned to 0.7.0.** Google removed MCP server mode in `0.8.0` ([PR #275](https://github.com/googleworkspace/cli/pull/275)). The pin works today but is a deliberate pin to a version its maintainers moved past.
 - **The eval grading harness has a JSON-parsing bug** unrelated to the agent: when the LLM-judge's `explanation` contains raw newlines, `agents-cli eval grade` fails to parse it. This affects automated eval scoring, not agent behavior — `tests/unit` and `tests/integration` pass cleanly (modulo live-API rate limits).
 
 ## Project Structure
 
-```
+```javascript
 agy-capstoneproject/
 ├── app/
 │   ├── agent.py            # ADK generation pipeline, guardrail callbacks, MCP wiring
 │   ├── schemas.py          # Pydantic contracts (incl. LearnerProfile, SessionLog)
 │   ├── phonics_db.py        # Grapheme inventory, level sequence, BKT params
-│   ├── brand.py            # Locked Phono brand: palette, cut-paper style, prompt composers
+│   ├── brand.py            # Brand module: palette + illustration-style → image prompts (values legacy; reboot in progress, see DESIGN_GUIDELINES.md)
 │   ├── illustrator.py      # Real illustrations: character bible + Nano Banana + verify/regen
 │   ├── doc_export.py       # Embed real images into the Google Doc
 │   ├── tutor/              # ★ Stage A: the closed loop as a stateful product
@@ -143,7 +143,7 @@ agy-capstoneproject/
 │   ├── tutor_web.py          # ★ Stage C: live web read-along server
 │   ├── tutor_voice_cli.py    # ★ Stage B: Gemini Live voice entry path
 │   └── build_sample_book.py  # End-to-end illustrated decodable book in Docs
-├── results/sample_book/    # Sample generated illustrated book (page PNGs)
+├── results/sample_book/    # Sample illustrated book (page PNGs) — capstone evidence; look is legacy (see DESIGN_GUIDELINES.md)
 ├── tests/                  # unit (incl. tutor loop), integration, eval datasets
 ├── Dockerfile
 └── pyproject.toml
@@ -152,44 +152,23 @@ agy-capstoneproject/
 ## Requirements
 
 - **Python** 3.11–3.13
-- **[uv](https://docs.astral.sh/uv/getting-started/installation/)** — dependency management
+- &#x20;— dependency management
 - **Node.js / npm** (provides `npx`) — required to run the `gws` MCP server
-- **[agents-cli](https://github.com/googleapis/agents-cli)** — `uv tool install google-agents-cli`
+- &#x20;— `uv tool install google-agents-cli`
 - **Google Cloud SDK** — for `gcloud auth application-default login` (required by `agents-cli eval`)
 - A Google Cloud project with Vertex AI enabled, and a Google AI Studio API key
 
 ## Setup
 
 1. Clone and install:
-   ```bash
-   git clone https://github.com/tannergriffith-beep/phono-storyforge.git
-   cd phono-storyforge
-   agents-cli install
-   ```
-
 2. Create `app/.env`:
-   ```
-   GOOGLE_API_KEY=<your AI Studio API key>
-   GOOGLE_GENAI_USE_VERTEXAI=0
-   GOOGLE_CLOUD_PROJECT=<your GCP project ID>
-   GOOGLE_CLOUD_LOCATION=global
-   LOG_LEVEL=INFO
-   ```
-
 3. Authenticate `gcloud` for eval/ADC:
-   ```bash
-   gcloud auth application-default login
-   ```
-
 4. Set up `gws` credentials for real Docs/Drive/Gmail export (the MCP subprocess only inherits a safe-list of env vars, so credentials must go in the default file location):
-   ```bash
-   mkdir -p ~/.config/gws
-   cp /path/to/your/client_secret_xxx.json ~/.config/gws/client_secret.json
-   ```
 
 ## Running it
 
 **The closed-loop tutor (Stage A — no API keys needed, fully offline):**
+
 ```bash
 uv run python -m scripts.tutor_cli --learner ada --interest dinosaurs --age 6
 # shows the planner's target + a decodable book; type what the child read
@@ -197,6 +176,7 @@ uv run python -m scripts.tutor_cli --learner ada --interest dinosaurs --age 6
 ```
 
 **The live web read-along (Stage C — the filmable demo, offline by default):**
+
 ```bash
 uv run python -m scripts.tutor_web            # → http://127.0.0.1:8000
 # Begin a session, read a page (type/preset, or the 🎤 browser mic), and watch
@@ -205,18 +185,21 @@ uv run python -m scripts.tutor_web --llm-book # use the verifier-gated LLM books
 ```
 
 **Voice read-aloud over Gemini Live (Stage B — needs Live access):**
+
 ```bash
 uv run python -m scripts.tutor_voice_cli --learner ada   # speak the page aloud
 # Requires the `voice` extra for mic capture: uv sync --extra voice
 ```
 
 **The illustrated-book generation pipeline (live LLM + MCP):**
+
 ```bash
 agents-cli playground            # interactive
 python -m scripts.build_sample_book   # full illustrated book in Google Docs
 ```
 
 **The evidence experiment:**
+
 ```bash
 uv run python -m eval.experiments.adaptive_vs_static   # writes chart + CSV
 ```

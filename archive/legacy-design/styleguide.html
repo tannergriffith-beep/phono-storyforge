@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phono StoryForge — Design System</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    /* Styleguide-only scaffolding (layout for the gallery; not part of the
+       shipped design system). All real components below use style.css classes. */
+    .sg-wrap { max-width: 1080px; margin: 0 auto; padding: 24px; }
+    .sg-section { margin: 40px 0; }
+    .sg-section > h2 { font: 700 26px var(--font-ui); color: var(--navy); margin-bottom: 4px; }
+    .sg-section > p.sg-note { color: var(--tundora); font-size: 13px; margin: 0 0 18px; }
+    .sg-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+    .sg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+    .sg-swatch { border-radius: 12px; padding: 14px; min-height: 86px; display: flex;
+      flex-direction: column; justify-content: flex-end; box-shadow: var(--shadow-sm); }
+    .sg-swatch .sg-name { font-weight: 700; font-size: 13px; }
+    .sg-swatch .sg-hex { font-family: var(--font-mono); font-size: 11px; opacity: 0.8; }
+    .sg-swatch .sg-role { font-size: 10px; opacity: 0.85; margin-top: 2px; }
+    .sg-card { background: var(--parchment); border-radius: 16px; padding: 20px; box-shadow: var(--shadow-md); }
+    .sg-tag { font-family: var(--font-mono); font-size: 11px; color: var(--plum); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">📖</span>
+      <div>
+        <h1 class="t-display">Phono StoryForge — Design System</h1>
+        <p class="tagline">Phase 1 · tokens &amp; reusable components (docs/DESIGN.md §10)</p>
+      </div>
+    </div>
+    <div class="mean-meter" title="example MeanMeter">
+      <span class="mean-label">Mastery</span>
+      <div class="mean-track"><div class="mean-fill" style="width:42%"></div></div>
+      <span class="mean-value">42%</span>
+    </div>
+  </header>
+
+  <div class="sg-wrap">
+
+    <!-- COLOR -->
+    <section class="sg-section">
+      <h2>Color tokens</h2>
+      <p class="sg-note">Locked brand palette with assigned roles (DESIGN §10.1). Coral-text <span class="sg-tag">--coral-text #C9603F</span> is the a11y-safe coral for text on light surfaces.</p>
+      <div class="sg-grid">
+        <div class="sg-swatch" style="background:#192255;color:#F0E9DF"><span class="sg-name">Navy</span><span class="sg-hex">#192255</span><span class="sg-role">text · top bar</span></div>
+        <div class="sg-swatch" style="background:#DB7E65;color:#fff"><span class="sg-name">Coral</span><span class="sg-hex">#DB7E65</span><span class="sg-role">action · target (fills)</span></div>
+        <div class="sg-swatch" style="background:#C9603F;color:#fff"><span class="sg-name">Coral-text</span><span class="sg-hex">#C9603F</span><span class="sg-role">coral text on light</span></div>
+        <div class="sg-swatch" style="background:#EBBA7A;color:#192255"><span class="sg-name">Gold</span><span class="sg-hex">#EBBA7A</span><span class="sg-role">target tint · highlight</span></div>
+        <div class="sg-swatch" style="background:#527164;color:#fff"><span class="sg-name">Sage</span><span class="sg-hex">#527164</span><span class="sg-role">mastered · success</span></div>
+        <div class="sg-swatch" style="background:#9C6D8B;color:#fff"><span class="sg-name">Plum</span><span class="sg-hex">#9C6D8B</span><span class="sg-role">reasoning · "why"</span></div>
+        <div class="sg-swatch" style="background:#ECE5DB;color:#192255"><span class="sg-name">Pearl</span><span class="sg-hex">#ECE5DB</span><span class="sg-role">inset · tracks</span></div>
+        <div class="sg-swatch" style="background:#F0E9DF;color:#192255"><span class="sg-name">Parchment</span><span class="sg-hex">#F0E9DF</span><span class="sg-role">page · card ground</span></div>
+        <div class="sg-swatch" style="background:#483E45;color:#F0E9DF"><span class="sg-name">Tundora</span><span class="sg-hex">#483E45</span><span class="sg-role">secondary text</span></div>
+      </div>
+    </section>
+
+    <!-- TYPE -->
+    <section class="sg-section">
+      <h2>Typography — three roles</h2>
+      <p class="sg-note">Display/UI · Reading surface (OpenDyslexic/Lexend → system) · Data (mono). DESIGN §10.3.</p>
+      <div class="sg-card">
+        <p class="t-label">Display / UI · Trebuchet</p>
+        <p class="t-display" style="font-size:44px">The loop you can see.</p>
+        <hr style="border:none;border-top:1px solid var(--color-border-soft);margin:18px 0">
+        <p class="t-label">Reading surface · the a11y-critical face</p>
+        <p class="t-read">the big red fox ran to the den</p>
+        <hr style="border:none;border-top:1px solid var(--color-border-soft);margin:18px 0">
+        <p class="t-label">Data · mono, tabular</p>
+        <p class="mono" style="font-size:18px">/a/ → /e/ · P(L) 0.62 · Δ +0.08 · 84 WCPM</p>
+      </div>
+    </section>
+
+    <!-- BUTTONS / BADGES -->
+    <section class="sg-section">
+      <h2>Buttons &amp; badges</h2>
+      <p class="sg-note">White-on-coral primary is ≥18px/700 to clear AA-Large (the DESIGN §10.2 fix).</p>
+      <div class="sg-row">
+        <button class="primary">Begin →</button>
+        <button class="primary btn-glow">Next session →</button>
+        <button class="ghost">Perfect read</button>
+        <button class="ghost" disabled>Disabled</button>
+      </div>
+      <div class="sg-row">
+        <span class="pill">session #3</span>
+        <span class="target-chip">target <b>/e/</b></span>
+        <span class="badge badge-success">decodable ✓</span>
+        <span class="badge badge-reasoning">why</span>
+        <span class="badge badge-source">deterministic</span>
+      </div>
+    </section>
+
+    <!-- LOOP RAIL -->
+    <section class="sg-section">
+      <h2>LoopRail <span class="sg-tag">§4 · the hero object</span></h2>
+      <p class="sg-note">Lights when a step runs; turns green ✓ when its guardrail passes. The Verify node is the differentiator. Click a node to cycle idle → lit → done.</p>
+      <div class="loop-rail" id="sg-rail">
+        <div class="loop-node done" data-node="plan"><span class="ln-index">1</span><span class="ln-name">Plan</span><span class="ln-sub">select_objective</span></div>
+        <div class="loop-node done" data-node="generate"><span class="ln-index">2</span><span class="ln-name">Generate</span><span class="ln-sub">decodable book</span></div>
+        <div class="loop-node done" data-node="verify"><span class="ln-index">3</span><span class="ln-name">Verify</span><span class="ln-sub">check_decodability</span></div>
+        <div class="loop-node lit pulse" data-node="read"><span class="ln-index">4</span><span class="ln-name">Read</span><span class="ln-sub">child reads aloud</span></div>
+        <div class="loop-node" data-node="assess"><span class="ln-index">5</span><span class="ln-name">Assess</span><span class="ln-sub">assess + attribute</span></div>
+        <div class="loop-node" data-node="adapt"><span class="ln-index">6</span><span class="ln-name">Adapt</span><span class="ln-sub">update_from_evidence</span></div>
+      </div>
+    </section>
+
+    <!-- MODE TOGGLE -->
+    <section class="sg-section">
+      <h2>ModeToggle <span class="sg-tag">§5 · Read ⇄ Insight</span></h2>
+      <p class="sg-note">Segmented control above the stage. The Insight tab shows a pip when the target advanced (DESIGN §18).</p>
+      <div class="sg-row">
+        <div class="mode-toggle" role="group" aria-label="View mode">
+          <button aria-pressed="true">📖 Reading</button>
+          <button aria-pressed="false" class="has-pip">📊 Insight<span class="pip"></span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MASTERY PATH -->
+    <section class="sg-section">
+      <h2>MasteryPath <span class="sg-tag">§6 · replaces the 30-bar scroll</span></h2>
+      <p class="sg-note">Graphemes as nodes along the level sequence: mastered (sage) · current target (coral, scaled) · locked/ahead (dashed). Per-grapheme P(L) appears on tap (Phase 2).</p>
+      <div class="sg-card">
+        <div class="mastery-path">
+          <span class="grapheme-node mastered">a</span><span class="gn-link"></span>
+          <span class="grapheme-node mastered">m</span><span class="gn-link"></span>
+          <span class="grapheme-node mastered">s</span><span class="gn-link"></span>
+          <span class="grapheme-node current">e</span><span class="gn-link"></span>
+          <span class="grapheme-node locked">i</span><span class="gn-link"></span>
+          <span class="grapheme-node locked">o</span><span class="gn-link"></span>
+          <span class="grapheme-node locked">th</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHY CARD -->
+    <section class="sg-section">
+      <h2>WhyCard <span class="sg-tag">§5 · planner rationale + evidence</span></h2>
+      <div class="why-card">
+        <h4>Why this book?</h4>
+        <p class="why-text">Today we practice <b>/e/</b> — the next unmastered sound on Ada's path. We'll also revisit /m/ and /s/ to keep them sharp.</p>
+        <div class="evidence-chips">
+          <span class="evidence-chip is-target">/e/ · 41% · focus</span>
+          <span class="evidence-chip">/m/ 92% ✓</span>
+          <span class="evidence-chip">/s/ 88% ✓</span>
+        </div>
+        <p class="why-receipt" title="the planner's raw rationale">[session 3] Lowest unmastered grapheme 'e' (level 'short vowels', P(L)=0.41). Spaced review: m, s.</p>
+      </div>
+    </section>
+
+    <!-- READING PAGE -->
+    <section class="sg-section">
+      <h2>ReadingPage <span class="sg-tag">§5 · child-facing · NO red</span></h2>
+      <p class="sg-note">Full-bleed reading face. Karaoke glow on the current word; today's practice words softly gold-underlined (warmth, never error). No stats, no miscue coloring here — ever. <em>Ships</em> with whole-word underline (<span class="sg-tag">.tgt-word</span>); per-grapheme tint (<span class="sg-tag">.tgt</span>) is ready for when the payload carries grapheme offsets.</p>
+      <div class="sg-card">
+        <div class="reading-page">
+          <span class="rw">The</span>
+          <span class="rw current tgt-word">red</span>
+          <span class="rw tgt-word">hen</span>
+          <span class="rw">ran.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- JOURNEY -->
+    <section class="sg-section">
+      <h2>JourneyTimeline <span class="sg-tag">§17 · proves "loop, not generator"</span></h2>
+      <p class="sg-note">Target row shifts (adaptation, coral where it changed) while the mean row rises (learning). Needs the new <span class="sg-tag">mean_mastery</span> SessionLog field (Phase 2).</p>
+      <div class="sg-card journey journey-view">
+        <div class="journey-head">
+          <strong>Ada's journey</strong>
+          <span class="muted">7 sessions · mastery 21% → 58%</span>
+        </div>
+        <div class="jtl">
+          <div class="jrow"><span class="jlabel">target</span><div class="jcells">
+            <span class="jcell journey-target">a</span><span class="jcell journey-target">a</span><span class="jcell journey-target changed">e</span><span class="jcell journey-target">e</span><span class="jcell journey-target changed">i</span><span class="jcell journey-target">i</span><span class="jcell journey-target changed">o</span>
+          </div></div>
+          <div class="jrow"><span class="jlabel">session</span><div class="jcells">
+            <span class="jcell"><span class="journey-dot"></span></span><span class="jcell"><span class="journey-dot"></span></span><span class="jcell"><span class="journey-dot"></span></span><span class="jcell"><span class="journey-dot"></span></span><span class="jcell"><span class="journey-dot"></span></span><span class="jcell"><span class="journey-dot"></span></span><span class="jcell"><span class="journey-dot today"></span></span>
+          </div></div>
+          <div class="jrow"><span class="jlabel">mean</span><div class="jcells">
+            <span class="jcell journey-mean">21%</span><span class="jcell journey-mean">29%</span><span class="jcell journey-mean">35%</span><span class="jcell journey-mean">41%</span><span class="jcell journey-mean">47%</span><span class="jcell journey-mean">52%</span><span class="jcell journey-mean">58%</span>
+          </div></div>
+        </div>
+        <div class="jspark-wrap"><span class="jlabel">trend</span>
+          <svg class="journey-spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+            <polygon points="0,30 0,23.7 16.7,21.3 33.3,18.9 50,16.5 66.7,14.1 83.3,11.8 100,9.5 100,30" class="spark-area"/>
+            <polyline points="0,23.7 16.7,21.3 33.3,18.9 50,16.5 66.7,14.1 83.3,11.8 100,9.5" class="spark-line"/>
+            <circle cx="100" cy="9.5" r="2.2" class="spark-end"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCAFFOLD / NEXT / ADAPT CAPTION -->
+    <section class="sg-section">
+      <h2>Insight pieces &amp; the Adapt caption</h2>
+      <div class="sg-card">
+        <div class="scaffold"><b>/e/</b> in "hen" — point under each letter and blend slowly: h-e-n.</div>
+        <div class="next-target advanced" style="margin-top:14px">
+          <h4>Tomorrow's target</h4>
+          <div>Next session will target <span class="next-g">/e/</span> <span class="muted">(short vowels)</span></div>
+          <div class="adv-badge">↳ the target ADVANCED from /a/ — the loop adapted.</div>
+        </div>
+        <p class="adapt-caption show" style="margin-top:14px">Ada mastered /a/. Tomorrow we practice /e/.</p>
+      </div>
+    </section>
+
+    <section class="sg-section">
+      <h2>DegradeBanner <span class="sg-tag">§9 · graceful degradation</span></h2>
+      <p class="sg-note">The one place soft failures surface — voice/Live quota, illustration
+        pipeline, connection drops. Dismissible, and a polite live region so it never steals focus.</p>
+      <div class="sg-card">
+        <div class="degrade-banner" data-severity="err">
+          <span class="degrade-icon" aria-hidden="true">⚠️</span>
+          <span class="degrade-msg">Live voice is unavailable right now — use the typed presets instead.</span>
+          <button type="button" class="degrade-dismiss" aria-label="Dismiss notice">✕</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // Tiny demo-only interaction so reviewers can feel the loop-node states.
+    // Not part of the shipped app; the real LoopRail logic lands in Phase 2.
+    document.querySelectorAll("#sg-rail .loop-node").forEach((n) => {
+      n.addEventListener("click", () => {
+        if (n.classList.contains("done")) { n.className = "loop-node"; n.dataset.node && (n.dataset.node = n.dataset.node); }
+        else if (n.classList.contains("lit")) { n.classList.remove("lit", "pulse"); n.classList.add("done"); }
+        else { n.classList.add("lit"); }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+/* tokens.css — Phono / StoryForge design-system tokens (Phase 7, PR1)
+ *
+ * The single source of design tokens for the redesign (design-system.md).
+ * Loaded AFTER style.css so it re-points the existing semantic token layer
+ * (--color-*, --font-*, --shadow-*) to the "Reading Room" palette and adds
+ * the new tokens later PRs consume (--ink, --claret, --cream, …).
+ *
+ * Rollback = remove the <link> to this file; style.css falls back to its own
+ * :root and the app renders in the previous palette. Purely additive.
+ *
+ * Direction: The Reading Room, governed by The Clear Path.
+ *   "The decode is sacred" · "effort never accuracy" · two audiences, one surface.
+ */
+
+/* ---- Self-hosted faces (Latin subset, woff2) ------------------------------ */
+@font-face{font-family:"Literata";font-style:normal;font-weight:400;font-display:swap;
+  src:url("/static/fonts/literata-400.woff2") format("woff2")}
+@font-face{font-family:"Literata";font-style:normal;font-weight:600;font-display:swap;
+  src:url("/static/fonts/literata-600.woff2") format("woff2")}
+@font-face{font-family:"Literata";font-style:italic;font-weight:400;font-display:swap;
+  src:url("/static/fonts/literata-italic-400.woff2") format("woff2")}
+@font-face{font-family:"Source Sans 3";font-style:normal;font-weight:400;font-display:swap;
+  src:url("/static/fonts/sourcesans3-400.woff2") format("woff2")}
+@font-face{font-family:"Source Sans 3";font-style:normal;font-weight:600;font-display:swap;
+  src:url("/static/fonts/sourcesans3-600.woff2") format("woff2")}
+@font-face{font-family:"Source Sans 3";font-style:normal;font-weight:700;font-display:swap;
+  src:url("/static/fonts/sourcesans3-700.woff2") format("woff2")}
+@font-face{font-family:"Source Code Pro";font-style:normal;font-weight:500;font-display:swap;
+  src:url("/static/fonts/sourcecodepro-500.woff2") format("woff2")}
+@font-face{font-family:"Lexend";font-style:normal;font-weight:400;font-display:swap;
+  src:url("/static/fonts/lexend-400.woff2") format("woff2")}
+@font-face{font-family:"Lexend";font-style:normal;font-weight:500;font-display:swap;
+  src:url("/static/fonts/lexend-500.woff2") format("woff2")}
+
+:root{
+  /* ---- Raw palette (Reading Room) ---------------------------------------- */
+  --ink:#23262C;            /* primary text & structure (printer's ink) */
+  --ink-soft:#3A3D42;       /* secondary text */
+  --claret:#5C2A33;         /* brand signature; primary action; spines */
+  --claret-deep:#4A222A;    /* active/pressed */
+  --claret-hover:#6E333E;   /* hover */
+  --claret-tint:#EBDADD;    /* selected / wash */
+  --gold:#B0863F;           /* celebration FILLS/graphics only (not text) */
+  --gold-deep:#6E5320;      /* text/icon-safe gold (celebration labels, why-rule) */
+  --gold-tint:#F0E4CC;      /* celebration background wash */
+  --sage:#3E5247;           /* growth/success — TEXT-SAFE (7.2:1 on cream) */
+  --sage-bright:#7C9486;    /* growth FILLS/glows only (not text) */
+  --sage-tint:#DCE5DE;      /* growth background wash */
+  --cream:#F4EDDE;          /* the reading ground (child's page) */
+  --paper:#F8F4EA;          /* app ground */
+  --paper-50:#FBF8F0;       /* lightest surface / cards */
+  --paper-sunken:#EFE7D6;   /* wells, insets, tracks, skeletons */
+  --stone-600:#6E6A60;      /* muted text (AA on cream) */
+  --stone-400:#9A958A;      /* quiet UI, disabled, cloth grey */
+  --line-token:#E4DBC8;     /* hairlines & borders */
+  --info:#2C5E7A;           /* parent/system info; Phono wayfinding accent */
+  --system-error:#8C3A2E;   /* adult/system failures only — calm, never child */
+  --caution:#7E5523;        /* gentle heads-up text (adult only) */
+
+  /* ---- Re-point the EXISTING semantic layer (style.css consumes these) --- */
+  --navy:var(--ink);
+  --coral:var(--claret);            /* primary action / target / energy */
+  --coral-text:var(--claret);
+  --coral-hover:var(--claret-hover);
+  --gold:#B0863F;                   /* celebration (kept; used on-dark/fills) */
+  --sage:#3E5247;                   /* mastered / success / progress (text-safe) */
+  --plum:var(--gold-deep);          /* reasoning / "why" -> gold-leaf rule */
+  --pearl:var(--paper-sunken);      /* inset surfaces, tracks */
+  --parchment:var(--paper);         /* page & card ground */
+  --tundora:var(--ink-soft);        /* secondary text, soft shadow */
+
+  --color-text:var(--ink);
+  --color-text-2:var(--ink-soft);
+  --color-bg:var(--paper);
+  --color-surface:var(--paper-50);
+  --color-surface-raised:var(--white);
+  --color-success:var(--sage);
+  --color-attention:var(--claret);
+  --color-reasoning:var(--gold-deep);
+  --color-warmth:var(--gold);
+  --color-border:var(--line-token);
+  --color-border-soft:#ECE3D0;
+  --track:rgba(35,38,44,0.10);
+
+  /* ---- Warm-tinted shadows (ink, never pure black) ----------------------- */
+  --shadow-color:rgba(35,38,44,0.16);
+  --shadow-sm:0 1px 2px rgba(35,38,44,.06);
+  --shadow-md:0 4px 12px -4px rgba(35,38,44,.12);
+  --shadow-lg:0 12px 28px -10px rgba(35,38,44,.18);
+  --elev-spine:inset -6px 0 12px -8px rgba(35,38,44,.40);
+
+  /* ---- Type roles -------------------------------------------------------- */
+  --font-ui:"Source Sans 3","Source Sans Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-read:"Literata","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-read-sans:"Lexend","Atkinson Hyperlegible",ui-rounded,system-ui,sans-serif;
+  --font-mono:"Source Code Pro",ui-monospace,"SF Mono",Menlo,monospace;
+
+  /* ---- Reader Settings hooks (driven by readerSettings.js in PR4) -------- */
+  /* The child's reading passage defaults to the easy-reading sans (Lexend) —
+   * accessibility-first per "the decode is sacred"; the storybook serif (Literata)
+   * stays the brand/display face for covers, titles, the shelf, and chrome.
+   * Families can switch back to the serif in Reader Settings. */
+  --reading-font:var(--font-read-sans);
+  --reading-scale:1;
+  --reading-letter-spacing:0.005em;
+  --reading-word-spacing:normal;
+  --reading-line-height:1.85;
+
+  /* ---- Radius (book-craft; used purposefully) ---------------------------- */
+  --r-xs:3px; --r-sm:6px; --r-md:10px; --r-lg:14px; --r-pill:999px;
+}
+
+/* Base type: UI sans on the warm paper ground. Reading containers opt into the
+   serif via --font-read in PR4. */
+body{font-family:var(--font-ui)}

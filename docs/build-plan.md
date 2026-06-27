@@ -103,7 +103,7 @@ The keystone. Everything depends on word→grapheme mapping.
 
 - Illustrator agent calls **Nano Banana** (`gemini-2.5-flash-image` via Vertex; free-tier API key is quota-0 for image gen) from `app.brand.build_page_prompt`; deterministic `build_character_bible()` + `character_bible` session-state key for cross-page consistency (page-1 image threaded as the character reference)
 - Deterministic **palette verifier** (`app/skills/palette_verifier.py`) proves each page on-palette via `nearest_brand_color` (tol 80 / 10% budget); reject-and-regenerate or snap on drift — the on-brand half of the LLM-proposes/Python-verifies through-line
-- Embed REAL images into the Google Doc (Drive upload + `insertInlineImage`; OpenDyslexic body / Poppins title)
+- Embed REAL images into the Google Doc (Drive upload + `insertInlineImage`; dyslexia-friendly body typeface for legibility / display title)
 
 **Day 9 (Jul 2)** ✅
 
@@ -182,7 +182,7 @@ real loop, never fakes it.
 - `app/web/server.py`: thin FastAPI + one WebSocket; calls `prepare`/`record_read`
   UNCHANGED. Only FastAPI importer. `PHONO_LLM_BOOK=1` swaps in the verifier-gated
   generator. No new deps (fastapi/uvicorn already transitive via google-adk).
-- `app/web/static/`: one HTML page + vanilla JS + brand-palette CSS; heatmap + mastery
+- `app/web/static/`: one HTML page + vanilla JS + themed CSS; heatmap + mastery
   bars animate via CSS transitions (no framework, no charting lib).
 - Step 2 voice (additive, non-load-bearing): browser mic → AudioWorklet → 16 kHz/16-bit
   PCM frames over the same socket → buffered → fed as the injectable `LiveTranscriber`

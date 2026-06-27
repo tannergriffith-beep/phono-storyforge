@@ -128,6 +128,45 @@ def prepared_payload(prepared: PreparedSession) -> dict:
     }
 
 
+def journey_payload(learner_id: str, learner_name: str, logs) -> dict:
+    """The 'journey' message: a longitudinal read over persisted SessionLogs.
+
+    Proves "loop, not generator" (DESIGN §17): the target row shifts (adaptation)
+    while the mean row rises (learning). Pure read over history — no new
+    instrumentation. `mean_mastery` is optional on older logs (written before it
+    was tracked); such cells carry null and the client renders them as gaps.
+    """
+    sessions: list[dict] = []
+    prev_target: str | None = None
+    for log in logs:
+        sessions.append(
+            {
+                "session_index": log.session_index,
+                "target_grapheme": log.target_grapheme,
+                "target_changed": prev_target is not None and log.target_grapheme != prev_target,
+                "mean_mastery": round(log.mean_mastery, 4) if log.mean_mastery is not None else None,
+                "accuracy": round(log.accuracy, 4),
+                "wcpm": round(log.wcpm, 1),
+                "newly_mastered": list(log.newly_mastered),
+                "book_title": log.book_title,
+            }
+        )
+        prev_target = log.target_grapheme
+
+    means = [s["mean_mastery"] for s in sessions if s["mean_mastery"] is not None]
+    return {
+        "type": "journey",
+        "learner_id": learner_id,
+        "learner_name": learner_name,
+        "sessions": sessions,
+        "summary": {
+            "count": len(sessions),
+            "first_mean": means[0] if means else None,
+            "last_mean": means[-1] if means else None,
+        },
+    }
+
+
 def _heatmap(outcome: SessionOutcome) -> tuple[list[dict], list[dict]]:
     """Per-expected-word heatmap cells + a separate list of inserted words.
 
@@ -223,5 +262,8 @@ def outcome_payload(outcome: SessionOutcome) -> dict:
             "rationale": nxt.rationale,
             "previous_grapheme": current,
             "advanced": nxt.target_grapheme != current,
+            # Current P(L) of the next target, so the Adapt-beat "ahead" node and
+            # its tap-detail are truthful rather than fabricated (DESIGN §7/§16).
+            "p_mastery": round(outcome.next_target_p_mastery, 4),
         },
     }

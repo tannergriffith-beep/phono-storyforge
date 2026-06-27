@@ -20,8 +20,8 @@ from app.illustrator import (
 )
 from app.schemas import CharacterBible
 
-NAVY = hex_to_rgb(BRAND_COLORS["Deep Navy"]["hex"])
-OATMEAL = hex_to_rgb(BRAND_COLORS["Pearl Bush"]["hex"])
+NAVY = hex_to_rgb(BRAND_COLORS["Ink"]["hex"])
+OATMEAL = hex_to_rgb(BRAND_COLORS["Paper"]["hex"])
 PURE_RED = (255, 0, 0)
 BRAND_NAMES = set(BRAND_COLORS.keys())
 

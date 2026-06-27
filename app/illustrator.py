@@ -47,9 +47,9 @@ HERO_IMAGE_MODEL = "gemini-3-pro-image"
 CHARACTER_BIBLE_STATE_KEY = "character_bible"
 
 # Warm accent colors cycled across characters so each gets a distinct, on-brand
-# identity. Deep Navy is reserved for line/hair, Strikemaster ("the character
-# color") used sparingly, backgrounds stay oatmeal/parchment.
-CHARACTER_PALETTE_CYCLE: list[str] = ["Japonica", "Warm Gold", "Sage", "Strikemaster"]
+# identity. Ink is reserved for line/hair, Tide ("the character color") used
+# sparingly, backgrounds stay Paper/Cream.
+CHARACTER_PALETTE_CYCLE: list[str] = ["Claret", "Gold", "Sage", "Tide"]
 
 
 # ---------------------------------------------------------------------------
@@ -90,7 +90,7 @@ def build_character_bible(
         if isinstance(spec, str):
             spec = CharacterSpec(name=spec)
         accent = CHARACTER_PALETTE_CYCLE[i % len(CHARACTER_PALETTE_CYCLE)]
-        palette_colors = [accent, "Deep Navy"]
+        palette_colors = [accent, "Ink"]
         trait = spec.trait.strip() or f"a {accent.lower()} paper outfit"
         appearance = (
             f"built from layered torn-paper shapes — a rounded {accent.lower()} "
@@ -214,6 +214,59 @@ def make_image_generator(client=None, *, model: str = IMAGE_MODEL):
             f"Image model returned no image data after 3 tries "
             f"(last finish_reason={last_finish})."
         )
+
+    return _generate
+
+
+# ---------------------------------------------------------------------------
+# Piece 2b: the OFFLINE stub generator — zero quota, instant, no network.
+# ---------------------------------------------------------------------------
+# Routine UI/flow testing must never touch the image model (its Vertex quota is
+# only ~2 requests/min, so a real book takes minutes and rate-limits hard). This
+# drop-in generator has the SAME (prompt, reference_images) -> png_bytes contract
+# as make_image_generator, but composes a deterministic, on-palette cut-paper
+# placeholder with PIL — so the whole pipeline (verifier, thumbnails, Docs export)
+# runs unchanged and for free. Selected via PHONO_STUB_IMAGES (see
+# app/tutor/illustrated_book.py) / the tutor_web --stub-images flag.
+def make_stub_image_generator(*, size: int = 768):
+    """Returns a (prompt, reference_images) -> png_bytes generator with NO network.
+
+    Each page is filled with brand hexes (parchment ground + a cycled accent
+    'cut-paper' block + a deep-navy caption), so it is on-palette by construction
+    and the real palette verifier passes it without a snap. The accent is derived
+    deterministically from the prompt, so pages look distinct but a given page is
+    stable across runs. Used for quota-free UI/flow testing.
+    """
+    import io
+
+    from PIL import Image, ImageDraw
+
+    from app.brand import hex_to_rgb
+
+    ground = hex_to_rgb(BRAND_COLORS["Cream"]["hex"])
+    navy = hex_to_rgb(BRAND_COLORS["Ink"]["hex"])
+    accents = [hex_to_rgb(BRAND_COLORS[name]["hex"]) for name in CHARACTER_PALETTE_CYCLE]
+
+    def _generate(prompt: str, reference_images: list[bytes] | None = None) -> bytes:
+        # Deterministic accent pick: stable per-prompt, distinct across pages.
+        accent = accents[sum(prompt.encode("utf-8")) % len(accents)]
+        secondary = accents[(sum(prompt.encode("utf-8")) + 1) % len(accents)]
+
+        img = Image.new("RGB", (size, size), ground)
+        draw = ImageDraw.Draw(img)
+        # A couple of large flat "cut-paper" blocks — the on-brand collage signal.
+        draw.rounded_rectangle(
+            [size * 0.10, size * 0.16, size * 0.90, size * 0.70], radius=40, fill=accent
+        )
+        draw.ellipse(
+            [size * 0.55, size * 0.48, size * 0.88, size * 0.82], fill=secondary
+        )
+        draw.rectangle([0, size * 0.86, size, size], fill=navy)
+        draw.text((size * 0.06, size * 0.88), "PLACEHOLDER — stub illustrator", fill=ground)
+
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        return buf.getvalue()
 
     return _generate
 

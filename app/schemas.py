@@ -119,7 +119,7 @@ class Character(BaseModel):
     clothing: str = Field(..., description="Outfit described with brand-palette colors.")
     palette_colors: list[str] = Field(
         default_factory=list,
-        description="Brand color NAMES used for this character (e.g. ['Japonica', 'Deep Navy']).",
+        description="Brand color NAMES used for this character (e.g. ['Claret', 'Ink']).",
     )
     defining_features: str = Field(
         ..., description="The 1-2 traits that keep them recognizable on every page."
@@ -417,6 +417,11 @@ class SessionLog(BaseModel):
     newly_mastered_levels: list[str] = Field(
         default_factory=list, description="Levels that became fully mastered this session."
     )
+    mean_mastery: float | None = Field(
+        default=None,
+        description="Mean P(L) across the inventory after this session (the Journey trend). "
+        "Optional for backward compatibility with logs written before it was tracked.",
+    )
     delta: MasteryDelta = Field(
         default_factory=MasteryDelta, description="Full per-grapheme before/after for the session."
     )
@@ -443,6 +448,7 @@ class SessionLog(BaseModel):
         assessment: "AssessmentResult",
         delta: "MasteryDelta",
         generation_source: str = "deterministic",
+        mean_mastery: float | None = None,
     ) -> "SessionLog":
         """Flattens an objective + assessment + mastery delta into a log row."""
         p_before = p_after = None
@@ -468,6 +474,7 @@ class SessionLog(BaseModel):
             target_p_after=p_after,
             newly_mastered=list(delta.newly_mastered),
             newly_mastered_levels=list(delta.newly_mastered_levels),
+            mean_mastery=mean_mastery,
             delta=delta,
             generation_source=generation_source,
         )

@@ -30,24 +30,27 @@ from app.schemas import CharacterBible
 # ---------------------------------------------------------------------------
 # Palette (locked). Roles per toolkit-builder/DESIGN-SYSTEM.md v4.
 # ---------------------------------------------------------------------------
+# Reading Room palette (Phase 7 — the rebrand's illustration guardrail). The dict
+# KEYS are semantic brand-color names (referenced by the palette verifier, the
+# illustrator's character cycle, and their tests); VALUES are the brand hexes.
 BRAND_COLORS: dict[str, dict[str, str]] = {
-    "Deep Navy":    {"hex": "#192255", "role": "text, line accents, darkest shapes"},
-    "Japonica":     {"hex": "#DB7E65", "role": "primary warm accent / energy (coral)"},
-    "Warm Gold":    {"hex": "#EBBA7A", "role": "highlights, warmth"},
-    "Sage":         {"hex": "#527164", "role": "secondary accent (muted green)"},
-    "Strikemaster": {"hex": "#9C6D8B", "role": "character/decorative accent — use sparingly (plum)"},
-    "Pearl Bush":   {"hex": "#ECE5DB", "role": "base background surface (oatmeal)"},
-    "Parchment":    {"hex": "#F0E9DF", "role": "warmer background surface"},
-    "Tundora":      {"hex": "#483E45", "role": "soft shadows, secondary darks"},
+    "Ink":    {"hex": "#23262C", "role": "text, line accents, darkest shapes (printer's ink)"},
+    "Claret": {"hex": "#5C2A33", "role": "primary signature accent (bookcloth claret)"},
+    "Gold":   {"hex": "#B0863F", "role": "highlights, warmth, celebration (gold leaf)"},
+    "Sage":   {"hex": "#7C9486", "role": "secondary accent (calm sage green)"},
+    "Tide":   {"hex": "#2C5E7A", "role": "decorative accent — use sparingly (deep tide blue)"},
+    "Paper":  {"hex": "#F8F4EA", "role": "base background surface (warm paper)"},
+    "Cream":  {"hex": "#F4EDDE", "role": "warmer background surface (page cream)"},
+    "Shadow": {"hex": "#3A3D42", "role": "soft shadows, secondary darks"},
 }
 
 # Plain-language palette line for prompts (image models read color words better
 # than hexes, but we name both so the intent is unambiguous and the verifier has
 # the truth).
 _PALETTE_PHRASE = (
-    "deep navy (#192255), warm coral (#DB7E65), warm gold (#EBBA7A), "
-    "muted sage green (#527164), soft plum (#9C6D8B, used sparingly), and warm "
-    "oatmeal / parchment backgrounds (#ECE5DB / #F0E9DF)"
+    "deep ink navy (#23262C), bookcloth claret (#5C2A33), warm gold (#B0863F), "
+    "calm sage green (#7C9486), deep tide blue (#2C5E7A, used sparingly), and warm "
+    "paper / cream backgrounds (#F8F4EA / #F4EDDE)"
 )
 
 # ---------------------------------------------------------------------------

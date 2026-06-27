@@ -29,9 +29,9 @@ def _half_and_half(
     return img
 
 
-NAVY = hex_to_rgb(BRAND_COLORS["Deep Navy"]["hex"])
-CORAL = hex_to_rgb(BRAND_COLORS["Japonica"]["hex"])
-OATMEAL = hex_to_rgb(BRAND_COLORS["Pearl Bush"]["hex"])
+NAVY = hex_to_rgb(BRAND_COLORS["Ink"]["hex"])
+CORAL = hex_to_rgb(BRAND_COLORS["Claret"]["hex"])
+OATMEAL = hex_to_rgb(BRAND_COLORS["Paper"]["hex"])
 PURE_RED = (255, 0, 0)
 PURE_GREEN = (0, 255, 0)
 
@@ -42,7 +42,7 @@ def test_exact_brand_color_is_on_brand_at_zero_distance() -> None:
     assert verdict.off_brand_fraction == 0.0
     assert verdict.max_distance == 0.0
     # The palette histogram attributes 100% to the one brand color present.
-    assert verdict.coverage.get("Deep Navy") == 1.0
+    assert verdict.coverage.get("Ink") == 1.0
 
 
 def test_every_brand_color_passes_itself() -> None:
@@ -129,4 +129,4 @@ def test_snap_preserves_in_tolerance_pixels() -> None:
 def test_on_brand_reason_lists_dominant_colors() -> None:
     verdict = verify_palette(_solid(NAVY))
     assert "On-brand" in verdict.reason()
-    assert "Deep Navy" in verdict.reason()
+    assert "Ink" in verdict.reason()

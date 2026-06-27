@@ -37,7 +37,7 @@ from fastapi.staticfiles import StaticFiles
 from app.store.learner_store import JSONLearnerStore
 from app.store.session_log import JSONLSessionLogStore
 from app.tutor.session import TutorSession
-from app.web.viz import outcome_payload, prepared_payload
+from app.web.viz import journey_payload, outcome_payload, prepared_payload
 
 _STATIC = Path(__file__).parent / "static"
 _DEFAULT_DATA_DIR = Path("artifacts") / "tutor_data"
@@ -118,6 +118,25 @@ def create_app(
                         interest=msg.get("interest", ""),
                     )
                     await websocket.send_json(prepared_payload(prepared))
+
+                elif action == "journey":
+                    # Read-only longitudinal view over persisted SessionLogs
+                    # (DESIGN §17). Independent of the current prepared session.
+                    learner_id = msg.get("learner_id") or (
+                        prepared.profile.learner_id if prepared else ""
+                    )
+                    if not learner_id:
+                        await websocket.send_json(
+                            {"type": "error", "message": "no learner to show a journey for"}
+                        )
+                        continue
+                    profile = store.get(learner_id)
+                    logs = log_store.list(learner_id)
+                    await websocket.send_json(
+                        journey_payload(
+                            learner_id, profile.name if profile else "", logs
+                        )
+                    )
 
                 elif action == "submit":
                     if prepared is None:
