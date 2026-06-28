@@ -22,6 +22,8 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
 from dataclasses import dataclass
 
@@ -34,7 +36,14 @@ IMAGE_WIDTH_PT = 360.0
 # 1:1 cut-paper pages by default (square); callers can override per page.
 IMAGE_HEIGHT_PT = 360.0
 
-_GWS = ["npx", "-y", "@googleworkspace/cli@0.7.0"]
+# The Google Workspace CLI invocation. Prefer the `gws` binary the user
+# authenticated via `gws auth login` (on PATH); a pinned npx build is only a
+# fallback when none is installed. NOTE: the previously-pinned 0.7.0 cannot
+# decrypt credentials written by a newer gws (a 401 "decryption failed"), so
+# PATH-first keeps doc export aligned with whatever version actually holds the
+# OAuth. Override the binary with PHONO_GWS_BIN.
+_GWS_BIN = os.environ.get("PHONO_GWS_BIN") or shutil.which("gws")
+_GWS = [_GWS_BIN] if _GWS_BIN else ["npx", "-y", "@googleworkspace/cli@0.7.0"]
 
 
 @dataclass
@@ -140,9 +149,16 @@ def build_doc_requests(
 def _run_gws(args: list[str], *, upload: str | None = None) -> dict:
     """Runs a Workspace CLI command and returns parsed JSON (raises on failure)."""
     cmd = _GWS + args
+    # @googleworkspace/cli >=0.7.0 sandboxes --upload to paths inside the current
+    # working directory and rejects anything outside it (the page PNGs live in a
+    # tempfile.TemporaryDirectory). Run the upload from the file's own directory
+    # and pass just the basename so the sandbox check passes.
+    cwd = None
     if upload:
-        cmd += ["--upload", upload]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+        upload_abs = os.path.abspath(upload)
+        cwd = os.path.dirname(upload_abs)
+        cmd += ["--upload", os.path.basename(upload_abs)]
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
     if result.returncode != 0:
         raise RuntimeError(f"Workspace CLI failed: {' '.join(args)}\n{result.stderr}")
     out = result.stdout.strip()
