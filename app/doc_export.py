@@ -46,6 +46,22 @@ _GWS_BIN = os.environ.get("PHONO_GWS_BIN") or shutil.which("gws")
 _GWS = [_GWS_BIN] if _GWS_BIN else ["npx", "-y", "@googleworkspace/cli@0.7.0"]
 
 
+def gws_base_command() -> list[str]:
+    """The PATH-first `gws` invocation shared by every deterministic CLI call.
+
+    Prefers the authenticated `gws` on PATH (or ``PHONO_GWS_BIN``); only falls
+    back to a pinned ``npx @googleworkspace/cli@0.7.0`` build when none is
+    installed. See the module header for why PATH-first: 0.7.0 cannot decrypt
+    credentials written by a newer gws (a 401 "decryption failed").
+
+    NOTE: the ADK MCP-server path in app/agent.py deliberately does NOT use this
+    resolver — it must stay pinned to 0.7.0 because newer gws removed MCP server
+    mode. Only the deterministic, one-shot CLI calls (Docs/Drive export here, and
+    the Gmail-draft subprocess in agent.py) are PATH-first.
+    """
+    return list(_GWS)
+
+
 @dataclass
 class DocPage:
     """One page to lay into the Doc: story text + a fetchable image URI."""
@@ -70,8 +86,12 @@ def build_doc_requests(
     indices are UTF-16 code units; the decodable story text is plain ASCII-range
     English, so len() matches. An inline image occupies exactly one index unit.
 
-    Layout: HEADING_1 title (Poppins), then per page the story text (OpenDyslexic)
-    followed by its illustration, each on its own paragraph.
+    Layout: a HEADING_1 title (Poppins) cover page, then EACH story page on its
+    own physical page — its text (OpenDyslexic) followed by its illustration. The
+    per-page page break is load-bearing: the illustrations are ~360pt (half a
+    page) tall, so without a hard break the paginated/printed Doc pushes each
+    image onto the *next* page's text, making every picture show the wrong (prior)
+    scene. The break pins the rendered pairing to text[i] <-> image[i].
     """
     requests: list[dict] = []
     index = 1  # first insertable index in a freshly created doc
@@ -84,6 +104,11 @@ def build_doc_requests(
         )
         index += len(text)
         return start, index  # [start, end)
+
+    def insert_page_break() -> None:
+        nonlocal index
+        requests.append({"insertPageBreak": {"location": {"index": index}}})
+        index += 1  # a page break occupies exactly one index unit
 
     def style_text(start: int, end: int, font: str, *, bold: bool = False) -> None:
         fields = "weightedFontFamily"
@@ -119,6 +144,10 @@ def build_doc_requests(
 
     # --- Pages ---
     for page in pages:
+        # Start every story page on its own physical page so its text and its
+        # illustration stay together (see docstring — prevents the off-by-one
+        # where an image drifts onto the following page's text).
+        insert_page_break()
         text = page.text.strip()
         if text:
             p_start, p_end = insert_text(text + "\n")
@@ -148,7 +177,7 @@ def build_doc_requests(
 # ---------------------------------------------------------------------------
 def _run_gws(args: list[str], *, upload: str | None = None) -> dict:
     """Runs a Workspace CLI command and returns parsed JSON (raises on failure)."""
-    cmd = _GWS + args
+    cmd = gws_base_command() + args
     # @googleworkspace/cli >=0.7.0 sandboxes --upload to paths inside the current
     # working directory and rejects anything outside it (the page PNGs live in a
     # tempfile.TemporaryDirectory). Run the upload from the file's own directory

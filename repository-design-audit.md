@@ -141,7 +141,7 @@ State after Phases 2–5 were executed.
   `docs/DESIGN.md` to the archived path, labeled "(legacy, archived)".
 - **Verified app integrity:** `app/web/static/styleguide.html` was unrouted/unreferenced —
   moving it broke nothing; no code referenced the moved docs. **`uv run pytest tests/unit`
-  → 260 passed.**
+  → full offline suite passed.**
 
 ### Remaining active files that still express visual identity — and the call on each
 

@@ -30,11 +30,11 @@ from __future__ import annotations
 
 import os
 import random
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 from app.schemas import Objective, StoryDraft
-from app.skills.decodability import decompose, inflectional_suffix, check_decodability
+from app.skills.decodability import check_decodability, decompose, inflectional_suffix
 
 # Text model for the writer. Matches the project convention in app/agent.py; the
 # decodability budget is enforced deterministically afterward, so a small/fast

@@ -41,6 +41,51 @@ def test_indices_advance_consistently_with_application_order() -> None:
         elif "insertInlineImage" in r:
             assert r["insertInlineImage"]["location"]["index"] == cursor
             cursor += 1  # an inline image occupies exactly one index unit
+        elif "insertPageBreak" in r:
+            assert r["insertPageBreak"]["location"]["index"] == cursor
+            cursor += 1  # a page break occupies exactly one index unit
+
+
+def test_each_page_text_is_paired_with_its_own_image_on_its_own_page() -> None:
+    # Regression for the off-by-one: ~360pt illustrations + no page break let
+    # each image paginate onto the FOLLOWING page's text, so every picture showed
+    # the wrong (prior) scene. A page break before each story page pins the
+    # rendered pairing to text[i] <-> image[i]. Distinct text/uris per page so any
+    # one-off shift is detectable. Fails before the page-break fix (no break ->
+    # the body never partitions into per-page sections).
+    pages = [
+        DocPage(text=f"Page {i} text.", image_uri=f"https://img/{i}")
+        for i in range(1, 5)
+    ]
+    reqs = build_doc_requests("The Title", pages)
+
+    # Partition the request stream into the cover (before the first break) and one
+    # section per page break — exactly how the paginated Doc lays out.
+    cover: list[tuple[str, str]] = []
+    sections: list[list[tuple[str, str]]] = []
+    current = cover
+    for r in reqs:
+        if "insertPageBreak" in r:
+            current = []
+            sections.append(current)
+        elif "insertText" in r:
+            current.append(("text", r["insertText"]["text"]))
+        elif "insertInlineImage" in r:
+            current.append(("img", r["insertInlineImage"]["uri"]))
+
+    # One page break (hence one section) per story page — nothing flows together.
+    assert len(sections) == len(pages), "expected a page break before each page"
+    # The title lives on its own cover page with no story illustration.
+    assert ("text", "The Title\n") in cover
+    assert not any(kind == "img" for kind, _ in cover)
+    # Each page section holds its OWN text followed by its OWN image — no drift.
+    for page, section in zip(pages, sections):
+        kinds = [kind for kind, _ in section]
+        texts = [val for kind, val in section if kind == "text"]
+        imgs = [val for kind, val in section if kind == "img"]
+        assert texts[0] == page.text + "\n"
+        assert imgs == [page.image_uri]
+        assert kinds.index("text") < kinds.index("img")  # text above its picture
 
 
 def test_title_is_heading_in_label_font_pages_in_body_font() -> None:

@@ -181,7 +181,7 @@ def create_app(
                         payload["heard"] = tokens
                         await websocket.send_json(payload)
                         prepared = None
-                    except Exception as exc:  # noqa: BLE001 - report, never crash the demo
+                    except Exception as exc:
                         await websocket.send_json(
                             {
                                 "type": "error",
@@ -229,7 +229,7 @@ def create_app(
                                 "pages": result.pages,
                             }
                         )
-                    except Exception as exc:  # noqa: BLE001 - report, never crash the demo
+                    except Exception as exc:
                         await websocket.send_json(
                             {
                                 "type": "error",

@@ -12,4 +12,4 @@
 # unchanged.
 from app.tutor.session import PreparedSession, SessionOutcome, TutorSession
 
-__all__ = ["TutorSession", "PreparedSession", "SessionOutcome"]
+__all__ = ["PreparedSession", "SessionOutcome", "TutorSession"]

@@ -16,6 +16,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 from app.schemas import SessionLog
+
 # Reuse the same id-sanitization the profile store uses, so a learner's profile
 # and its session log live under matching, escape-proof filenames.
 from app.store.learner_store import _safe_id

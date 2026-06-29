@@ -46,8 +46,9 @@
 from __future__ import annotations
 
 import inspect
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Awaitable, Callable, Optional
+from typing import Optional
 
 from app.phonics_db import LEVEL_SEQUENCE
 from app.schemas import LearnerProfile, Objective, PhonicsProfile
@@ -63,7 +64,7 @@ _VALID_LEVELS: frozenset[str] = frozenset(LEVEL_SEQUENCE)
 _DEFAULT_INTEREST = "animals"
 
 # Async or sync progress sink: receives coarse stage strings ("Planning…", …).
-ProgressCb = Optional[Callable[[str], Optional[Awaitable[None]]]]
+ProgressCb = Optional[Callable[[str], Awaitable[None] | None]]
 
 
 # ---------------------------------------------------------------------------
@@ -324,7 +325,7 @@ def _illustrate_pages_sync(bible, page_texts: list[str], *, age: int, model: str
         try:
             page = _render(text, i, timed_generate)
             real = True
-        except Exception as exc:  # noqa: BLE001 - one bad page must not lose the rest
+        except Exception as exc:
             if progress:
                 progress(f"Page {i} unavailable ({exc}); using a placeholder for this page.")
             page = _render(text, i, fallback_generate)
@@ -514,7 +515,7 @@ async def generate_illustrated_book(
                 model=IMAGE_MODEL,
                 progress=thread_progress,
             )
-        except Exception as exc:  # noqa: BLE001 - degrade to text-only, never crash
+        except Exception as exc:
             await _emit(
                 progress_cb,
                 f"Illustration unavailable ({exc}); continuing with a text-only book.",
@@ -533,7 +534,7 @@ async def generate_illustrated_book(
             doc_id, shareable_url = await asyncio.to_thread(
                 _export_doc_sync, title, page_texts
             )
-    except Exception as exc:  # noqa: BLE001 - pages-only, never crash the demo
+    except Exception as exc:
         await _emit(
             progress_cb,
             f"Google Docs export unavailable ({exc}); showing the pages only.",

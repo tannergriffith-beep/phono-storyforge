@@ -235,7 +235,10 @@ input, textarea {
   border: 1.5px solid var(--color-border); border-radius: var(--r-sm);
   background: var(--white); color: var(--navy);
 }
-input:focus, textarea:focus { outline: none; border-color: var(--coral); }
+input:focus, textarea:focus { border-color: var(--coral); }
+/* Drop the outline only for pointer focus; keyboard focus keeps the 3px
+   :focus-visible ring above (WCAG 2.4.7 / 2.4.11). */
+input:focus:not(:focus-visible), textarea:focus:not(:focus-visible) { outline: none; }
 
 /* --- Cards / surfaces --- */
 .card {

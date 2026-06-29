@@ -5,7 +5,7 @@
 > `video-skeleton.md`. Placeholders `[SCREENSHOT:…]` / `[CITE:…]` / `TODO:` are deliberate.
 > Tone target: the "knowledgeable neighbor" — warm, plain, honest, never salesy (`voice-lexicon.md`).
 > Shot order + timing follow `video-skeleton.md`; UI choreography follows the runbook.
-> NUMBERS LOCKED: **267 tests**; adapt chain **wh→ck→qu** via **"One miscue"**; evidence **+0.06 acc / +0.04 mean mastery / +4.9 WCPM**.
+> NUMBERS LOCKED: **full offline test suite green** (count-free — say "the whole offline suite passes," not a specific number); adapt chain **wh→ck→qu** via **"One miscue"**; evidence **+0.06 acc / +0.04 mean mastery / +4.9 WCPM**.
 > DO NOT say the never-punish confidence repair "fires live" — it's a no-op on the Gemini Live path.
 
 ---
@@ -96,12 +96,12 @@ Reading face → score "One miscue" → "For grown-ups" → Insight face → sec
 ---
 
 ## Shot 5 — Close (4:35–5:00, ~25s)
-**On screen:** architecture loop diagram / recap card; "**267 tests green**" line. [SCREENSHOT: loop diagram] [CITE: README.md:15–24]
+**On screen:** architecture loop diagram / recap card; "**full offline suite green**" line. [SCREENSHOT: loop diagram] [CITE: README.md:15–24]
 
 **Say (rough):**
 - "One deterministic loop — plan, generate, listen, attribute, update — wired into a real product."
 - "Proven by a de-circularized study, and now generating illustrated books inside that same loop."
-- "**267 offline unit tests green.** Built on ADK, for Agents for Good."
+- "**The whole offline unit suite passes green.** Built on ADK, for Agents for Good."
 - TODO: pick the single closing line that lands — lead candidate: "A five-minute win beats a fifteen-minute fight — at scale."
 
 ---

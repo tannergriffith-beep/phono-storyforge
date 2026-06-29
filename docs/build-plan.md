@@ -205,7 +205,7 @@ tracked separately as **D′** — see README roadmap and `docs/stage-d-prime-fl
 and is not yet built.)
 
 - ✅ **Segmenter externally validated.** `tests/unit/test_decompose_corpus.py` checks
-  `_segment` against (A) a 58-word hand-verified grapheme truth set across every level,
+  `_segment` against (A) a hand-verified grapheme truth set across every level,
   and (B) structural tiling laws swept over `/usr/share/dict/words` (~210k words). Result:
   tiling+reconstruction on 209,743/210,773; count≤letters on all; no false vowel drops.
   This anchors the "guaranteed decodable" claim to truth outside the codebase. Additive —
@@ -255,7 +255,7 @@ sandbox check rejected the tempfile path the illustrated pages were written to, 
 pinned `gws` CLI version couldn't decrypt credentials written by a newer `gws`. Fixed (run
 the upload with cwd set to the file's directory; prefer the `gws` binary on PATH over the
 npx pin) and verified end-to-end with stub images — real story generation + real Docs
-export, 267 unit tests pass.
+export, full offline unit suite passes.
 
 ---
 

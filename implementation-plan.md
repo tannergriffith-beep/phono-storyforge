@@ -8,7 +8,7 @@
 
 1. **Additive first, subtractive last.** Introduce new tokens/components alongside the old, migrate one component family, then delete the old styles in the *same* PR once that family is green. Never leave two systems fighting across PRs.
 2. **The deterministic brain is off-limits.** [app/skills/](app/skills/), [app/tutor/session.py](app/tutor/session.py), [app/store/](app/store/), and [schemas.py](app/schemas.py) are the product's tested core. PRs touch **presentation** ([app/web/static/](app/web/static/)) and, narrowly, **payload copy** ([app/web/viz.py](app/web/viz.py), [app/web/server.py](app/web/server.py)) — never the loop logic, never payload *shape* that tests assert.
-3. **Green at every step.** `uv run pytest tests/unit` (260 tests) must pass on every PR. Backend-touching PRs add their own guard tests (see "New invariant tests" below).
+3. **Green at every step.** `uv run pytest tests/unit` (the full offline suite) must pass on every PR. Backend-touching PRs add their own guard tests (see "New invariant tests" below).
 4. **Feature-flag the risky/structural changes** (session-arc nav, illustration) so rollback is a flag flip, not a revert.
 5. **Manual verification** each PR via `uv run python scripts/tutor_web.py` + the `/verify` skill, against a per-PR QA checklist. (No automated visual-regression harness exists; this is the substitute.)
 6. **Branching:** one branch per PR off `main` (`redesign/NN-slug`); small, reviewable diffs; commit footer `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`. Do not stack unrelated changes.
@@ -272,7 +272,7 @@ Ship in number order; PR6–PR12 can be parallelized by a second contributor aft
 
 ## What this plan deliberately does NOT do
 - Touch the deterministic loop, BKT model, planner, or schemas.
-- Change payload *shapes* the 260 tests assert (only string values + additive fields).
+- Change payload *shapes* the `tests/unit` suite asserts (only string values + additive fields).
 - Ship dark mode (deferred, design-system §1.7).
 - Build the marketing site or print toolkits (system is *built to extend* there; out of this app-first engagement's scope).
 

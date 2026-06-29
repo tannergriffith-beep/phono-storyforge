@@ -19,7 +19,7 @@ Ugliness rules: bullets over prose, leave `[SCREENSHOT: …]` / `[CITE: …]` / 
 - `README.md` — feature/architecture claims (audited Jun 28, high integrity).
 
 ## Verified facts the drafts MUST reflect (don't re-derive)
-- **267 unit tests pass** (NOT 260 — video-skeleton Shot 5 is stale on this).
+- **The full offline `tests/unit` suite passes** (count-free per the Jun 29 policy — phrase as "the full offline suite passes," no specific number; older 260/267 figures are superseded).
 - **Live demo adapt chain: wh → ck → qu** on the seeded `ada` profile; each strong read masters the current digraph and advances the target.
 - **Use the "One miscue" preset** in the demo: it lights the heatmap (1 red cell) + shows a scaffold cue + advances the target, all in one read. ("Perfect" = no miscues to narrate; "Struggling" = target holds.)
 - **UI is post-rebrand:** mastery is a **node PATH** (not bars); the running-record heatmap + analysis live in the **Insight face** reached by tapping **"For grown-ups"**; operator presets are collapsed; the ADK loop rail shows only with `?loop`.
@@ -30,4 +30,4 @@ Ugliness rules: bullets over prose, leave `[SCREENSHOT: …]` / `[CITE: …]` / 
 ## Boundaries (orchestrator notes)
 - This session does NOT finish the demo. The **live visual dry run + recording** are unfinished Workstream 1, done by the human at the demo machine — keep them as a separate track.
 - After both drafts exist, the natural next workstream is **Workstream 4 (Final Submission Review)** closer to the deadline.
-- Tiny leftover truth fix (cheap, optional): correct "260 tests" → "267" wherever it appears.
+- Test-count policy (Jun 29): all artifacts are now **count-free** — phrase as "the full offline `tests/unit` suite passes," never a specific number (avoids the 260/267/268 churn).

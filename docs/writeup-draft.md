@@ -2,7 +2,7 @@
 
 > **Intentionally ugly.** Bullets + rough paragraphs, real numbers/refs, `[CITE:…]` / TODO placeholders.
 > Structure follows `docs/writeup-skeleton.md`. Final prose written Jul 4–5 — do NOT polish here.
-> NUMBERS LOCKED: **267 tests** (skeleton 3d says 260 — stale, use 267); evidence **+0.06 / +0.04 / +4.9**;
+> NUMBERS LOCKED: **full offline test suite green** (count-free — phrase as "the full offline suite passes," no specific number; older skeletons saying 260/267 are superseded); evidence **+0.06 / +0.04 / +4.9**;
 > adapt chain wh→ck→qu. Do NOT claim never-punish confidence repair fires live.
 
 ---
@@ -62,9 +62,10 @@ Three concrete instances of one pattern [CITE: content-engine mermaid README.md:
 |---|---|---|
 | probe accuracy gap | +0.14 | **+0.06** (exactly +0.0605) |
 | true mean latent mastery gap | +0.09 | **+0.04** |
-| WCPM gap | +16 | **+4.9** |
+| WCPM gap | +16 | **+4.9** (derived, not independent — see caveat) |
 | num_mastered (≥0.95) gap | positive | **−0.47 — a wash** |
 
+- **WCPM caveat — surface at the headline:** the two genuine, independent wins are **accuracy (+0.06)** and **mean latent mastery (+0.04)**. WCPM is **derived** — a deterministic function of the error count, not an independent timing measurement — so it tracks the accuracy result rather than adding a third independent line of evidence. Do not sell +4.9 WCPM as a separate win.
 - **Frame honestly:** de-circularizing roughly *halved* every gap but did not erase it. Adaptive still wins on real reading accuracy, mean latent mastery, and fluency.
 
 ### 3c. Why the result is credible (de-circularization — the rigor beat) [CITE: stage-d-independent-learner.md:9–27; README.md:79,110]
@@ -76,8 +77,8 @@ Three concrete instances of one pattern [CITE: content-engine mermaid README.md:
 ### 3d. Honest caveats to keep in (don't bury)
 - `num_mastered` (count past hard 0.95 bar) is a **wash / slightly negative** — fixed drill over-concentrates practice; logged in CSV, not headlined. [CITE: README.md:79]
 - Learner constants are reasonable but **uncalibrated**; WCPM is still a deterministic `errors → seconds` function, not an independent timing measurement. [CITE: stage-d doc:54–55]
-- Externally-validated segmenter (other Stage D half): `tests/unit/test_decompose_corpus.py` — 58-word hand-verified truth set + tiling laws over `/usr/share/dict/words`; tiling+reconstruction on **209,743/210,773** words. Two test-pinned known findings: trailing-`e` drop (1,030/210,773 = 0.49%, real bug, pinned <1%) and split-vowel span overlap (representational choice). [CITE: build-plan Stage D:198–224]
-- **267 offline unit tests pass** (`uv run pytest tests/unit`). [CITE: README.md:44 — confirmed Jun 28: README + both skeletons now read 267]
+- Externally-validated segmenter (other Stage D half): `tests/unit/test_decompose_corpus.py` — a hand-verified grapheme truth set + tiling laws over `/usr/share/dict/words`; tiling+reconstruction on **209,743/210,773** words. Two test-pinned known findings: trailing-`e` drop (1,030/210,773 = 0.49%, real bug, pinned <1%) and split-vowel span overlap (representational choice). [CITE: build-plan Stage D:198–224]
+- **The full offline `tests/unit` suite passes** (`uv run pytest tests/unit`). [CITE: README.md:44 — count-free per the Jun 29 test-count policy]
 
 ### 3e. Artifacts + exact regeneration commands
 - Chart: `eval/experiments/results/adaptive_vs_static.png` ✅ git-tracked.
@@ -89,7 +90,7 @@ Three concrete instances of one pattern [CITE: content-engine mermaid README.md:
 ---
 
 ## 4. Status / Roadmap (rough — decide scope Jul 4)
-- Built & verified: closed loop live in web app; de-circularized evidence; illustrated book folded into loop; 267 tests green.
+- Built & verified: closed loop live in web app; de-circularized evidence; illustrated book folded into loop; full offline suite green.
 - NOT live: Cloud Run deployment (path exists, not deployed); never-punish confidence repair is a no-op on the Gemini Live path today (no per-word confidence) — state as known limitation, not a feature.
 - TODO: decide whether to name **D′ (flywheel)** as explicitly planned/deferred (`docs/stage-d-prime-flywheel.md`) here or leave to README roadmap table only.
 

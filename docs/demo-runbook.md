@@ -94,7 +94,7 @@ Show `results/sample_book/page_01.png … page_06.png`. Prefer committed PNGs or
 ---
 
 ### Shot 5 — Close (~0:25)
-Architecture loop + "267 tests green" (skeleton says 260 — **use 267**, the verified count). Narration unchanged.
+Architecture loop + "full offline suite green" (count-free — don't show a specific number; older skeletons say 260/267, both now superseded). Narration unchanged.
 
 ---
 
@@ -126,5 +126,5 @@ Architecture loop + "267 tests green" (skeleton says 260 — **use 267**, the ve
 ---
 
 ## Verification log
-- **Jun 28 — headless WS replay (done).** Replayed prepare→read against a copy of `.phono-demo-data`. Perfect & One-miscue reads advance wh→ck→qu; Struggling holds (wh→wh). One-miscue is the recommended demo read (heatmap + scaffold + advance in one). Seeded profile untouched. Script: `scratchpad/verify_adapt.py`.
+- **Jun 28 — headless WS replay (done).** Replayed prepare→read against a copy of `.phono-demo-data`. Perfect & One-miscue reads advance wh→ck→qu; Struggling holds (wh→wh). One-miscue is the recommended demo read (heatmap + scaffold + advance in one). Seeded profile untouched. Verified via a one-off ad-hoc WS-replay script (not committed — scratch only); to re-verify, replay the preset reads through `scripts/tutor_web` against a *copy* of `.phono-demo-data`.
 - **Remaining (needs a human + a screen):** a full live dry run on the demo machine to confirm the node-pop / glow-travel animation and the Reading→Insight toggle timing are *visually* clean — the headless check proves the data, not the pixels.

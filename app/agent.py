@@ -17,10 +17,11 @@
 # =============================================================================
 
 from __future__ import annotations
+
 import asyncio
-import os
 import json
-from typing import AsyncGenerator
+import os
+from collections.abc import AsyncGenerator
 
 from google.adk.agents import Agent, BaseAgent, LoopAgent, SequentialAgent
 from google.adk.agents.callback_context import CallbackContext
@@ -28,23 +29,21 @@ from google.adk.agents.invocation_context import InvocationContext
 from google.adk.apps import App
 from google.adk.events import Event, EventActions
 from google.adk.models import Gemini
-from google.genai import types
 from google.adk.tools import FunctionTool
 from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+from google.genai import types
 from mcp import StdioServerParameters
 
-from app.schemas import (
-    PhonicsProfile,
-    StoryOutline,
-    StoryDraft,
-    QAFeedback,
-    PageIllustration,
-    StoryIllustrations,
-    ExportResult,
-    ParentReport,
-)
 from app.brand import AGE_BAND_MODIFIERS, ILLUSTRATION_STYLE_PREAMBLE
+from app.schemas import (
+    ParentReport,
+    PhonicsProfile,
+    QAFeedback,
+    StoryDraft,
+    StoryIllustrations,
+    StoryOutline,
+)
 from app.skills.decodability import check_decodability
 
 # Configure Gemini Model options.
@@ -395,6 +394,13 @@ if os.environ.get("INTEGRATION_TEST") == "TRUE" or os.environ.get("PYTEST_CURREN
     ]
 else:
     print("\n--- [Agent Setup] Instantiating real Stdio Google Workspace MCP Toolset ---")
+    # This path is deliberately pinned to 0.7.0 and does NOT use the PATH-first
+    # gws resolver (app/doc_export.gws_base_command): newer gws removed MCP
+    # server mode (the `mcp` subcommand) in 0.8.0
+    # (https://github.com/googleworkspace/cli/pull/275), so only 0.7.0 can serve
+    # this McpToolset. The deterministic one-shot CLI paths (Docs/Drive export +
+    # the Gmail-draft subprocess below) are PATH-first instead, because 0.7.0
+    # 401s on credentials written by a newer gws. Two postures, by necessity.
     gws_mcp = McpToolset(
         connection_params=StdioConnectionParams(
             server_params=StdioServerParameters(
@@ -479,7 +485,7 @@ async def save_export_result(callback_context: CallbackContext) -> types.Content
         "shareable_url": shareable_url
     }
     print(f"\n--- [Export Agent Callback] Saved export_result to state: {callback_context.state['export_result']} ---")
-    
+
     # Export guardrail: Halt the pipeline if the document export failed.
     # Both fields must be valid — a real doc_id with an "unknown" shareable_url
     # is still a failed export, since parent_report_agent embeds shareable_url
@@ -521,10 +527,17 @@ def create_draft(to: list[str], subject: str, body: str) -> dict:
         return {"id": "mock-draft-12345"}
     else:
         print(f"\n[Real Gmail Tool] create_draft called via Workspace CLI: to={to}, subject='{subject}'")
-        import subprocess
-        import json
         import base64
+        import json
+        import subprocess
         from email.mime.text import MIMEText
+
+        # This is a one-shot CLI call (not MCP server mode), so it uses the same
+        # PATH-first gws resolver as the deterministic Docs/Drive export — a
+        # pinned 0.7.0 here would 401 ("decryption failed") against credentials
+        # written by a newer gws. (The McpToolset above must stay pinned to 0.7.0
+        # for the opposite reason: newer gws removed MCP server mode.)
+        from app.doc_export import gws_base_command
 
         try:
             mime_message = MIMEText(body)
@@ -536,8 +549,7 @@ def create_draft(to: list[str], subject: str, body: str) -> dict:
                     "raw": raw_message
                 }
             }
-            cmd = [
-                "npx", "-y", "@googleworkspace/cli@0.7.0",
+            cmd = gws_base_command() + [
                 "gmail", "users", "drafts", "create",
                 "--params", '{"userId": "me"}',
                 "--json", json.dumps(payload)

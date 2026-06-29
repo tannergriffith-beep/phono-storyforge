@@ -58,7 +58,7 @@ Tests updated/added in `tests/unit/test_simulated_learner.py` (logistic emission
 difficulty ordering, no-prereq-gate, forgetting, probe-is-inert) and
 `tests/unit/test_experiment.py` (`test_advantage_emerges_from_a_tied_start`
 replaces the old `test_gap_widens_over_time`, which encoded the circular "gap
-always widens" narrative). Full `tests/unit` suite green (249 passed).
+always widens" narrative). Full `tests/unit` suite green (`uv run pytest tests/unit`).
 
 ---
 

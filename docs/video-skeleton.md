@@ -5,6 +5,11 @@
 > **live web demo first → offline evidence chart for rigor → illustrated book for polish.**
 > Browser-mic voice is the *optional* live beat (needs Gemini Live creds); typed presets are the safe fallback.
 > Target total ≈ 5:00.
+>
+> **Authoritative narration:** [`demo-narration-draft.md`](demo-narration-draft.md) is the source of truth for
+> spoken lines and the locked choreography (Reading Room redesign: LoopRail, MasteryPath, Read/Insight faces,
+> the **wh→ck→qu** adapt chain on the seeded `ada`). This skeleton is the shot/timing scaffold; where the two
+> differ, the narration draft wins.
 
 ---
 
@@ -19,14 +24,15 @@
 
 ## Shot 1 — LIVE web demo: the loop adapting (0:30–2:15, ~1:45) ★ the centerpiece
 
-- **On screen:** `scripts/tutor_web.py` in the browser (`uv run python -m scripts.tutor_web` → http://127.0.0.1:8000). Begin a session for a learner. Read a page (typed/preset input), then:
+- **On screen:** `scripts/tutor_web.py` in the browser (`uv run python -m scripts.tutor_web --data-dir .phono-demo-data` → http://127.0.0.1:8000), Reading Room redesign. Open the seeded `ada` session. The **LoopRail** narrates the six steps (Plan → Generate → Verify → Read → Assess → Adapt), lighting up as each runs. Read a page (typed/preset input), then on the **Insight face**:
   - miscue **heatmap** lights per word as the read is scored,
-  - **mastery bars animate** as BKT updates,
-  - **next-target panel shifts** ("the loop adapted" — e.g. target advances `a` → `e` → `i`).
-  - Do a second read to show the target visibly moving + persistence across the session.
-- **Says (rough):** narrate the loop live — "child reads → every miscue is attributed down to the exact grapheme → mastery updates → tomorrow's target just shifted on screen. This is the real production loop, not a mockup — same `prepare`/`record_read` code the experiment exercises."
-- **Sources:** README Stage C (README.md:42), build-plan Stage C (build-plan.md:173–192), bar-set invariant (every animating bar was already on screen).
-- **⚠ Risk / pre-Jul-4 rehearsal REQUIRED:** must rehearse `scripts/tutor_web.py` end-to-end on the demo machine — confirm heatmap + bar animation + target-shift all fire on a scripted input sequence, and pick the exact learner/interest/preset reads that produce a clean visible `a→e→i` advance. This is the load-bearing shot; do not record cold.
+  - the **"Why this book?"** card shows the planner's rationale (judge-facing receipt),
+  - the **MasteryPath** updates — graphemes as nodes (mastered / current target / in-progress / locked), not animating bars,
+  - the **next-target advances** along the seeded chain: **wh → ck → qu** (each strong read masters the current digraph and advances).
+  - Do a second read to show the target visibly moving along the chain + persistence across the session.
+- **Says (rough):** narrate the loop live — "child reads → every miscue is attributed down to the exact grapheme → mastery updates → the next target just shifted on screen. This is the real production loop, not a mockup — same `prepare`/`record_read` code the experiment exercises." (Final lines: see `demo-narration-draft.md`.)
+- **Sources:** README Stage C (README.md:42), build-plan Stage C (build-plan.md:173–192), `demo-narration-draft.md` (locked choreography), demo-runbook.md (verified wh→ck→qu chain).
+- **⚠ Risk / pre-Jul-4 rehearsal REQUIRED:** must rehearse `scripts/tutor_web.py` end-to-end on the demo machine — confirm LoopRail + heatmap + MasteryPath + target-advance all fire on the seeded `ada` input sequence, and **copy/restore `.phono-demo-data` before each take** so the wh→ck→qu chain doesn't self-mutate. This is the load-bearing shot; do not record cold.
 
 ---
 
@@ -61,7 +67,7 @@
 
 ## Shot 5 — Close (4:35–5:00, ~25s)
 
-- **On screen:** architecture loop diagram (README.md:15–24) or recap card; 267 tests green line.
+- **On screen:** architecture loop diagram (README.md:15–24) or recap card; full offline suite green line.
 - **Says (rough):** "One deterministic loop — plan, generate, listen, attribute, update — wired into a real product, proven by a de-circularized study, and now generating illustrated books in the loop. Built on ADK for Agents for Good."
 - **Source:** README.md:36, 44, 93–102.
 - **Risk:** none.

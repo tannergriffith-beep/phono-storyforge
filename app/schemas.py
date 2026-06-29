@@ -8,8 +8,10 @@
 # =============================================================================
 
 from __future__ import annotations
-from datetime import datetime, timezone
+
+from datetime import UTC, datetime
 from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from app.phonics_db import (
@@ -169,7 +171,7 @@ class ExportResult(BaseModel):
 
 def _utcnow_iso() -> str:
     """Timezone-aware UTC timestamp as an ISO-8601 string (store-friendly)."""
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 class GraphemeMastery(BaseModel):
@@ -227,7 +229,7 @@ class LearnerProfile(BaseModel):
         age: int = 6,
         interest: str = "",
         sight_words: list[str] | None = None,
-    ) -> "LearnerProfile":
+    ) -> LearnerProfile:
         """Creates a fresh profile with every inventory grapheme at its BKT prior."""
         masteries = {
             grapheme: GraphemeMastery(
@@ -443,13 +445,13 @@ class SessionLog(BaseModel):
         *,
         learner_id: str,
         session_index: int,
-        objective: "Objective",
+        objective: Objective,
         book_title: str,
-        assessment: "AssessmentResult",
-        delta: "MasteryDelta",
+        assessment: AssessmentResult,
+        delta: MasteryDelta,
         generation_source: str = "deterministic",
         mean_mastery: float | None = None,
-    ) -> "SessionLog":
+    ) -> SessionLog:
         """Flattens an objective + assessment + mastery delta into a log row."""
         p_before = p_after = None
         for change in delta.changes:

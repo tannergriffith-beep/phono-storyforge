@@ -12,7 +12,7 @@ Parents of dyslexic and struggling readers are told to "read decodable books at 
 
 The spine of the project is one loop, run per child, per session:
 
-```javascript
+```mermaid
 graph LR
     Store[(LearnerProfile<br/>persistent mastery)] --> Plan["select_objective()<br/>ZPD target from BKT"]
     Plan -->|Objective| Gen["generate decodable book"]
@@ -40,14 +40,14 @@ Everything load-bearing here is **deterministic, non-LLM Python** that the proje
 - **Closed-loop tutor — a real, stateful product (Stage A, done).** `app/tutor/TutorSession` runs the full loop above against a persistent `LearnerStore`, exposed through a typed-transcript entry path (`scripts/tutor_cli.py`). Run it twice for a child with strong reads and the target visibly advances (e.g. `a` → `e` → `i`), mastery rises, and everything persists across processes.
 - **Voice read-aloud + verifier-gated LLM books (Stage B, done).** Gemini Live transcribes the child's read-aloud (`app/voice/`, with a `FakeTranscriber` for offline tests) and feeds the *unchanged* `record_read()`; a verifier-gated LLM generator (`app/tutor/llm_book.py`, propose → `check_decodability` → revise) is wired into the loop as an optional content source behind the same `BookProvider` seam (`--llm-book`). Voice is creds-gated and degrades to typed input if Gemini Live is unavailable.
 - **Web read-along + live mastery viz (Stage C, done).** A FastAPI + vanilla-JS app (`app/web/`, launched via `scripts/tutor_web.py`) drives the real loop in the browser over a WebSocket, behind the "Reading Room" redesign: a persistent **LoopRail** narrates the six loop steps (Plan → Generate → Verify → Read → Assess → Adapt), lighting up and checking off as each runs and its guardrail passes; a **"Why this book?"** card surfaces the planner's rationale as a judge-facing receipt; mastery renders as a **MasteryPath** — graphemes as nodes (mastered / current target / in-progress / locked) rather than an animating bar list; and a **Read ⇄ Insight** toggle splits a child-safe reading face (no red, no stats) from an adult/judge-facing insight face (miscue heatmap, mastery path, next-target). Browser-mic voice is layered on additively; the typed path stands alone if voice is flaky.
-- **Decodable-book generation pipeline — implemented and verified end-to-end, and now folded into the live loop.** A multi-stage ADK `SequentialAgent` writes a phonically-decodable story, illustrates it (real generated art, brand-palette-verified), and exports it to Google Docs/Drive with a Gmail parent report. The Docs/Drive and Gmail write paths are verified against real accounts. This pipeline is no longer just a standalone path: the live per-session loop can trigger it directly from the web UI, reusing the same `story_planner`/QA-loop agents and exporting deterministically (`app/doc_export.py`) rather than via the agentic MCP exporter (which stays in `root_agent` for `adk web` and integration tests). The export path's sandbox-path and credential-version bugs are now fixed and verified end-to-end.
-- **What's honestly not done.** A self-improving content flywheel — every real session becomes an eval datapoint, with `check_decodability` as an always-on judge (roadmap item **D′**) — is planned but not built. The de-circularized evidence study (Stage D) is done; see *Evidence*. **267 offline unit tests pass** (`uv run pytest tests/unit`).
+- **Decodable-book generation pipeline — built; deterministic export path live-verified with stubbed images, real-image end-to-end still pending.** A multi-stage ADK `SequentialAgent` writes a phonically-decodable story, illustrates it (real generated art, brand-palette-verified), and exports it to Google Docs/Drive with a Gmail parent report. Receipts: the deterministic Doc/Drive assembly (`app/doc_export.py`, `build_doc_requests`) is unit-tested and was live-export verified against a real Drive/Docs account using **stubbed** images (`PHONO_STUB_IMAGES`); the committed `results/sample_book/` PNGs prove real illustration generation; a full real-image-into-real-Doc run is **still pending**. This pipeline is no longer just a standalone path: the live per-session loop can trigger it directly from the web UI, reusing the same `story_planner`/QA-loop agents and exporting deterministically (`app/doc_export.py`) rather than via the agentic MCP exporter (which stays in `root_agent` for `adk web` and integration tests). The export path's earlier sandbox-path and credential-version bugs are fixed (verified with stubbed images).
+- **What's honestly not done.** A self-improving content flywheel — every real session becomes an eval datapoint, with `check_decodability` as an always-on judge (roadmap item **D′**) — is planned but not built. The de-circularized evidence study (Stage D) is done; see *Evidence*. **The full offline `tests/unit` suite passes** (`uv run pytest tests/unit`).
 
 ## The content engine: verifier-gated decodable-book generation
 
 The illustrated-book pipeline is the "generate decodable book" node of the loop, and it embodies the project's core pattern — **an LLM/image model proposes, deterministic Python verifies**:
 
-```javascript
+```mermaid
 graph TD
     Profile([PhonicsProfile]) --> Planner[Story Planner]
     Planner -->|StoryOutline| Loop
@@ -76,7 +76,7 @@ Run `python -m scripts.build_sample_book` to produce a full illustrated decodabl
 
 Result (n=30, 40 sessions): **probe accuracy +0.06, true mean latent mastery +0.04, +4.9 WCPM**. Fully deterministic and LLM-free, so it reproduces exactly. Chart + CSV under `eval/experiments/results/`.
 
-> **On rigor (Stage D, de-circularized).** Those numbers are from an *independent* learner whose generative process is deliberately **not** what the tutor assumes — so the experiment is no longer self-validating. Two mismatches were introduced (`eval/simulated_learner.py`): (1) **emission** is a logistic/IRT curve with per-grapheme item difficulty, not the linear slip/guess that BKT inverts — the tutor must estimate mastery under a model it cannot represent; (2) **learning has no prerequisite/ZPD gate** (the planner's own thesis) — skills are learned by direct practice and *forget* when unpracticed, so adaptive can only win by revisiting each child's decaying frontier. The gaps roughly halve versus the earlier self-consistent learner (which reported +0.14 / +0.09 / +16) but stay positive, and the accuracy advantage holds across all 12 cells of a forgetting/discrimination sweep (`eval/experiments/robustness_sweep.py`; narrowing to +0.002 at the harshest corner) — a smaller, more credible win. One honest wrinkle: on the count of graphemes pushed past a hard 0.95 mastery bar, adaptive and static are a wash (the fixed drill over-concentrates practice), even though adaptive wins on real reading accuracy, mean mastery, and fluency.
+> **On rigor (Stage D, de-circularized).** Those numbers are from an *independent* learner whose generative process is deliberately **not** what the tutor assumes — so the experiment is no longer self-validating. Two mismatches were introduced (`eval/simulated_learner.py`): (1) **emission** is a logistic/IRT curve with per-grapheme item difficulty, not the linear slip/guess that BKT inverts — the tutor must estimate mastery under a model it cannot represent; (2) **learning has no prerequisite/ZPD gate** (the planner's own thesis) — skills are learned by direct practice and *forget* when unpracticed, so adaptive can only win by revisiting each child's decaying frontier. The gaps roughly halve versus the earlier self-consistent learner but stay positive, and the accuracy advantage holds across all 12 cells of a forgetting/discrimination sweep (`eval/experiments/robustness_sweep.py`; narrowing to +0.002 at the harshest corner) — a smaller, more credible win. One honest wrinkle: on the count of graphemes pushed past a hard 0.95 mastery bar, adaptive and static are a wash (the fixed drill over-concentrates practice), even though adaptive wins on real reading accuracy, mean mastery, and fluency.
 
 ## Roadmap
 
@@ -89,6 +89,17 @@ Result (n=30, 40 sessions): **probe accuracy +0.06, true mean latent mastery +0.
 | **D′** | Self-improving content flywheel (every real session → an eval datapoint)                                                                              | ⬜ Planned |
 
 The voice loop (Stage B) drops in behind the existing `TutorSession.record_read(prepared, spoken)` signature unchanged — `spoken` simply arrives from ASR instead of stdin.
+
+## Documentation map
+
+The deeper write-ups live under [`docs/`](docs/):
+
+| Document | What it covers |
+| --- | --- |
+| [docs/writeup-draft.md](docs/writeup-draft.md) | The capstone write-up — problem, architecture, evidence, and the "Agents for Good" case (draft; final prose locked at submission). |
+| [docs/stage-d-independent-learner.md](docs/stage-d-independent-learner.md) | Stage D evidence and rigor: the de-circularized independent learner (logistic/IRT emission, no ZPD gate, forgetting) and what the adaptive-vs-static gaps do and don't show. |
+| [docs/demo-runbook.md](docs/demo-runbook.md) | The filmable-demo runbook — seeded `ada` profile, the verified wh→ck→qu adapt chain, shot-by-shot choreography and fallbacks. |
+| [docs/build-plan.md](docs/build-plan.md) | The staged build plan (A→D′) and the engineering decisions behind each stage. |
 
 ## Capstone concepts demonstrated
 
@@ -108,12 +119,13 @@ Documented honestly rather than glossed over:
 - **Illustrated-book generation now reaches the live loop, with graceful degradation rather than a hard failure.** The illustrated-book ADK pipeline (Nano Banana art + Docs export) can be triggered directly from the live per-session loop (web UI), not just as a separate standalone path — see *Status* above. It degrades along two independent axes instead of failing outright: if illustration generation is unavailable, the result falls back to text-only pages; if Docs export is unavailable, it falls back to illustrated pages without a shareable Doc link.
 - **Voice is creds-gated and not exercised in CI.** Gemini Live transcription is real (`app/voice`) but requires Live access; without it the web/CLI paths degrade to typed input. The "never-punish" confidence repair is currently a no-op on the live path (Live returns no per-word confidence today) — it only fires in tests via `FakeTranscriber`.
 - **The evidence experiment has been de-circularized (Stage D, both halves done).** Previously the simulated learner and planner shared a ZPD assumption, making the result partly self-validating. Both leaks are now closed: the **segmenter half** — `decompose`/`_segment` (the basis of the "guaranteed decodable" claim) is externally validated against a hand-verified grapheme truth set and structural tiling laws swept over `/usr/share/dict/words` (\~210k words) in `tests/unit/test_decompose_corpus.py`; and the **learner-model half** — the simulated learner now uses a logistic/IRT emission with per-grapheme difficulty (not BKT's linear slip/guess) and learning with no prerequisite gate plus forgetting (not the planner's ZPD thesis), so the tutor faces a genuine model mismatch. Adaptive still beats static on reading accuracy, mean mastery, and fluency (gaps \~halved but positive across all 12 cells of a parameter sweep); it does *not* reliably win the count past a hard 0.95 mastery bar. The remaining honesty caveat: the learner's constants are reasonable but uncalibrated, and WCPM is still a deterministic function of error count, not an independent timing measurement.
-- **gws CLI is pinned to 0.7.0.** Google removed MCP server mode in `0.8.0` ([PR #275](https://github.com/googleworkspace/cli/pull/275)). The pin works today but is a deliberate pin to a version its maintainers moved past.
+- **Two gws postures, by necessity.** The project uses Google's `@googleworkspace/cli` (`gws`) two ways, and they need different versions. (1) The **deterministic export path** (`app/doc_export.py`) is **PATH-first** — it uses whatever `gws` you authenticated (`gws auth login`; e.g. 0.22.5 here), because the old 0.7.0 cannot decrypt credentials written by a newer gws (a 401 "decryption failed"), and falls back to a pinned `npx @googleworkspace/cli@0.7.0` only if no `gws` is on PATH. (2) The **agentic MCP path** (`app/agent.py`, used by `adk web` / integration tests) pins **0.7.0** because Google removed MCP server mode in `0.8.0` ([PR #275](https://github.com/googleworkspace/cli/pull/275)). So the deterministic path follows your installed gws while the MCP path is held at 0.7.0 — a deliberate split, not a single pin.
 - **The eval grading harness has a JSON-parsing bug** unrelated to the agent: when the LLM-judge's `explanation` contains raw newlines, `agents-cli eval grade` fails to parse it. This affects automated eval scoring, not agent behavior — `tests/unit` and `tests/integration` pass cleanly (modulo live-API rate limits).
+- **Deprecated ADK primitives (documented debt).** The generation pipeline uses ADK's `LoopAgent` / `SequentialAgent`, which ADK has deprecated in favor of `Workflow` (they still run — `uv.lock` pins a working ADK and the tests pass — but emit deprecation warnings). Migrating to `Workflow` is deferred, not done.
 
 ## Project Structure
 
-```javascript
+```text
 agy-capstoneproject/
 ├── app/
 │   ├── agent.py            # ADK generation pipeline, guardrail callbacks, MCP wiring
@@ -152,18 +164,51 @@ agy-capstoneproject/
 ## Requirements
 
 - **Python** 3.11–3.13
-- &#x20;— dependency management
+- **[uv](https://docs.astral.sh/uv/)** — dependency management (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - **Node.js / npm** (provides `npx`) — required to run the `gws` MCP server
-- &#x20;— `uv tool install google-agents-cli`
+- **agents-cli** (Google Agents CLI) — `uv tool install google-agents-cli`
 - **Google Cloud SDK** — for `gcloud auth application-default login` (required by `agents-cli eval`)
 - A Google Cloud project with Vertex AI enabled, and a Google AI Studio API key
 
 ## Setup
 
-1. Clone and install:
-2. Create `app/.env`:
-3. Authenticate `gcloud` for eval/ADC:
-4. Set up `gws` credentials for real Docs/Drive/Gmail export (the MCP subprocess only inherits a safe-list of env vars, so credentials must go in the default file location):
+1. **Clone and install.** The base install runs the offline closed-loop tutor and the `tests/unit` suite. Add `--extra eval` for the evidence chart (matplotlib), `--extra web` for the live web demo, and `--extra voice` for server-side mic capture.
+
+   ```bash
+   git clone https://github.com/tannergriffith-beep/phono-storyforge.git
+   cd phono-storyforge
+   uv sync                                   # base
+   uv sync --extra eval --extra web          # + evidence chart + web demo (recommended)
+   # uv sync --extra voice                   # optional: server-side mic capture
+   ```
+
+2. **Create `app/.env`.** Only needed for the LLM/voice/illustration paths — the Stage A/C offline loops run without it.
+
+   ```bash
+   cat > app/.env <<'EOF'
+   # Route the app (incl. Gemini Live voice) through Vertex via gcloud ADC.
+   GOOGLE_GENAI_USE_VERTEXAI=1
+   GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+   GOOGLE_CLOUD_LOCATION=us-central1
+   # Used only when GOOGLE_GENAI_USE_VERTEXAI=0 (AI Studio key path).
+   GOOGLE_API_KEY=your-ai-studio-key
+   LOG_LEVEL=INFO
+   EOF
+   ```
+
+3. **Authenticate `gcloud` for Vertex / eval (ADC).** Required by the LLM, voice, and `agents-cli eval` paths.
+
+   ```bash
+   gcloud auth application-default login
+   gcloud config set project your-gcp-project-id
+   ```
+
+4. **Set up `gws` credentials for real Docs/Drive/Gmail export.** The deterministic export path is PATH-first, so authenticate the `gws` already on your PATH (see *Known Limitations → Two gws postures*). Auth is stored in the default file location (`~/.config/gws`) because the MCP subprocess only inherits a safe-list of env vars.
+
+   ```bash
+   gws auth login            # opens a browser; grants Drive/Docs/Gmail scopes
+   gws auth status           # confirm the active account
+   ```
 
 ## Running it
 

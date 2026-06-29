@@ -29,14 +29,14 @@ from collections import defaultdict
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 
+from app.schemas import AssessmentResult, Miscue
+from app.skills import fluency
 from app.skills.decodability import (
     GraphemeHit,
     clean_word,
     decompose,
     inflectional_suffix,
 )
-from app.skills import fluency
-from app.schemas import AssessmentResult, Miscue
 
 # A self-correction is recognized when the child's discarded first attempt is
 # this surface-similar to the word they then read correctly (difflib ratio).
