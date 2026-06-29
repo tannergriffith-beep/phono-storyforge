@@ -98,7 +98,7 @@ _Cite docs/stage-d-independent-learner.md:9–27 and README.md:79, 110._
 - `num_mastered` (count past hard 0.95 bar) is a **wash / slightly negative** — fixed drill over-concentrates practice; logged in CSV, not headlined. (build-plan Phase 3 note, README.md:79)
 - Learner constants are reasonable but **uncalibrated**; WCPM is still a deterministic `errors → seconds` function, not an independent timing measurement. (stage-d doc:54–55)
 - Externally-validated segmenter (the other Stage D half): `tests/unit/test_decompose_corpus.py` — 58-word hand-verified truth set + tiling laws over `/usr/share/dict/words`; tiling+reconstruction on **209,743/210,773** words. Two test-pinned known findings: trailing-`e` drop (1,030/210,773 = 0.49%, real bug, pinned <1%) and split-vowel span overlap (representational choice). (build-plan Stage D:198–224)
-- **260 offline unit tests pass** (`uv run pytest tests/unit`). (README.md:44)
+- **267 offline unit tests pass** (`uv run pytest tests/unit`). (README.md:44)
 
 ### 3e. Artifacts + exact regeneration commands
 

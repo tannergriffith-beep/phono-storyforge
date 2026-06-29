@@ -61,7 +61,7 @@
 
 ## Shot 5 — Close (4:35–5:00, ~25s)
 
-- **On screen:** architecture loop diagram (README.md:15–24) or recap card; 260 tests green line.
+- **On screen:** architecture loop diagram (README.md:15–24) or recap card; 267 tests green line.
 - **Says (rough):** "One deterministic loop — plan, generate, listen, attribute, update — wired into a real product, proven by a de-circularized study, and now generating illustrated books in the loop. Built on ADK for Agents for Good."
 - **Source:** README.md:36, 44, 93–102.
 - **Risk:** none.

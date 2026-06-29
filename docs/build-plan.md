@@ -1,7 +1,7 @@
 # Build Plan — Closed-Loop Reading Tutor
 
 **Deadline:** Mon **July 6, 2026**. **Internal ship date:** Sat **July 5** (1 day slack).
-**Today:** June 25. **Assumption:** \~full-time solo effort + AI assist. Part-time? See "Compression" at bottom.
+**Today:** June 28. **Assumption:** \~full-time solo effort + AI assist. Part-time? See "Compression" at bottom.
 
 ## Status dashboard
 
@@ -15,9 +15,13 @@
 | Flagship B. Voice read-aloud          | Jun 24    | Gemini Live → transcript; LLM book in the loop | ✅ Done |
 | Flagship C. Web UI + live mastery viz | Jun 24    | The filmable demo (typed + browser-mic voice)  | ✅ Done |
 | Flagship D. De-circularized evidence  | Jun 25    | Independent learner + externally-validated `decompose` | ✅ Done |
+| "Reading Room" UI/UX redesign         | Jun 26–27 | 12-PR identity + design-system overhaul — LoopRail, WhyCard, MasteryPath, Read⇄Insight split (not in the original plan) | ✅ Done |
+| Doc-export bugfix                     | Jun 28    | Sandbox-path + creds-mismatch fix on the illustrated-book Doc export, verified end-to-end | ✅ Done |
 | D′. Self-improving content flywheel   | TBD       | Every real session → eval datapoint            | ⬜      |
 | Writeup + video + final eval          | Jul 4–5   | Submission package                             | ⬜      |
 | Buffer / submit                       | Jul 6     | —                                              | ⬜      |
+
+**Runway as of Jun 28:** 5 engineering days left (Jun 29–Jul 3) before the non-negotiable Jul 4–5 writeup/video window. Writeup and video are both still 0% drafted — see "Jul 4–5" below.
 
 > **Note:** the "Stretch (audio OR thin UI)" row was absorbed into the Flagship redesign below — see that section for the new direction that supersedes the original stretch scope.
 
@@ -26,6 +30,7 @@
 1. **Jul 4–5 for writeup + video is non-negotiable.** Never borrow from it.
 2. **GATE @ Jun 30:** if Phase 3 isn't done, drop Phases 5/stretch and go straight to writeup. Phases 1–3 alone is a winning thesis.
 3. **Skip real audio (4) and full UI (6).** The simulated learner closes the loop; the video narrates over playground + illustrated book + the chart.
+4. **No further redesign/branding/illustration-palette work before the writeup + video exist.** The "Reading Room" redesign already cost ~2 days against the 5 remaining (see Flagship redesign below) — stretch work has eaten into this runway twice now despite this rule existing. `DESIGN_GUIDELINES.md` frames the illustration-palette rework as open/unfinished; that thread stays closed until after Jul 6.
 
 ---
 
@@ -227,6 +232,33 @@ neither touches the experiment, both are now locked by tests so any future fix i
 
 ---
 
+**"Reading Room" UI/UX redesign (Jun 26–27)** ✅ Done — not in the original plan
+A documented 12-PR identity + design-system overhaul (`docs/DESIGN.md`, merged `d1ab921`)
+on top of the Stage-C web UI. Replaces the always-on bar sidebar with a **MasteryPath**
+(graphemes as nodes — mastered / current target / in-progress / locked); adds a
+**LoopRail** that narrates the six loop steps live (Plan→Generate→Verify→Read→Assess→Adapt,
+a judge-facing ADK-architecture beat); a **"Why this book?"** card surfacing the planner's
+rationale as a receipt; and a **Read ⇄ Insight** toggle splitting a child-safe reading face
+from an adult/judge-facing insight face (heatmap + mastery path + next-target). Real a11y
+wins too: a contrast fix and an OpenDyslexic/Lexend reading typeface. Old design system
+archived to `archive/legacy-design/`; `app/brand.py`'s illustration palette is explicitly
+**not** yet reworked (see `DESIGN_GUIDELINES.md` — a separate, still-open thread).
+**Cost:** ~2 days against the 5 remaining before Jul 4. Worth naming plainly — this is
+exactly the kind of stretch/polish work the Hard rules above warn against, and it's the
+second time it's happened (see `docs/stage-d-prime-flywheel.md` for the first). It did
+ship real judge-relevant value (the Insight view especially) — but the line is closed now:
+no further redesign/brand work before the writeup + video exist (Hard rule 4, above).
+
+**Doc-export bugfix (Jun 28)** ✅ Done
+`app/doc_export.py`'s Google Doc export was actually broken: the `gws` CLI's upload-path
+sandbox check rejected the tempfile path the illustrated pages were written to, and the
+pinned `gws` CLI version couldn't decrypt credentials written by a newer `gws`. Fixed (run
+the upload with cwd set to the file's directory; prefer the `gws` binary on PATH over the
+npx pin) and verified end-to-end with stub images — real story generation + real Docs
+export, 267 unit tests pass.
+
+---
+
 ## Jul 3 — Stretch (superseded by Flagship A/B/C above)
 
 Original plan: minimal audio upload→transcript, **or** a thin Streamlit read-along.
@@ -241,10 +273,13 @@ continuous + live-animated and needs a clean browser-audio channel.
 
 - Writeup: problem → architecture → **the evidence result**
 - Record video (\~5 min): lead with the **live web demo** (`scripts/tutor_web.py`) — child
-  reads a page → miscue heatmap lights per word → mastery bars animate as BKT updates →
-  next-target panel shifts ("the loop adapted"); then the offline **evidence chart**
-  (adaptive > static) for rigor, and the illustrated book for polish. Browser-mic voice
-  is the optional live beat (needs Live creds; typed presets are the safe fallback).
+  reads a page → the LoopRail lights through Plan→Generate→Verify→Read→Assess→Adapt →
+  miscue heatmap lights per word → the MasteryPath updates → next-target shifts ("the loop
+  adapted"); then the offline **evidence chart** (adaptive > static) for rigor, and the
+  illustrated book for polish. Browser-mic voice is the optional live beat (needs Live
+  creds; typed presets are the safe fallback). **Rehearse this end-to-end on the
+  redesigned UI before recording** — the UI changed Jun 26–27, so any earlier mental
+  walkthrough of this shot is now out of date.
 - Update README to match the new system; remove stale claims
 - Final eval run + commit artifacts
 - Submit (Jul 5; Jul 6 = buffer)
