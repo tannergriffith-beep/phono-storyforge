@@ -1,0 +1,588 @@
+{
+  "learner_id": "ada",
+  "name": "Ada",
+  "age": 6,
+  "interest": "dinosaurs",
+  "sight_words": [],
+  "masteries": {
+    "a": {
+      "grapheme": "a",
+      "level": "short_vowels",
+      "p_mastery": 1.0,
+      "opportunities": 222,
+      "correct": 131,
+      "last_seen_session": 17
+    },
+    "e": {
+      "grapheme": "e",
+      "level": "short_vowels",
+      "p_mastery": 0.9999999999905494,
+      "opportunities": 15,
+      "correct": 15,
+      "last_seen_session": 17
+    },
+    "i": {
+      "grapheme": "i",
+      "level": "short_vowels",
+      "p_mastery": 1.0,
+      "opportunities": 22,
+      "correct": 22,
+      "last_seen_session": 17
+    },
+    "o": {
+      "grapheme": "o",
+      "level": "short_vowels",
+      "p_mastery": 0.9999983160883161,
+      "opportunities": 8,
+      "correct": 8,
+      "last_seen_session": 11
+    },
+    "u": {
+      "grapheme": "u",
+      "level": "short_vowels",
+      "p_mastery": 0.9999999983179848,
+      "opportunities": 12,
+      "correct": 12,
+      "last_seen_session": 17
+    },
+    "b": {
+      "grapheme": "b",
+      "level": "short_vowels",
+      "p_mastery": 0.9999999999999971,
+      "opportunities": 42,
+      "correct": 20,
+      "last_seen_session": 17
+    },
+    "c": {
+      "grapheme": "c",
+      "level": "short_vowels",
+      "p_mastery": 0.9999839810821031,
+      "opportunities": 23,
+      "correct": 7,
+      "last_seen_session": 15
+    },
+    "d": {
+      "grapheme": "d",
+      "level": "short_vowels",
+      "p_mastery": 1.0,
+      "opportunities": 88,
+      "correct": 46,
+      "last_seen_session": 17
+    },
+    "f": {
+      "grapheme": "f",
+      "level": "short_vowels",
+      "p_mastery": 0.9999971521575916,
+      "opportunities": 16,
+      "correct": 8,
+      "last_seen_session": 14
+    },
+    "g": {
+      "grapheme": "g",
+      "level": "short_vowels",
+      "p_mastery": 1.0,
+      "opportunities": 69,
+      "correct": 60,
+      "last_seen_session": 17
+    },
+    "h": {
+      "grapheme": "h",
+      "level": "short_vowels",
+      "p_mastery": 0.9999999999999999,
+      "opportunities": 27,
+      "correct": 22,
+      "last_seen_session": 17
+    },
+    "j": {
+      "grapheme": "j",
+      "level": "short_vowels",
+      "p_mastery": 0.9999999983179848,
+      "opportunities": 12,
+      "correct": 12,
+      "last_seen_session": 17
+    },
+    "k": {
+      "grapheme": "k",
+      "level": "short_vowels",
+      "p_mastery": 0.9999905280665591,
+      "opportunities": 7,
+      "correct": 7,
+      "last_seen_session": 12
+    },
+    "l": {
+      "grapheme": "l",
+      "level": "short_vowels",
+      "p_mastery": 0.9983168683155232,
+      "opportunities": 4,
+      "correct": 4,
+      "last_seen_session": 8
+    },
+    "m": {
+      "grapheme": "m",
+      "level": "short_vowels",
+      "p_mastery": 1.0,
+      "opportunities": 54,
+      "correct": 40,
+      "last_seen_session": 17
+    },
+    "n": {
+      "grapheme": "n",
+      "level": "short_vowels",
+      "p_mastery": 0.9999999999999994,
+      "opportunities": 23,
+      "correct": 21,
+      "last_seen_session": 17
+    },
+    "p": {
+      "grapheme": "p",
+      "level": "short_vowels",
+      "p_mastery": 0.9999999099938596,
+      "opportunities": 24,
+      "correct": 10,
+      "last_seen_session": 17
+    },
+    "r": {
+      "grapheme": "r",
+      "level": "short_vowels",
+      "p_mastery": 0.9999999999999102,
+      "opportunities": 23,
+      "correct": 18,
+      "last_seen_session": 17
+    },
+    "s": {
+      "grapheme": "s",
+      "level": "short_vowels",
+      "p_mastery": 0.9999971521568948,
+      "opportunities": 19,
+      "correct": 8,
+      "last_seen_session": 17
+    },
+    "t": {
+      "grapheme": "t",
+      "level": "short_vowels",
+      "p_mastery": 1.0,
+      "opportunities": 70,
+      "correct": 37,
+      "last_seen_session": 16
+    },
+    "v": {
+      "grapheme": "v",
+      "level": "short_vowels",
+      "p_mastery": 0.9999467225821953,
+      "opportunities": 6,
+      "correct": 6,
+      "last_seen_session": 13
+    },
+    "w": {
+      "grapheme": "w",
+      "level": "short_vowels",
+      "p_mastery": 0.9999999999188588,
+      "opportunities": 15,
+      "correct": 14,
+      "last_seen_session": 17
+    },
+    "x": {
+      "grapheme": "x",
+      "level": "short_vowels",
+      "p_mastery": 0.9906015913471382,
+      "opportunities": 3,
+      "correct": 3,
+      "last_seen_session": 9
+    },
+    "z": {
+      "grapheme": "z",
+      "level": "short_vowels",
+      "p_mastery": 0.9999905280665591,
+      "opportunities": 7,
+      "correct": 7,
+      "last_seen_session": 14
+    },
+    "sh": {
+      "grapheme": "sh",
+      "level": "digraphs",
+      "p_mastery": 0.9998787118920943,
+      "opportunities": 6,
+      "correct": 6,
+      "last_seen_session": 15
+    },
+    "ch": {
+      "grapheme": "ch",
+      "level": "digraphs",
+      "p_mastery": 0.9998787118920943,
+      "opportunities": 6,
+      "correct": 6,
+      "last_seen_session": 16
+    },
+    "th": {
+      "grapheme": "th",
+      "level": "digraphs",
+      "p_mastery": 0.9998787118920943,
+      "opportunities": 6,
+      "correct": 6,
+      "last_seen_session": 17
+    },
+    "wh": {
+      "grapheme": "wh",
+      "level": "digraphs",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ck": {
+      "grapheme": "ck",
+      "level": "digraphs",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ng": {
+      "grapheme": "ng",
+      "level": "digraphs",
+      "p_mastery": 1.0,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ph": {
+      "grapheme": "ph",
+      "level": "digraphs",
+      "p_mastery": 1.0,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "qu": {
+      "grapheme": "qu",
+      "level": "digraphs",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "_blend_": {
+      "grapheme": "_blend_",
+      "level": "blends",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "a_e": {
+      "grapheme": "a_e",
+      "level": "silent_e",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "e_e": {
+      "grapheme": "e_e",
+      "level": "silent_e",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "i_e": {
+      "grapheme": "i_e",
+      "level": "silent_e",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "o_e": {
+      "grapheme": "o_e",
+      "level": "silent_e",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "u_e": {
+      "grapheme": "u_e",
+      "level": "silent_e",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ar": {
+      "grapheme": "ar",
+      "level": "r_controlled",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "er": {
+      "grapheme": "er",
+      "level": "r_controlled",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ir": {
+      "grapheme": "ir",
+      "level": "r_controlled",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "or": {
+      "grapheme": "or",
+      "level": "r_controlled",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ur": {
+      "grapheme": "ur",
+      "level": "r_controlled",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ai": {
+      "grapheme": "ai",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ay": {
+      "grapheme": "ay",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ee": {
+      "grapheme": "ee",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ea": {
+      "grapheme": "ea",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "oa": {
+      "grapheme": "oa",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "oe": {
+      "grapheme": "oe",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ie": {
+      "grapheme": "ie",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "igh": {
+      "grapheme": "igh",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "oo": {
+      "grapheme": "oo",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ou": {
+      "grapheme": "ou",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ow": {
+      "grapheme": "ow",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "oi": {
+      "grapheme": "oi",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "oy": {
+      "grapheme": "oy",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "au": {
+      "grapheme": "au",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "aw": {
+      "grapheme": "aw",
+      "level": "vowel_teams",
+      "p_mastery": 0.15,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "all": {
+      "grapheme": "all",
+      "level": "glued_sounds",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ang": {
+      "grapheme": "ang",
+      "level": "glued_sounds",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ing": {
+      "grapheme": "ing",
+      "level": "glued_sounds",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ong": {
+      "grapheme": "ong",
+      "level": "glued_sounds",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ung": {
+      "grapheme": "ung",
+      "level": "glued_sounds",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ank": {
+      "grapheme": "ank",
+      "level": "glued_sounds",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "ink": {
+      "grapheme": "ink",
+      "level": "glued_sounds",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "onk": {
+      "grapheme": "onk",
+      "level": "glued_sounds",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "unk": {
+      "grapheme": "unk",
+      "level": "glued_sounds",
+      "p_mastery": 0.25,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "y": {
+      "grapheme": "y",
+      "level": "y_vowel",
+      "p_mastery": 0.9999992109133149,
+      "opportunities": 8,
+      "correct": 8,
+      "last_seen_session": 17
+    },
+    "-s": {
+      "grapheme": "-s",
+      "level": "suffixes",
+      "p_mastery": 0.6599999999999999,
+      "opportunities": 1,
+      "correct": 1,
+      "last_seen_session": 17
+    },
+    "-es": {
+      "grapheme": "-es",
+      "level": "suffixes",
+      "p_mastery": 0.9327906976744185,
+      "opportunities": 2,
+      "correct": 2,
+      "last_seen_session": 15
+    },
+    "-ed": {
+      "grapheme": "-ed",
+      "level": "suffixes",
+      "p_mastery": 0.2,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    },
+    "-ing": {
+      "grapheme": "-ing",
+      "level": "suffixes",
+      "p_mastery": 0.2,
+      "opportunities": 0,
+      "correct": 0,
+      "last_seen_session": null
+    }
+  },
+  "sessions_completed": 18,
+  "created_at": "2026-06-26T05:00:26.431554+00:00",
+  "updated_at": "2026-06-26T05:04:05.905268+00:00"
+}
