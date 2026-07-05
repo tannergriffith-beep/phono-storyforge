@@ -27,15 +27,29 @@ The "Reading Room" rebrand (Jun 27) changed exactly the things Shot 1 depends on
 
 ```bash
 cd /Users/tannergriffith/Projects/agy/agy-capstoneproject
-# Use the pre-seeded demo profile so the shelf/history isn't empty and the adapt is legible.
-# NOTE: confirm which data-dir the seeded "ada" lives in (.phono-demo-data) and point at it:
+# Use the pre-seeded demo profile (confirmed: seeded "ada" lives in .phono-demo-data):
 uv run python -m scripts.tutor_web --data-dir .phono-demo-data --port 8000
 ```
 
-- Open **http://127.0.0.1:8000/?loop**  ← the `?loop` flag shows the ADK loop rail for the architecture beat.
+- **RESTORE THE SEED before EVERY take (verified Jul 5: a live take mutates it):** each session
+  rewrites `profiles/ada.json` and appends to the session log, so take 2 would open on **ck**, not
+  **wh**, desyncing the narration. The seed is git-tracked — between takes run:
+  ```bash
+  git restore .phono-demo-data
+  ```
+- **SEED THE BROWSER once per browser profile (verified Jul 5):** the "Read with Ada →"
+  returning-reader card is gated on `localStorage["phono.learner"]`, which the on-disk seed never
+  writes — on a fresh profile/incognito you get the cold-start card instead. Either do one
+  throwaway onboard typing **Ada** / K–2 / dinosaurs (`slug("Ada") = ada`, so it loads the full
+  seeded profile *with* populated shelf — the "fresh onboard = empty shelf" caveat does NOT apply
+  to the name Ada), or paste in DevTools and reload:
+  ```js
+  localStorage.setItem('phono.learner', JSON.stringify({id:'ada',name:'Ada',age:6,interest:'dinosaurs',onboarded:true}))
+  ```
+- Open **http://127.0.0.1:8000/?loop**  ← the `?loop` flag shows the ADK loop rail for the architecture beat. (`?loop` is the ONLY URL flag — there is no `?demo`; don't improvise one.)
 - Browser zoom so reading words + mastery path are both legible at recording resolution.
 - **Pre-expand** the operator controls `<details>` if you're scoring via preset, so there's no fumble on camera. (Decide: preset path vs. live mic — see Shot 2 decision.)
-- Confirm the seeded **`ada`** profile loads (returning-reader path) OR plan to onboard fresh (cold-start path) — pick ONE and rehearse it. Returning-reader = faster, shelf already populated; fresh onboard = shows the warm onboarding flow but empty shelf.
+- Confirm the seeded **`ada`** profile loads (returning-reader path) OR plan to onboard fresh (cold-start path) — pick ONE and rehearse it.
 - Window-manage: hide bookmarks bar, notifications off, mic permission pre-granted.
 
 ✅ **VERIFIED Jun 28 (headless WS replay against a copy of `.phono-demo-data`):** the seeded `ada` advances on every strong read. Known-good target chain: **wh → ck → qu** (each read masters the current digraph and advances). The seeded profile was NOT mutated by this check.
@@ -79,6 +93,10 @@ Static title card / narration only. No UI. (Unchanged from skeleton.)
 
 - Click **"🎤 Read aloud"**, speak the page, transcript drives the same loop.
 - ⚠ **Decision before recording:** test Gemini Live creds on the demo machine. If flaky → CUT, stay on presets (explicitly fine). Don't discover this mid-take.
+- ⚠ **Failure mode if Live creds are dead (verified Jul 5):** the UI does NOT error — it hangs on
+  "transcribing…" indefinitely and **wedges the whole WebSocket**, so even the typed presets on
+  that page stop responding. Recovery = **reload the page** (state persists on disk). If the mic
+  test wasn't green immediately before recording, do not click 🎤 at all.
 - Don't claim never-punish confidence repair "fires live" — it's a no-op on the Live path (no per-word confidence).
 
 ---
@@ -103,10 +121,11 @@ Architecture loop + "full offline suite green" (count-free — don't show a spec
 | If this fails | Recover by |
 |---|---|
 | Voice/Gemini Live dead | Stay on typed presets — it's the documented fallback; don't apologize, just narrate "typed here for reproducibility" |
+| 🎤 stuck on "transcribing…" (creds dead → socket wedged) | **Reload the page** — typed presets on the wedged page won't respond; disk state persists, so you resume where you were |
 | Adapt animation doesn't visibly move the target | Cut to the **Shelf/Journey** timeline (🏷 Shelf) — sound-by-sound shift + growth line is an alternate adaptation proof across sessions |
 | `?loop` rail clutters / distracts | Reload without `?loop`; the human Session Arc carries the narrative |
 | DegradeBanner appears (quota/connection) | If filming graceful-degradation is intentional, narrate it; otherwise reload and re-take |
-| Server hiccup mid-take | App reboots in ~3s; keep `--data-dir .phono-demo-data` so state persists |
+| Server hiccup mid-take | App reboots in ~3s; keep `--data-dir .phono-demo-data` so state persists **mid-take** (but `git restore .phono-demo-data` **between** takes — see pre-flight) |
 | Illustrated book live Doc stalls | Fall back to committed page PNGs / pre-captured Doc recording |
 
 ---

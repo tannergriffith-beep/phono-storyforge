@@ -128,7 +128,7 @@ the whole evidence narrative needs rewriting. Therefore:
 - Treat a *flat/negative* result as **information, not failure** — but only adopt it
   if there's time to re-chart, re-validate, and rewrite the writeup. Two weeks out is
   fine; three days out is not.
-- Re-run the full `n=30` experiment + regenerate `results/adaptive_vs_static.png`
+- Re-run the full `n=30` experiment + regenerate `eval/experiments/results/adaptive_vs_static.png`
   and the CSV before believing anything.
 
 ## Done-when
@@ -153,4 +153,4 @@ not a gate** — the video + writeup come first.
 - [`app/skills/mastery.py`](../app/skills/mastery.py) — BKT (don't change; this is the thing being tested)
 - [`eval/loop.py`](../eval/loop.py) — closed loop + WCPM fabrication
 - [`eval/experiments/adaptive_vs_static.py`](../eval/experiments/adaptive_vs_static.py) — the experiment to re-run
-- `results/adaptive_vs_static.{png,csv}` — artifacts to regenerate
+- `eval/experiments/results/adaptive_vs_static.{png,csv}` — artifacts to regenerate

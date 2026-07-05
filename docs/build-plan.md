@@ -16,7 +16,7 @@
 | Flagship C. Web UI + live mastery viz | Jun 24    | The filmable demo (typed + browser-mic voice)  | ✅ Done |
 | Flagship D. De-circularized evidence  | Jun 25    | Independent learner + externally-validated `decompose` | ✅ Done |
 | "Reading Room" UI/UX redesign         | Jun 26–27 | 12-PR identity + design-system overhaul — LoopRail, WhyCard, MasteryPath, Read⇄Insight split (not in the original plan) | ✅ Done |
-| Doc-export bugfix                     | Jun 28    | Sandbox-path + creds-mismatch fix on the illustrated-book Doc export, verified end-to-end | ✅ Done |
+| Doc-export bugfix                     | Jun 28    | Sandbox-path + creds-mismatch fix on the illustrated-book Doc export, verified end-to-end with stub images | ✅ Done |
 | D′. Self-improving content flywheel   | TBD       | Every real session → eval datapoint            | ⬜      |
 | Writeup + video + final eval          | Jul 4–5   | Submission package                             | ⬜      |
 | Buffer / submit                       | Jul 6     | —                                              | ⬜      |
@@ -95,7 +95,7 @@ The keystone. Everything depends on word→grapheme mapping.
 **Day 7 (Jun 30) — GATE** ✅
 
 - `eval/experiments/adaptive_vs_static.py`: adaptive (planner) vs static control over N paired learners; tracks TRUE mastery + a FIXED benchmark probe (fair accuracy/WCPM)
-- Evidence chart (`results/adaptive_vs_static.png`) + CSV fallback (`results/adaptive_vs_static.csv`) — 5 unit tests
+- Evidence chart (`eval/experiments/results/adaptive_vs_static.png`) + CSV fallback (`eval/experiments/results/adaptive_vs_static.csv`) — 5 unit tests
 
 **Done when:** chart proves adaptive > static. ✅ — n=30 (de-circularized learner, Stage D): probe accuracy +0.06, true mean mastery +0.04, WCPM +4.9. **This is the minimum winning submission.** (The earlier self-consistent learner reported +0.14 / +0.09 / +16; de-circularizing roughly halved the gaps but kept them positive across all 12 cells of a forgetting/discrimination sweep — a more credible win.)
 **Note:** headline metrics are the fixed-probe reading accuracy/WCPM and true mean latent mastery (all robustly adaptive). `num_mastered` (count past a hard 0.95 bar) is breadth-vs-depth ambiguous — under forgetting the fixed drill over-concentrates and ties/edges adaptive — so it's logged in the CSV but not headlined.
@@ -233,7 +233,7 @@ neither touches the experiment, both are now locked by tests so any future fix i
 ---
 
 **"Reading Room" UI/UX redesign (Jun 26–27)** ✅ Done — not in the original plan
-A documented 12-PR identity + design-system overhaul (`docs/DESIGN.md`, merged `d1ab921`)
+A documented 12-PR identity + design-system overhaul (`archive/legacy-design/DESIGN.md`, merged `d1ab921`)
 on top of the Stage-C web UI. Replaces the always-on bar sidebar with a **MasteryPath**
 (graphemes as nodes — mastered / current target / in-progress / locked); adds a
 **LoopRail** that narrates the six loop steps live (Plan→Generate→Verify→Read→Assess→Adapt,

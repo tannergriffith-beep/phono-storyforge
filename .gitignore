@@ -206,3 +206,6 @@ tools/a2a-inspector/
 # Local debug scripts and regenerable eval run dumps (not part of the deliverable)
 /scratch/
 /artifacts/
+
+# Internal readiness-audit orchestrators + reports (not part of the deliverable)
+/orchestrators/
