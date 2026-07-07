@@ -1,12 +1,12 @@
 # YouTube video description
 
 > **Status: DRAFT.** Chapter timestamps are **PROVISIONAL** — they mirror the shot
-> list in `demo-narration-draft.md` (the authoritative narration) and must be
+> list in `archive/submission-prep/demo-narration-draft.md` (the authoritative narration) and must be
 > re-stamped against the final recording before publishing. Fill the two
 > back-links once the repo is public and the Kaggle write-up URL exists.
 > Numbers are count-free per the Jun 29 test-count policy; evidence figures and
-> the adapt chain are copied from `demo-narration-draft.md`, never the stale
-> `video-skeleton.md`.
+> the adapt chain are copied from `archive/submission-prep/demo-narration-draft.md`, never the stale
+> `archive/submission-prep/video-skeleton.md`.
 
 ---
 

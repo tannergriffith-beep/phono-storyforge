@@ -55,8 +55,8 @@ app: FastAPI = get_fast_api_app(
     session_service_uri=session_service_uri,
     otel_to_cloud=(os.environ.get("INTEGRATION_TEST") != "TRUE"),
 )
-app.title = "agy-capstoneproject"
-app.description = "API for interacting with the Agent agy-capstoneproject"
+app.title = "phono-storyforge"
+app.description = "API for interacting with the Agent phono-storyforge"
 
 
 @app.post("/feedback")

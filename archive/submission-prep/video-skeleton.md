@@ -3,7 +3,7 @@
 > **Skeleton only.** Shot list + rough spoken beats + durations. Final narration is written/recorded in
 > the Jul 4–5 window. Order follows build-plan.md "Jul 4–5" (build-plan.md:242–244):
 > **live web demo first → offline evidence chart for rigor → illustrated book for polish.**
-> Browser-mic voice is the *optional* live beat (needs Gemini Live creds); typed presets are the safe fallback.
+> The browser-mic voice beat (Shot 2) was **CUT on Jul 5** — typed presets are the recorded path.
 > Target total ≈ 5:00.
 >
 > **Authoritative narration:** [`demo-narration-draft.md`](demo-narration-draft.md) is the source of truth for
@@ -15,7 +15,7 @@
 
 ## Shot 0 — Cold open / problem (0:00–0:30, ~30s)
 
-- **On screen:** title card (Phono StoryForge) → one line of the problem; optionally a generic/scarce decodable-book stock image.
+- **On screen:** title card (StoryForge · by Phono) + one problem line — asset committed at `artifacts/media/title-card.png` (source: `title-card.html`).
 - **Says (rough):** "Struggling and dyslexic readers are told to read decodable books at their level — but those books are scarce and generic, and nothing watches what the child *misreads* to pick what to practice next. Phono StoryForge closes that loop."
 - **Source for claim:** README "The Problem" (README.md:7–9).
 - **Risk:** none (static).
@@ -36,12 +36,12 @@
 
 ---
 
-## Shot 2 — (OPTIONAL) browser-mic voice beat (insert within Shot 1, ~20–25s)
+## Shot 2 — CUT (was: browser-mic voice beat)
 
-- **On screen:** click the 🎤 in the web UI, speak a page aloud, transcript drives the same loop.
-- **Says (rough):** "And the child can just *read aloud* — browser mic streams to Gemini Live, the transcript feeds the exact same loop."
-- **Source:** build-plan Stage C step 2 (build-plan.md:185–189), README.md:42.
-- **⚠ Risk / conditional:** depends on **Gemini Live creds working on the demo machine** at record time. If creds/Live are flaky, CUT this shot and stay on typed presets (the fallback is explicitly fine — README.md:42, build-plan.md:244). Decision must be made *before* recording, not mid-take. Also note: "never-punish" confidence repair is a no-op on the live path today (Live returns no per-word confidence) — don't claim it fires live. (README.md:109)
+- **Decided Jul 5: this shot is OUT.** Gemini Live unverified on the demo machine; dead creds
+  hang on "transcribing…" and wedge the WebSocket (see `demo-runbook.md` Shot 2). Typed presets
+  are the recorded path — explicitly fine per README.md:42, build-plan.md:244. Do not click 🎤
+  on camera. Shot numbering 3–5 kept unchanged.
 
 ---
 
@@ -80,19 +80,19 @@
 |---|---|---|---|
 | 0 | Problem cold open | 0:30 | 0:30 |
 | 1 | Live web demo (centerpiece) | 1:45 | 2:15 |
-| 2 | (optional) voice — folded into 1 | ~0:20 | (within 1) |
+| 2 | CUT (was voice) | — | — |
 | 3 | Evidence chart + rigor | 1:30 | 3:45 |
 | 4 | Illustrated book | 0:50 | 4:35 |
 | 5 | Close | 0:25 | 5:00 |
 
-≈ **5:00** with voice cut; if voice beat (Shot 2) is included, trim ~20s from Shot 1's second-read or Shot 4.
+≈ **5:00** (Shot 2 / voice CUT Jul 5 — no trim trade-off needed).
 
 ---
 
 ## Pre-record checklist (do before Jul 4)
 
 - ⚠ **Rehearse `scripts/tutor_web.py` end-to-end** — scripted input sequence that produces a clean visible target advance + bar animation (Shot 1 is load-bearing).
-- ⚠ **Decide voice in/out** — test Gemini Live creds on the demo machine; if flaky, commit to typed presets and cut Shot 2 before recording (build-plan.md:244).
+- [x] **Voice decided OUT (Jul 5)** — Shot 2 cut; typed presets committed as the recorded path (build-plan.md:244).
 - ⚠ **Confirm chart PNG is the de-circularized re-run** (re-run the regen command, eyeball headline numbers).
-- TODO: capture a fallback **screen-recording of the Google Doc** (Shot 4) so the demo doesn't depend on live `gws` at record time.
-- TODO: pick the demo learner/interest/age + preset reads in advance so the on-screen story is decodable and the adapt is legible.
+- [ ] Capture a fallback **screen-recording of the Google Doc** (Shot 4) so the demo doesn't depend on live `gws` at record time. (Committed page PNGs are the approved fallback if this isn't captured.)
+- [x] Demo learner/interest/age + preset reads picked (Jul 5): seeded **ada** / K–2 / dinosaurs, preset **"One miscue"**, verified chain **wh→ck→qu** (`demo-runbook.md`).

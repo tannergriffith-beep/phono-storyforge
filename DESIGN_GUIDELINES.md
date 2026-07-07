@@ -13,16 +13,16 @@ If you are about to design, theme, brand, or restyle this product, read this fir
 
 | You need… | Authoritative source | Notes |
 |---|---|---|
-| **Customer, product, business, goals, constraints** | `design-context/` | Start with `design-context/design-brief.md`, then `01`–`08`. Deliberately contains **no** prior visual identity. This is the starting point for the redesign. |
+| **Customer, product, business, goals, constraints** | `archive/rebrand-engagement/design-context/` | Start with `design-context/design-brief.md`, then `01`–`08`. Deliberately contains **no** prior visual identity. This is the starting point for the redesign. |
 | **What the product does (functionality)** | The application code (`app/`, `eval/`, `scripts/`) and `README.md` | The code is the source of truth for behavior, workflows, and architecture — independent of how it looks. |
-| **Accessibility requirements** | `design-context/07-design-constraints.md` | Functional, non-negotiable: legibility, read-aloud/audio support, no shame-inducing feedback, progress by effort not accuracy, low cognitive load. Validate against WCAG. These are requirements, not aesthetics — honor them in any design. |
+| **Accessibility requirements** | `archive/rebrand-engagement/design-context/07-design-constraints.md` | Functional, non-negotiable: legibility, read-aloud/audio support, no shame-inducing feedback, progress by effort not accuracy, low cognitive load. Validate against WCAG. These are requirements, not aesthetics — honor them in any design. |
 | **The previous visual identity (reference only)** | `archive/legacy-design/` | Historical. **Do not use as a design input.** See its `ARCHIVE.md`. |
 
 ---
 
 ## Ground rules for redesign work
 
-1. **Begin from product strategy, not previous visuals.** Design from `design-context/`.
+1. **Begin from product strategy, not previous visuals.** Design from `archive/rebrand-engagement/design-context/`.
    Do not open `archive/legacy-design/` to "see what we had" — that re-anchors the new
    identity to the old one and defeats the reboot.
 
@@ -60,12 +60,12 @@ If you are about to design, theme, brand, or restyle this product, read this fir
 
 ## For AI agents specifically
 
-- Your design starting context is `design-context/` + this file. Do **not** read
+- Your design starting context is `archive/rebrand-engagement/design-context/` + this file. Do **not** read
   `archive/legacy-design/**` as inspiration or precedent.
 - When a task touches both function and look (e.g. "restyle the reading view"), preserve the
   behavior the code already implements and the accessibility constraints; change only the
   visual layer.
 - If you are unsure whether something is product strategy or visual implementation, treat
   the **strategy** as authoritative and the **visual implementation** as replaceable.
-- See `repository-design-audit.md` (repo root) for the full inventory of where visual
-  identity lives and how each item was dispositioned.
+- See `archive/rebrand-engagement/repository-design-audit.md` for the full inventory of
+  where visual identity lives and how each item was dispositioned.

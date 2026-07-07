@@ -18,7 +18,7 @@ The "Reading Room" rebrand (Jun 27) changed exactly the things Shot 1 depends on
 | heatmap lights per word, on screen | Heatmap lives in the **Insight face only**; child sees a clean celebration | Must tap **"For grown-ups"** to reveal the heatmap on camera |
 | presets visible | Presets collapsed inside `<details>` "⌨ Type or use a preset" | Must **expand it once** before scoring (or pre-expand off-camera) |
 | loop rail (Plan→…→Adapt) visible | Hidden unless `?loop` URL flag or `localStorage.phono.devLoop=1` | For the ADK-loop visual, **open with `?loop`** |
-| mic "🎤" | Button reads "🎤 Read aloud" | cosmetic only |
+| mic "🎤" | Button reads "🎤 Read aloud" | cosmetic only — voice shot is CUT; never click it on camera |
 | — | New: **Session Arc** (Tonight's story → Read together → How it went → What's next), **Why card**, **Shelf/Journey** timeline | new assets you can show; not breaking |
 
 ---
@@ -26,7 +26,7 @@ The "Reading Room" rebrand (Jun 27) changed exactly the things Shot 1 depends on
 ## Pre-flight (do once, off camera, before every take)
 
 ```bash
-cd /Users/tannergriffith/Projects/agy/agy-capstoneproject
+cd /path/to/phono-storyforge
 # Use the pre-seeded demo profile (confirmed: seeded "ada" lives in .phono-demo-data):
 uv run python -m scripts.tutor_web --data-dir .phono-demo-data --port 8000
 ```
@@ -46,11 +46,19 @@ uv run python -m scripts.tutor_web --data-dir .phono-demo-data --port 8000
   ```js
   localStorage.setItem('phono.learner', JSON.stringify({id:'ada',name:'Ada',age:6,interest:'dinosaurs',onboarded:true}))
   ```
-- Open **http://127.0.0.1:8000/?loop**  ← the `?loop` flag shows the ADK loop rail for the architecture beat. (`?loop` is the ONLY URL flag — there is no `?demo`; don't improvise one.)
-- Browser zoom so reading words + mastery path are both legible at recording resolution.
-- **Pre-expand** the operator controls `<details>` if you're scoring via preset, so there's no fumble on camera. (Decide: preset path vs. live mic — see Shot 2 decision.)
+- Open **http://127.0.0.1:8000/?loop&demo**  ← `loop` shows the ADK loop rail for the architecture beat; `demo` slows the adapt pop/glow ~1.5× so the camera catches each frame (verified Jul 5: `adaptBeat.js:95`). These are the only two URL flags.
+- **Motion check (verified Jul 5 — recording trap):** the adapt beat honors OS *Reduce Motion*
+  AND the in-app Calm toggle (`motionReduced()` zeroes every delay). Confirm macOS
+  System Settings → Accessibility → Display → **Reduce Motion is OFF** and the app's Calm mode
+  is OFF, or the pop/glow payoff will not animate on camera.
+- Browser zoom **110–125%** (verified via 1920×1080 headless capture Jul 5: at 100% the
+  loop-rail sub-labels and topbar growth caption are illegible on video; the six step names are
+  fine). Check reading words + mastery path both fit after zooming.
+- ⚠ **The mastered-node "pop" is subtle** (scale 1.06 over 0.7s) — `?demo` slows it 1.5× and
+  zoom helps, but treat the **glow travel + adapt caption** as the narratable payoff, not the pop.
+- **Pre-expand** the operator controls `<details>` — scoring is via preset (voice shot CUT, see Shot 2), so there's no fumble on camera.
 - Confirm the seeded **`ada`** profile loads (returning-reader path) OR plan to onboard fresh (cold-start path) — pick ONE and rehearse it.
-- Window-manage: hide bookmarks bar, notifications off, mic permission pre-granted.
+- Window-manage: hide bookmarks bar, notifications off. (No mic needed — voice shot is CUT.)
 
 ✅ **VERIFIED Jun 28 (headless WS replay against a copy of `.phono-demo-data`):** the seeded `ada` advances on every strong read. Known-good target chain: **wh → ck → qu** (each read masters the current digraph and advances). The seeded profile was NOT mutated by this check.
 
@@ -59,14 +67,18 @@ uv run python -m scripts.tutor_web --data-dir .phono-demo-data --port 8000
 ## Shot-by-shot click choreography
 
 ### Shot 0 — Cold open / problem (~0:30)
-Static title card / narration only. No UI. (Unchanged from skeleton.)
+Static title card / narration only. No UI.
+- **Asset (created Jul 5): `artifacts/media/title-card.png`** (1920×1080, Reading Room brand,
+  real Literata 600). Source: `artifacts/media/title-card.html` — open it full-screen in the
+  browser (`F11` / ⌃⌘F) if you prefer a live render; PNG and HTML are pixel-identical.
+- Display it full-screen for the whole ~30s narration, then cut to the browser for Shot 1.
 
 ---
 
 ### Shot 1 — LIVE web demo: the loop adapting (~1:45) ★ centerpiece
 
 **Click path (returning-reader `ada`):**
-1. Land on **http://127.0.0.1:8000/?loop**. If returning-reader prompt shows → **"Read with Ada →"**.
+1. Land on **http://127.0.0.1:8000/?loop&demo**. If returning-reader prompt shows → **"Read with Ada →"**.
    - (Fresh path instead: type name → tap age band → tap an interest chip → **"Start tonight's story →"**.)
 2. **Reading face** appears: story words, target graphemes softly gold-underlined. Narrate the problem→loop framing here.
 3. Score the read:
@@ -85,19 +97,27 @@ Static title card / narration only. No UI. (Unchanged from skeleton.)
 
 **Narration:** use skeleton Shot 1 beats BUT replace "mastery bars animate" → "the mastery path lights up and the target moves to the next sound."
 
-⚠ **Most-practiced moment:** the Reading→Insight toggle + landing on the adapt animation at the right time. The animation fires on the `outcome` event; if you toggle too early you'll miss the pop/glow. Rehearse the timing.
+⚠ **Most-practiced moment:** the Reading→Insight toggle. Mechanics verified Jul 5
+(`adaptBeat.js`): when you score from the Reading face, the adapt beat is **deferred** and plays
+the moment you enter Insight — you cannot miss it by toggling "late," so don't rush. Toggle
+when you're ready, then **let the ~2s pop → glow → caption land in silence** before speaking.
+(Only failure mode: sitting in Insight *while* scoring — the beat plays immediately and you may
+be mid-sentence. Score from the Reading face.)
 
 ---
 
-### Shot 2 — (OPTIONAL) browser-mic voice (~20s, folded into Shot 1)
+### Shot 2 — CUT (was: browser-mic voice)
 
-- Click **"🎤 Read aloud"**, speak the page, transcript drives the same loop.
-- ⚠ **Decision before recording:** test Gemini Live creds on the demo machine. If flaky → CUT, stay on presets (explicitly fine). Don't discover this mid-take.
-- ⚠ **Failure mode if Live creds are dead (verified Jul 5):** the UI does NOT error — it hangs on
-  "transcribing…" indefinitely and **wedges the whole WebSocket**, so even the typed presets on
-  that page stop responding. Recovery = **reload the page** (state persists on disk). If the mic
-  test wasn't green immediately before recording, do not click 🎤 at all.
-- Don't claim never-punish confidence repair "fires live" — it's a no-op on the Live path (no per-word confidence).
+**Decision made Jul 5: the voice shot is OUT.** Typed presets are the documented, approved
+path — narrate "I'm scoring a typical read from the keyboard so it's repeatable on camera" and
+move on. Rationale: Gemini Live is unverified on the demo machine and its failure mode is
+unacceptable on camera (verified Jul 5): dead creds do NOT error — the UI hangs on
+"transcribing…" indefinitely and **wedges the whole WebSocket**, so even typed presets stop
+responding until a page reload.
+
+⚠ **Do not click "🎤 Read aloud" at any point during recording.** The button stays visible on
+the Reading face — it's scenery, not part of the demo. Shot numbering below (3–5) is unchanged
+to keep cross-references stable.
 
 ---
 
@@ -120,8 +140,7 @@ Architecture loop + "full offline suite green" (count-free — don't show a spec
 
 | If this fails | Recover by |
 |---|---|
-| Voice/Gemini Live dead | Stay on typed presets — it's the documented fallback; don't apologize, just narrate "typed here for reproducibility" |
-| 🎤 stuck on "transcribing…" (creds dead → socket wedged) | **Reload the page** — typed presets on the wedged page won't respond; disk state persists, so you resume where you were |
+| "🎤 Read aloud" clicked by accident (voice shot is CUT) | **Reload the page** — a mic click with dead creds hangs on "transcribing…" and wedges the WebSocket, so typed presets stop responding; disk state persists, so you resume where you were |
 | Adapt animation doesn't visibly move the target | Cut to the **Shelf/Journey** timeline (🏷 Shelf) — sound-by-sound shift + growth line is an alternate adaptation proof across sessions |
 | `?loop` rail clutters / distracts | Reload without `?loop`; the human Session Arc carries the narrative |
 | DegradeBanner appears (quota/connection) | If filming graceful-degradation is intentional, narrate it; otherwise reload and re-take |
@@ -134,7 +153,7 @@ Architecture loop + "full offline suite green" (count-free — don't show a spec
 
 - [ ] App boots against `.phono-demo-data` and `ada` loads (returning path) — **confirmed bootable Jun 28**.
 - [ ] Decided: returning-`ada` vs fresh-onboard. Rehearsed the chosen one ≥3×.
-- [ ] Decided: voice in/out. If in, Gemini Live verified on demo machine.
+- [x] Voice shot CUT (decided Jul 5) — typed presets only; never click 🎤 on camera.
 - [x] **Adapt mechanic verified headless (Jun 28):** wh→ck→qu on strong reads; "One miscue" advances + lights heatmap. Still confirm it's *visually* legible on screen during a live dry run.
 - [ ] Toggle timing (Reading→Insight) lands on the adapt animation, not before it.
 - [ ] Operator `<details>` pre-expanded or expanding it is part of the rehearsed motion.

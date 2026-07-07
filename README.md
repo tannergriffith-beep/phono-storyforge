@@ -1,5 +1,8 @@
 # Phono StoryForge
 
+![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)
+
 Phono StoryForge is a **closed-loop adaptive reading tutor** for early and struggling readers (dyslexia-aware), built on Google's Agent Development Kit (ADK). It doesn't just generate a decodable storybook once — it keeps a per-child mastery model, decides what phonics skill to teach next from that child's own reading evidence, generates a book guaranteed decodable at exactly that level, listens to the child read it, attributes every miscue down to the specific grapheme, updates the mastery model, and lets the *next* book change because of how this read went.
 
 Built as the capstone project for Google/Kaggle's **5-Day AI Agents Intensive — Vibe Coding Capstone**, Track: **Agents for Good** (education).
@@ -36,6 +39,9 @@ Everything load-bearing here is **deterministic, non-LLM Python** that the proje
 **The same code that runs the product loop is the code the evidence experiment exercises** (see *Evidence* below) — so the simulation isn't a detached toy; it's a calibration/regression harness for the production brain.
 
 ## Status (honest)
+
+![The live web app's onboarding screen](artifacts/media/web-app-screenshot.png)
+*The onboarding screen of the live web app (`scripts/tutor_web.py`) — the same real UI the loop below runs in, screenshotted from a running instance, not a mockup.*
 
 - **Closed-loop tutor — a real, stateful product (Stage A, done).** `app/tutor/TutorSession` runs the full loop above against a persistent `LearnerStore`, exposed through a typed-transcript entry path (`scripts/tutor_cli.py`). Run it twice for a child with strong reads and the target visibly advances (e.g. `a` → `e` → `i`), mastery rises, and everything persists across processes.
 - **Voice read-aloud + verifier-gated LLM books (Stage B, done).** Gemini Live transcribes the child's read-aloud (`app/voice/`, with a `FakeTranscriber` for offline tests) and feeds the *unchanged* `record_read()`; a verifier-gated LLM generator (`app/tutor/llm_book.py`, propose → `check_decodability` → revise) is wired into the loop as an optional content source behind the same `BookProvider` seam (`--llm-book`). Voice is creds-gated and degrades to typed input if Gemini Live is unavailable.
@@ -96,9 +102,8 @@ The deeper write-ups live under [`docs/`](docs/):
 
 | Document | What it covers |
 | --- | --- |
-| [docs/writeup-draft.md](docs/writeup-draft.md) | The capstone write-up — problem, architecture, evidence, and the "Agents for Good" case (draft; final prose locked at submission). |
+| [docs/kaggle-writeup-FINAL.md](docs/kaggle-writeup-FINAL.md) | The capstone write-up — problem, architecture, evidence, and the "Agents for Good" case. |
 | [docs/stage-d-independent-learner.md](docs/stage-d-independent-learner.md) | Stage D evidence and rigor: the de-circularized independent learner (logistic/IRT emission, no ZPD gate, forgetting) and what the adaptive-vs-static gaps do and don't show. |
-| [docs/demo-runbook.md](docs/demo-runbook.md) | The filmable-demo runbook — seeded `ada` profile, the verified wh→ck→qu adapt chain, shot-by-shot choreography and fallbacks. |
 | [docs/build-plan.md](docs/build-plan.md) | The staged build plan (A→D′) and the engineering decisions behind each stage. |
 
 ## Capstone concepts demonstrated
@@ -265,3 +270,7 @@ agents-cli deploy
 ```
 
 `Dockerfile` builds a standalone FastAPI image (`app/fast_api_app.py`) suitable for Cloud Run. Not deployed live for this submission — see Known Limitations.
+
+## License
+
+[Apache License 2.0](LICENSE).
