@@ -9,33 +9,33 @@
       "grapheme": "a",
       "level": "short_vowels",
       "p_mastery": 1.0,
-      "opportunities": 222,
-      "correct": 131,
-      "last_seen_session": 17
+      "opportunities": 250,
+      "correct": 150,
+      "last_seen_session": 20
     },
     "e": {
       "grapheme": "e",
       "level": "short_vowels",
-      "p_mastery": 0.9999999999905494,
-      "opportunities": 15,
-      "correct": 15,
-      "last_seen_session": 17
+      "p_mastery": 0.9999999999999469,
+      "opportunities": 18,
+      "correct": 18,
+      "last_seen_session": 19
     },
     "i": {
       "grapheme": "i",
       "level": "short_vowels",
       "p_mastery": 1.0,
-      "opportunities": 22,
-      "correct": 22,
-      "last_seen_session": 17
+      "opportunities": 35,
+      "correct": 27,
+      "last_seen_session": 20
     },
     "o": {
       "grapheme": "o",
       "level": "short_vowels",
-      "p_mastery": 0.9999983160883161,
-      "opportunities": 8,
-      "correct": 8,
-      "last_seen_session": 11
+      "p_mastery": 0.9999997006375307,
+      "opportunities": 9,
+      "correct": 9,
+      "last_seen_session": 19
     },
     "u": {
       "grapheme": "u",
@@ -72,82 +72,82 @@
     "f": {
       "grapheme": "f",
       "level": "short_vowels",
-      "p_mastery": 0.9999971521575916,
-      "opportunities": 16,
-      "correct": 8,
-      "last_seen_session": 14
+      "p_mastery": 0.9999994239612056,
+      "opportunities": 19,
+      "correct": 10,
+      "last_seen_session": 20
     },
     "g": {
       "grapheme": "g",
       "level": "short_vowels",
       "p_mastery": 1.0,
-      "opportunities": 69,
-      "correct": 60,
-      "last_seen_session": 17
+      "opportunities": 70,
+      "correct": 61,
+      "last_seen_session": 18
     },
     "h": {
       "grapheme": "h",
       "level": "short_vowels",
-      "p_mastery": 0.9999999999999999,
-      "opportunities": 27,
-      "correct": 22,
-      "last_seen_session": 17
+      "p_mastery": 1.0,
+      "opportunities": 30,
+      "correct": 24,
+      "last_seen_session": 20
     },
     "j": {
       "grapheme": "j",
       "level": "short_vowels",
-      "p_mastery": 0.9999999983179848,
-      "opportunities": 12,
-      "correct": 12,
-      "last_seen_session": 17
+      "p_mastery": 0.9999999999468401,
+      "opportunities": 14,
+      "correct": 14,
+      "last_seen_session": 19
     },
     "k": {
       "grapheme": "k",
       "level": "short_vowels",
-      "p_mastery": 0.9999905280665591,
-      "opportunities": 7,
+      "p_mastery": 0.9999393836450567,
+      "opportunities": 8,
       "correct": 7,
-      "last_seen_session": 12
+      "last_seen_session": 19
     },
     "l": {
       "grapheme": "l",
       "level": "short_vowels",
-      "p_mastery": 0.9983168683155232,
-      "opportunities": 4,
-      "correct": 4,
-      "last_seen_session": 8
+      "p_mastery": 0.9999467225821953,
+      "opportunities": 6,
+      "correct": 6,
+      "last_seen_session": 19
     },
     "m": {
       "grapheme": "m",
       "level": "short_vowels",
       "p_mastery": 1.0,
-      "opportunities": 54,
-      "correct": 40,
-      "last_seen_session": 17
+      "opportunities": 69,
+      "correct": 51,
+      "last_seen_session": 20
     },
     "n": {
       "grapheme": "n",
       "level": "short_vowels",
-      "p_mastery": 0.9999999999999994,
-      "opportunities": 23,
-      "correct": 21,
-      "last_seen_session": 17
+      "p_mastery": 1.0,
+      "opportunities": 40,
+      "correct": 33,
+      "last_seen_session": 20
     },
     "p": {
       "grapheme": "p",
       "level": "short_vowels",
-      "p_mastery": 0.9999999099938596,
-      "opportunities": 24,
-      "correct": 10,
-      "last_seen_session": 17
+      "p_mastery": 0.9999999958101398,
+      "opportunities": 32,
+      "correct": 15,
+      "last_seen_session": 20
     },
     "r": {
       "grapheme": "r",
       "level": "short_vowels",
-      "p_mastery": 0.9999999999999102,
-      "opportunities": 23,
-      "correct": 18,
-      "last_seen_session": 17
+      "p_mastery": 0.9999999999999958,
+      "opportunities": 29,
+      "correct": 22,
+      "last_seen_session": 20
     },
     "s": {
       "grapheme": "s",
@@ -161,9 +161,9 @@
       "grapheme": "t",
       "level": "short_vowels",
       "p_mastery": 1.0,
-      "opportunities": 70,
-      "correct": 37,
-      "last_seen_session": 16
+      "opportunities": 76,
+      "correct": 38,
+      "last_seen_session": 20
     },
     "v": {
       "grapheme": "v",
@@ -192,10 +192,10 @@
     "z": {
       "grapheme": "z",
       "level": "short_vowels",
-      "p_mastery": 0.9999905280665591,
-      "opportunities": 7,
-      "correct": 7,
-      "last_seen_session": 14
+      "p_mastery": 0.9999215318768286,
+      "opportunities": 12,
+      "correct": 9,
+      "last_seen_session": 20
     },
     "sh": {
       "grapheme": "sh",
@@ -224,18 +224,18 @@
     "wh": {
       "grapheme": "wh",
       "level": "digraphs",
-      "p_mastery": 0.25,
-      "opportunities": 0,
-      "correct": 0,
-      "last_seen_session": null
+      "p_mastery": 0.9990988042847716,
+      "opportunities": 6,
+      "correct": 5,
+      "last_seen_session": 18
     },
     "ck": {
       "grapheme": "ck",
       "level": "digraphs",
-      "p_mastery": 0.25,
-      "opportunities": 0,
-      "correct": 0,
-      "last_seen_session": null
+      "p_mastery": 0.9990988042847716,
+      "opportunities": 6,
+      "correct": 5,
+      "last_seen_session": 19
     },
     "ng": {
       "grapheme": "ng",
@@ -256,10 +256,10 @@
     "qu": {
       "grapheme": "qu",
       "level": "digraphs",
-      "p_mastery": 0.25,
-      "opportunities": 0,
+      "p_mastery": 0.17142944939801907,
+      "opportunities": 6,
       "correct": 0,
-      "last_seen_session": null
+      "last_seen_session": 20
     },
     "_blend_": {
       "grapheme": "_blend_",
@@ -544,10 +544,10 @@
     "y": {
       "grapheme": "y",
       "level": "y_vowel",
-      "p_mastery": 0.9999992109133149,
-      "opportunities": 8,
-      "correct": 8,
-      "last_seen_session": 17
+      "p_mastery": 0.9999998855809882,
+      "opportunities": 11,
+      "correct": 10,
+      "last_seen_session": 20
     },
     "-s": {
       "grapheme": "-s",
@@ -582,7 +582,7 @@
       "last_seen_session": null
     }
   },
-  "sessions_completed": 18,
+  "sessions_completed": 21,
   "created_at": "2026-06-26T05:00:26.431554+00:00",
-  "updated_at": "2026-06-26T05:04:05.905268+00:00"
+  "updated_at": "2026-07-07T05:53:27.285217+00:00"
 }

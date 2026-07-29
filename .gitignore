@@ -205,7 +205,9 @@ tools/a2a-inspector/
 
 # Local debug scripts and regenerable eval run dumps (not part of the deliverable)
 /scratch/
-/artifacts/
+/artifacts/*
+# …except committed demo/submission media (title card, UI captures — readiness plan item 11)
+!/artifacts/media/
 
 # Internal readiness-audit orchestrators + reports (not part of the deliverable)
 /orchestrators/
